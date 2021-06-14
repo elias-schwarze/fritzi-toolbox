@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Elias Schwarze",
     "description" : "A suite of tools for the Fritzi Project",
     "blender" : (2, 93, 0),
-    "version" : (0, 0, 2),
+    "version" : (0, 0, 3),
     "location" : "View3D",
     "warning" : "",
     "category" : "Object"
