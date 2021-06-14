@@ -45,4 +45,11 @@ class FTB_PT_ScaleCheck_Panel(Panel):
         bl_region_type = "UI"
 
         def draw(self, context):
+
                 layout = self.layout
+
+                col = layout.column()
+                col.operator("object.select_scale_non_one")
+
+                col = layout.column()
+                col.operator("object.select_scale_non_unform")

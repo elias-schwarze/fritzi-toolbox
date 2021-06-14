@@ -48,12 +48,56 @@ class FTB_OT_Toggle_Face_Orient_Op(Operator):
         ##self.report({'INFO'}, 'Printing report to Info window.')
         return {'FINISHED'} 
 
-#class FTB_OT_SelectScaleNonOne_Op(Operator):
-    #bl_idname = "view.select_scale_non_one"
-    #bl_label = "Unapplied Scale"
-    #bl_description = "Select all objects that do not have Scale of (1,1,1)"
+class FTB_OT_SelectScaleNonOne_Op(Operator):
+    bl_idname = "object.select_scale_non_one"
+    bl_label = "Unapplied Scale"
+    bl_description = "Select all objects that do not have Scale of (1,1,1)"
+    bl_options = {"REGISTER", "UNDO"}
 
-    #def execute(self, context):
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in bpy.data.objects:
+            if o.type == 'MESH':
+                if o.scale[0] != 1 or o.scale[1] != 1 or o.scale[2] != 1:
+                    o.select_set(True)
+        
+        return {'FINISHED'}
+
+class FTB_OT_SelectScaleNonUniform_Op(Operator):
+    bl_idname = "object.select_scale_non_unform"
+    bl_label = "Non Uniform Scale"
+    bl_description = "Select all objects that do not have a uniform Scale (x=y=z))"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in bpy.data.objects:
+            if o.type == 'MESH':
+                if not (o.scale[0] == o.scale[1] == o.scale[2]):
+                    o.select_set(True)
+        
+        return {'FINISHED'}
+
 
 class FTB_OT_RemoveMaterials_Op(Operator):
     bl_idname = "object.remove_all_materials"

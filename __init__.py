@@ -24,7 +24,10 @@ bl_info = {
 
 import bpy
 
-from . ftb_op import FTB_OT_Apply_All_Op, FTB_OT_Toggle_Face_Orient_Op, FTB_OT_RemoveMaterials_Op, FTB_OT_PurgeUnusedData_Op, FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_CheckNgons_Op
+from . ftb_op import FTB_OT_Apply_All_Op, FTB_OT_Toggle_Face_Orient_Op, FTB_OT_RemoveMaterials_Op, FTB_OT_PurgeUnusedData_Op, FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_CheckNgons_Op, FTB_OT_SelectScaleNonOne_Op, FTB_OT_SelectScaleNonUniform_Op
+
+
+
 from . ftb_pnl import FTB_PT_Checking_Panel, FTB_PT_ScaleCheck_Panel
 
 classes = (
@@ -36,7 +39,9 @@ classes = (
     FTB_OT_PurgeUnusedData_Op,
     FTB_OT_SetToCenter_Op,
     FTB_OT_OriginToCursor_Op,
-    FTB_OT_CheckNgons_Op
+    FTB_OT_CheckNgons_Op,
+    FTB_OT_SelectScaleNonOne_Op,
+    FTB_OT_SelectScaleNonUniform_Op
     )
 
 def register():
