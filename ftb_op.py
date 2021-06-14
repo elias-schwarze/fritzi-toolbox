@@ -95,7 +95,7 @@ class FTB_OT_SelectScaleNonUniform_Op(Operator):
 
 class FTB_OT_RemoveMaterials_Op(Operator):
     bl_idname = "object.remove_all_materials"
-    bl_label = "Remove Materials"
+    bl_label = "Remove All Materials"
     bl_description = "Remove all Material slots from all selected Objects"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -121,8 +121,8 @@ class FTB_OT_RemoveMaterials_Op(Operator):
 
 class FTB_OT_PurgeUnusedData_Op(Operator):
     bl_idname = "data.purge_unused"
-    bl_label = "Purge Data"
-    bl_description = "Remove all Material slots from all selected Objects"
+    bl_label = "Purge Unused Data"
+    bl_description = "Recursively remove all unused Datablocks from file"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):

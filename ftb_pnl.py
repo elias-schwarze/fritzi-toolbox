@@ -18,7 +18,7 @@ class FTB_PT_Checking_Panel(Panel):
                 col.label(text="Data Cleaning")
 
                 col = layout.column()
-                col.operator("object.remove_all_materials", text="Remove Materials")
+                col.operator("object.remove_all_materials", text="Remove All Materials")
 
                 col = layout.column()
                 col.operator("data.purge_unused", text="Purge Data")
