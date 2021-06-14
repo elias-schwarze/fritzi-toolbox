@@ -9,7 +9,6 @@ class FTB_PT_Checking_Panel(Panel):
         bl_category = "FTB"
 
         def draw(self, context):
-
                 layout = self.layout
 
                 col = layout.column()
@@ -45,7 +44,6 @@ class FTB_PT_ScaleCheck_Panel(Panel):
         bl_region_type = "UI"
 
         def draw(self, context):
-
                 layout = self.layout
 
                 col = layout.column()
