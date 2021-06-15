@@ -15,13 +15,13 @@ class FTB_PT_Checking_Panel(Panel):
                 col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
 
                 col = layout.column()
-                col.label(text="Data Cleaning")
+                col.label(text="Scale Checking")
 
                 col = layout.column()
-                col.operator("object.remove_all_materials", text="Remove All Materials")
+                col.operator("object.select_scale_non_one")
 
                 col = layout.column()
-                col.operator("data.purge_unused", text="Purge Data")
+                col.operator("object.select_scale_non_unform")
 
                 col = layout.column()
                 col.label(text="Origin")
@@ -37,9 +37,9 @@ class FTB_PT_Checking_Panel(Panel):
 
 
 
-class FTB_PT_ScaleCheck_Panel(Panel):
+class FTB_PT_DataClean_Panel(Panel):
         bl_parent_id = "FTB_PT_Checking_Panel"
-        bl_label = "Scale Checking" 
+        bl_label = "Data Cleaning" 
         bl_space_type = "VIEW_3D"
         bl_region_type = "UI"
 
@@ -47,7 +47,7 @@ class FTB_PT_ScaleCheck_Panel(Panel):
                 layout = self.layout
 
                 col = layout.column()
-                col.operator("object.select_scale_non_one")
+                col.operator("object.remove_all_materials", text="Remove All Materials")
 
                 col = layout.column()
-                col.operator("object.select_scale_non_unform")
+                col.operator("data.purge_unused", text="Purge Data")
