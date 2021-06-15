@@ -190,10 +190,10 @@ class FTB_OT_CheckNgons_Op(Operator):
         obj = context.object
 
         if obj is not None:
-            if obj.mode == "OBJECT":
+            if obj.mode == "OBJECT" and obj.type == 'MESH':
                 return True
 
-            elif obj.mode == "EDIT":
+            elif obj.mode == "EDIT" and obj.type == 'MESH':
                 return True
 
         return False
