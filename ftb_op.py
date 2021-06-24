@@ -9,7 +9,7 @@ class FTB_OT_Apply_All_Op(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-
+ 
         if obj is not None:
             if obj.mode == "OBJECT":
                 return True
@@ -188,7 +188,7 @@ class FTB_OT_CheckNgons_Op(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.object
-
+    #test
         if obj is not None:
             if obj.mode == "OBJECT" and obj.type == 'MESH':
                 return True
