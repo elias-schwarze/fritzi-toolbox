@@ -20,25 +20,22 @@ class FTB_PT_Checking_Panel(Panel):
                 col = layout.column()
                 col.operator("object.copy_rotation")
 
-                col = layout.column()
+                col = layout.column(align=True)
                 col.label(text="Scale Checking")
 
-                col = layout.column()
                 col.operator("object.select_scale_non_one")
 
-                col = layout.column()
                 col.operator("object.select_scale_non_unform")
 
-                col = layout.column()
+                col = layout.column(align=True)
                 col.label(text="Origin")
 
-                col = layout.column()
                 col.operator("object.center_object")
                 
-                col = layout.column()
                 col.operator("object.origin_to_cursor")
 
                 col = layout.column()
+                col.label(text="Mesh Checking")
                 col.operator("object.check_ngons")
 
 
@@ -53,8 +50,6 @@ class FTB_PT_DataClean_Panel(Panel):
         def draw(self, context):
                 layout = self.layout
 
-                col = layout.column()
+                col = layout.column(align=True)
                 col.operator("object.remove_all_materials", text="Remove All Materials")
-
-                col = layout.column()
                 col.operator("data.purge_unused", text="Purge Data")
