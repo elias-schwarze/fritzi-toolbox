@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Elias Schwarze",
     "description" : "A suite of tools for the Fritzi Project",
     "blender" : (2, 93, 0),
-    "version" : (0, 0, 3),
+    "version" : (0, 0, 4),
     "location" : "View3D",
     "warning" : "",
     "category" : "Object"
@@ -25,8 +25,9 @@ bl_info = {
 import bpy
 
 from . ftb_op import *
-
 from . ftb_pnl import *
+from . ftb_rotator_op import *
+from . ftb_rotator_pnl import *
 
 classes = (
     FTB_OT_Apply_All_Op,
@@ -39,7 +40,9 @@ classes = (
     FTB_OT_OriginToCursor_Op,
     FTB_OT_CheckNgons_Op,
     FTB_OT_SelectScaleNonOne_Op,
-    FTB_OT_SelectScaleNonUniform_Op
+    FTB_OT_SelectScaleNonUniform_Op,
+    FTB_OT_CopyRotation_Op,
+    FTB_PT_Rotator_Panel
     )
 
 def register():

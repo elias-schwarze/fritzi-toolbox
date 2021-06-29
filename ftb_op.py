@@ -212,3 +212,28 @@ class FTB_OT_CheckNgons_Op(Operator):
             bpy.ops.mesh.select_face_by_sides(number=4, type='GREATER', extend=False)
             return {'FINISHED'}
 
+class FTB_OT_CopyRotation_Op(Operator):
+    bl_idname = "object.copy_rotation"
+    bl_label = "Copy Rotation"
+    bl_description = "Copy rotation from active object to selected"
+    bl_options = {"REGISTER", "UNDO"}
+
+    #should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+
+        currentRotation = bpy.context.active_object.rotation_euler
+        
+        for obj in bpy.context.selected_objects:
+            obj.rotation_euler = currentRotation
+
+        return {'FINISHED'}

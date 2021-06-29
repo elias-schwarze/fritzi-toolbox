@@ -15,6 +15,12 @@ class FTB_PT_Checking_Panel(Panel):
                 col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
 
                 col = layout.column()
+                col.label(text="Copy Attributes")
+
+                col = layout.column()
+                col.operator("object.copy_rotation")
+
+                col = layout.column()
                 col.label(text="Scale Checking")
 
                 col = layout.column()
@@ -42,6 +48,7 @@ class FTB_PT_DataClean_Panel(Panel):
         bl_label = "Data Cleaning" 
         bl_space_type = "VIEW_3D"
         bl_region_type = "UI"
+        bl_category = "FTB"
 
         def draw(self, context):
                 layout = self.layout
