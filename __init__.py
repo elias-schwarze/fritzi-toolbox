@@ -26,8 +26,8 @@ import bpy
 
 from . ftb_op import *
 from . ftb_pnl import *
-from . ftb_rotator_op import *
-from . ftb_rotator_pnl import *
+from .batch_rotator.ftb_rotator_op import *
+from .batch_rotator.ftb_rotator_pnl import *
 
 classes = (
     FTB_OT_Apply_All_Op,

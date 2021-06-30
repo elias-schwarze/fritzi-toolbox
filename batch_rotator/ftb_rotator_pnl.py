@@ -26,6 +26,7 @@ class FTB_PT_Rotator_Panel(Panel):
             #button randomize rotation
             col = layout.column()
             col.scale_y = 1.5
+            
             col.operator("object.random_rotation") 
 
             #min max input boxes

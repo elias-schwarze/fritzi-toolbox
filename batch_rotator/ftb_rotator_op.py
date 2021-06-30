@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Operator
-from . ftb_utils import ftb_random_rotation
+from ..ftb_utils import ftb_random_rotation
 
 class FTB_OT_Random_Rotation_Op(Operator):
     bl_idname = "object.random_rotation"
