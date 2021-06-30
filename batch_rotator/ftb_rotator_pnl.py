@@ -18,7 +18,7 @@ class FTB_PT_Rotator_Panel(Panel):
         bpy.types.WindowManager.bAxisToggleY = bpy.props.BoolProperty()
         bpy.types.WindowManager.bAxisToggleZ = bpy.props.BoolProperty()
 
-        bpy.types.WindowManager.bRandomRotDirection = bpy.props.BoolProperty(description="Randomize direction in which objects are rotated. (If disabled, always rotate objects according to sign +/-)")
+        bpy.types.WindowManager.bRandomizeDirection = bpy.props.BoolProperty(description="Randomize direction in which objects are rotated. (If disabled, always rotate objects according to sign +/-)")
 
         def draw(self, context):
             layout = self.layout

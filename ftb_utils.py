@@ -3,13 +3,12 @@ from bpy import context
 import random
 from math import radians, degrees
 
+# function to return 
+def ftb_random_rotation(minRot = 0.0, maxRot = 0.0, randomizeDirection = True):
 
-def ftb_random_rotation(randomizeDirection = True):
-        
-    wm = context.window_manager
-    randomRot = random.uniform(wm.fMinRotation, wm.fMaxRotation)
+    randomRot = random.uniform(minRot, maxRot)
 
-    if (wm.bRandomRotDirection == True):
+    if (randomizeDirection == True):
             if(random.getrandbits(1) == True):
                 randomRot*= -1
         

@@ -33,6 +33,7 @@ classes = (
     FTB_OT_Apply_All_Op,
     FTB_PT_Checking_Panel,
     FTB_PT_DataClean_Panel,
+    
     FTB_OT_Toggle_Face_Orient_Op,
     FTB_OT_RemoveMaterials_Op,
     FTB_OT_PurgeUnusedData_Op,
@@ -42,6 +43,7 @@ classes = (
     FTB_OT_SelectScaleNonOne_Op,
     FTB_OT_SelectScaleNonUniform_Op,
     FTB_OT_CopyRotation_Op,
+
     FTB_PT_Rotator_Panel,
     FTB_OT_Random_Rotation_Op
     )

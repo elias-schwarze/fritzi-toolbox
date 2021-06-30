@@ -26,13 +26,13 @@ class FTB_OT_Random_Rotation_Op(Operator):
         for obj in bpy.context.selected_objects:
 
             if (wm.bAxisToggleX):
-                obj.rotation_euler[0] += ftb_random_rotation(wm.bRandomRotDirection)
+                obj.rotation_euler[0] += ftb_random_rotation(wm.fMinRotation, wm.fMaxRotation, wm.bRandomizeDirection)
 
             if (wm.bAxisToggleY):
-                obj.rotation_euler[1] += ftb_random_rotation(wm.bRandomRotDirection)
+                obj.rotation_euler[1] += ftb_random_rotation(wm.fMinRotation, wm.fMaxRotation, wm.bRandomizeDirection)
 
             if (wm.bAxisToggleZ):
-                obj.rotation_euler[2] += ftb_random_rotation(wm.bRandomRotDirection)
+                obj.rotation_euler[2] += ftb_random_rotation(wm.fMinRotation, wm.fMaxRotation, wm.bRandomizeDirection)
 
         return {'FINISHED'}
 
