@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Operator
+from . ftb_utils import obCopyVisLoc, obCopyVisRot, obCopyVisSca
 
 class FTB_OT_Apply_All_Op(Operator):
     bl_idname = "object.apply_all_mods"
@@ -156,6 +157,8 @@ class FTB_OT_SetToCenter_Op(Operator):
         bpy.context.tool_settings.transform_pivot_point = offsetMode
         return {'FINISHED'}
 
+
+
 class FTB_OT_OriginToCursor_Op(Operator):
     bl_idname = "object.origin_to_cursor"
     bl_label = "Origin to cursor"
@@ -177,6 +180,8 @@ class FTB_OT_OriginToCursor_Op(Operator):
     def execute(self, context):
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
         return {'FINISHED'}
+
+
 
 class FTB_OT_CheckNgons_Op(Operator):
     bl_idname = "object.check_ngons"
@@ -212,6 +217,35 @@ class FTB_OT_CheckNgons_Op(Operator):
             bpy.ops.mesh.select_face_by_sides(number=4, type='GREATER', extend=False)
             return {'FINISHED'}
 
+
+
+class FTB_OT_CopyLocation_Op(Operator):
+    bl_idname = "object.copy_location"
+    bl_label = "Copy Location"
+    bl_description = "Copy location from active object to selected"
+    bl_options = {"REGISTER", "UNDO"}
+
+    #should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+
+        sourceObj = bpy.context.active_object
+        
+        for obj in bpy.context.selected_objects:
+            obCopyVisLoc(obj, sourceObj)
+        return {'FINISHED'}
+
+
+
 class FTB_OT_CopyRotation_Op(Operator):
     bl_idname = "object.copy_rotation"
     bl_label = "Copy Rotation"
@@ -231,9 +265,84 @@ class FTB_OT_CopyRotation_Op(Operator):
 
     def execute(self, context):
 
-        currentRotation = bpy.context.active_object.rotation_euler
+        sourceObj = bpy.context.active_object
         
         for obj in bpy.context.selected_objects:
-            obj.rotation_euler = currentRotation
+            obCopyVisRot(obj, sourceObj)
+        return {'FINISHED'}
+
+
+class FTB_OT_CopyScale_Op(Operator):
+    bl_idname = "object.copy_scale"
+    bl_label = "Copy Scale"
+    bl_description = "Copy scale from active object to selected"
+    bl_options = {"REGISTER", "UNDO"}
+
+    #should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+
+        sourceObj = bpy.context.active_object
+        
+        for obj in bpy.context.selected_objects:
+            obCopyVisSca(obj, sourceObj)
+        return {'FINISHED'}
+
+
+
+class FTB_OT_OverrideRetainTransform_Op(Operator):
+    bl_idname = "object.override_retain_transform"
+    bl_label = "Override Keep Transform"
+    bl_description = "Make a library override and retain the transform of the previous instance object"
+    bl_options = {"REGISTER", "UNDO"}
+
+    #should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj is not None:
+            if obj.mode == "OBJECT" and obj.type == 'EMPTY' and obj.is_instancer:
+                return True
+        return False
+
+    def execute(self, context):
+        objName = context.active_object.name
+        objLoc = context.active_object.location
+        objRot = context.active_object.rotation_euler
+        objScale = context.active_object.scale
+
+        #add new empty object to temporarily store transform and parent matrix of linked object
+        tempOb = bpy.data.objects.new(objName + "phx", None)
+        bpy.context.scene.collection.objects.link(tempOb)
+
+        #tempOb copy transform from linked object
+        obCopyVisLoc(tempOb, context.active_object)
+        obCopyVisRot(tempOb, context.active_object)
+        obCopyVisSca(tempOb, context.active_object)
+
+        #rename the linked object before overriding, so the objects created by 
+        #library override can have the same name as the original linked object had
+        bpy.context.active_object.name = objName + "phName"
+
+        bpy.ops.object.make_override_library()
+
+        newOb = bpy.data.collections[objName].objects[objName]
+
+        obCopyVisLoc(newOb, tempOb)
+        obCopyVisRot(newOb, tempOb)
+        obCopyVisSca(newOb, tempOb)
+
+        objs = bpy.data.objects
+        objs.remove(objs[objName + "phx"], do_unlink=True)
 
         return {'FINISHED'}

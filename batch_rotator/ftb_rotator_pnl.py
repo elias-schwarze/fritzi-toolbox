@@ -35,7 +35,7 @@ class FTB_PT_Rotator_Panel(Panel):
             row.prop(context.window_manager, "fMaxRotation", text= "Max:")
 
             col = layout.column()
-            col.prop(context.window_manager, "bRandomRotDirection", text= "Randomize Direction", )
+            col.prop(context.window_manager, "bRandomizeDirection", text= "Randomize Direction", )
             col = layout.column()
             
             #Axis toggles

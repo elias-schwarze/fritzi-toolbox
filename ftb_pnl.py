@@ -17,14 +17,15 @@ class FTB_PT_Checking_Panel(Panel):
                 col = layout.column()
                 col.label(text="Copy Attributes")
 
-                col = layout.column()
+                col = layout.column(align=True)
+                col.operator("object.copy_location")
                 col.operator("object.copy_rotation")
+                col.operator("object.copy_scale")
 
                 col = layout.column(align=True)
                 col.label(text="Scale Checking")
 
                 col.operator("object.select_scale_non_one")
-
                 col.operator("object.select_scale_non_unform")
 
                 col = layout.column(align=True)
@@ -40,9 +41,8 @@ class FTB_PT_Checking_Panel(Panel):
 
 
 
-class FTB_PT_DataClean_Panel(Panel):
-        bl_parent_id = "FTB_PT_Checking_Panel"
-        bl_label = "Data Cleaning" 
+class FTB_PT_DataEditing_Panel(Panel):
+        bl_label = "Data Editing" 
         bl_space_type = "VIEW_3D"
         bl_region_type = "UI"
         bl_category = "FTB"
@@ -50,6 +50,9 @@ class FTB_PT_DataClean_Panel(Panel):
         def draw(self, context):
                 layout = self.layout
 
+                col = layout.column()
+                col.operator("object.override_retain_transform")
+
                 col = layout.column(align=True)
                 col.operator("object.remove_all_materials", text="Remove All Materials")
-                col.operator("data.purge_unused", text="Purge Data")
+                col.operator("data.purge_unused", text="Purge Data", icon='ERROR')
