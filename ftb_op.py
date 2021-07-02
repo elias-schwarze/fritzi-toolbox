@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Operator
-from . ftb_utils import obCopyVisLoc, obCopyVisRot, obCopyVisSca
+from . ftb_utils import obCopyVisLoc, obCopyVisRot, obCopyVisSca, stripEndNumbers
+
 
 class FTB_OT_Apply_All_Op(Operator):
     bl_idname = "object.apply_all_mods"
@@ -322,6 +323,8 @@ class FTB_OT_OverrideRetainTransform_Op(Operator):
         objScale = context.active_object.scale
 
         #add new empty object to temporarily store transform and parent matrix of linked object
+         
+
         tempOb = bpy.data.objects.new(objName + "phx", None)
         bpy.context.scene.collection.objects.link(tempOb)
 
@@ -333,16 +336,13 @@ class FTB_OT_OverrideRetainTransform_Op(Operator):
         #rename the linked object before overriding, so the objects created by 
         #library override can have the same name as the original linked object had
         bpy.context.active_object.name = objName + "phName"
-
         bpy.ops.object.make_override_library()
-
-        newOb = bpy.data.collections[objName].objects[objName]
+        newOb = bpy.data.collections[stripEndNumbers(objName)].objects[stripEndNumbers(objName)]
 
         obCopyVisLoc(newOb, tempOb)
         obCopyVisRot(newOb, tempOb)
         obCopyVisSca(newOb, tempOb)
-
-        objs = bpy.data.objects
-        objs.remove(objs[objName + "phx"], do_unlink=True)
+        
+        bpy.data.objects.remove(tempOb, do_unlink=True)
 
         return {'FINISHED'}

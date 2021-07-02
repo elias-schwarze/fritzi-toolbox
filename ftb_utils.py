@@ -2,6 +2,7 @@ import bpy
 from bpy import context
 import random
 from math import radians, degrees
+import string
 
 # function to return a random float (in radian unit) between the range of minRot and maxRot 
 def ftb_random_rotation(minRot = 0.0, maxRot = 0.0, randomizeDirection = True):
@@ -23,7 +24,7 @@ def world_to_basis(active, obj):
     return(mat)
 
 
-#copy visual location from active to obj
+#copy visual location from sourceObj to obj
 def obCopyVisLoc(obj, sourceObj):
     if obj.parent:
         mat = world_to_basis(sourceObj, obj)
@@ -31,7 +32,7 @@ def obCopyVisLoc(obj, sourceObj):
     else:
         obj.location = sourceObj.matrix_world.to_translation()
 
-#copy visual rotation from active to obj
+#copy visual rotation from sourceObj to obj
 def obCopyVisRot(obj, sourceObj):
     if obj.parent:
         mat = world_to_basis(sourceObj, obj)
@@ -39,7 +40,7 @@ def obCopyVisRot(obj, sourceObj):
     else:
         rotcopy(obj, sourceObj.matrix_world.to_3x3())
 
-#copy visual Scale from active to obj
+#copy visual Scale from sourceObj to obj
 def obCopyVisSca(obj, sourceObj):
     if obj.parent:
         mat = world_to_basis(sourceObj, obj)
@@ -59,3 +60,10 @@ def rotcopy(item, mat):
     else:
         item.rotation_euler = mat.to_3x3().to_euler(item.rotation_mode)
 
+
+# strip trailing numbers and dot from string, if any
+def stripEndNumbers(inputString):
+    if "." in inputString[-4:]:
+        return inputString[:-4]
+
+    else: return inputString
