@@ -9,6 +9,7 @@ class FTB_PT_Rotator_Panel(Panel):
         bl_region_type = "UI"
         bl_label = "Batch Rotator" 
         bl_category = "FTB"
+        bl_options = {"DEFAULT_CLOSED"}
         
         #create all needed properties and store in WindowManager
         bpy.types.WindowManager.fMinRotation = bpy.props.FloatProperty(description="Minimum amount to rotate objects by", min=-359, max=359)

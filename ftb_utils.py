@@ -63,7 +63,7 @@ def rotcopy(item, mat):
 
 # strip trailing numbers and dot from string, if any
 def stripEndNumbers(inputString):
-    if "." in inputString[-4:]:
+    if ("." in inputString[-4:] and any(i.isdigit() for i in inputString[-4:])):
         return inputString[:-4]
 
     else: return inputString

@@ -29,6 +29,9 @@ from . ftb_pnl import *
 from .batch_rotator.ftb_rotator_op import *
 from .batch_rotator.ftb_rotator_pnl import *
 
+from .preview_render.ftb_previewRender_op import *
+from .preview_render.ftb_previewRender_pnl import *
+
 classes = (
     FTB_OT_Apply_All_Op,
     FTB_PT_Checking_Panel,
@@ -52,7 +55,12 @@ classes = (
     FTB_OT_OverrideRetainTransform_Op,
 
     FTB_PT_Rotator_Panel,
-    FTB_OT_Random_Rotation_Op
+    FTB_OT_Random_Rotation_Op,
+
+    FTB_PT_PreviewRender_Panel,
+    FTB_PT_PreviewSelector_Panel,
+    FTB_OT_Preview_Render_Op
+
     )
 
 def register():
