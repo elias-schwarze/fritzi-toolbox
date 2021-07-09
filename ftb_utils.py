@@ -1,8 +1,5 @@
-import bpy
-from bpy import context
 import random
-from math import radians, degrees
-import string
+from math import radians
 
 # function to return a random float (in radian unit) between the range of minRot and maxRot 
 def ftb_random_rotation(minRot = 0.0, maxRot = 0.0, randomizeDirection = True):

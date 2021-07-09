@@ -1,7 +1,4 @@
 import bpy
-from random import uniform
-from mathutils import Vector
-
 from bpy.types import Panel
 
 class FTB_PT_Rotator_Panel(Panel):

@@ -1,5 +1,3 @@
-import bpy
-
 from bpy.types import Panel
 
 class FTB_PT_Checking_Panel(Panel):

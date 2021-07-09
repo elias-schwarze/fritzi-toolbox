@@ -1,5 +1,4 @@
 import bpy
-
 from bpy.types import Panel
 
 class FTB_PT_PreviewRender_Panel(Panel):
