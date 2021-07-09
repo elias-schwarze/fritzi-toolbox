@@ -15,7 +15,9 @@ class FTB_OT_Preview_Render_Op(Operator):
         storedRenderPath = bpy.context.scene.render.filepath
         storedRenderCam = bpy.context.scene.camera
 
-        renderElements = [wm.bEnableFront, wm.bEnableBack, wm.bEnableLeft, wm.bEnableRight, wm.bEnable45FrontLeft, wm.bEnable45FrontRight, wm.bEnable45RearLeft, wm.bEnable45RearRight, wm.bEnableTop, wm.bEnableBottom]
+        renderElements = [wm.bEnableFront, wm.bEnableBack, wm.bEnableLeft, wm.bEnableRight,
+                        wm.bEnable45FrontLeft, wm.bEnable45FrontRight, wm.bEnable45RearLeft,
+                         wm.bEnable45RearRight, wm.bEnableTop, wm.bEnableBottom]
 
         if (not wm.sOutputPath):
             self.report({'WARNING'}, 'Output path is not set')
