@@ -32,6 +32,9 @@ from .batch_rotator.ftb_rotator_pnl import *
 from .preview_render.ftb_previewRender_op import *
 from .preview_render.ftb_previewRender_pnl import *
 
+from .preview_import.ftb_previewImport_op import *
+from .preview_import.ftb_previewImport_pnl import *
+
 classes = (
     FTB_OT_Apply_All_Op,
     FTB_PT_Checking_Panel,
@@ -59,7 +62,10 @@ classes = (
 
     FTB_PT_PreviewRender_Panel,
     FTB_PT_PreviewSelector_Panel,
-    FTB_OT_Preview_Render_Op
+    FTB_OT_Preview_Render_Op,
+
+    FTB_OT_Preview_Import_Op,
+    FTB_PT_PreviewImport_Panel
 
     )
 
