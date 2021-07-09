@@ -41,35 +41,53 @@ class FTB_OT_Preview_Render_Op(Operator):
 
             bpy.context.scene.camera = previewCamObject
 
+            renderElements = [wm.bEnableFront, wm.bEnableBack, wm.bEnableLeft, wm.bEnableRight, wm.bEnable45Left, wm.bEnable45Right, wm.bEnableTop]
+            totalRenderCount = sum(renderElements)
+            currentRenderCount = 0
+
+            wm.progress_begin(0,totalRenderCount)
+
             if wm.bEnableFront:
                 previewEmpty.rotation_euler[2] = 0
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_front")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
                 
             if wm.bEnableBack:
                 previewEmpty.rotation_euler[2] = math.pi
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_back")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             if wm.bEnableLeft:
                 previewEmpty.rotation_euler[2] = -90*math.pi/180
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_left")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             if wm.bEnableRight:
                 previewEmpty.rotation_euler[2] = 90*math.pi/180
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_right")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             if wm.bEnable45Left:
                 previewEmpty.rotation_euler[2] = -45*math.pi/180
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_45left")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             if wm.bEnable45Right:
                 previewEmpty.rotation_euler[2] = 45*math.pi/180
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_45right")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             if wm.bEnableTop:
                 previewEmpty.rotation_euler[2] = 0
@@ -77,11 +95,14 @@ class FTB_OT_Preview_Render_Op(Operator):
                 previewCamObject.location[2] = 0
                 bpy.context.scene.render.filepath = (wm.sOutputPath + wm.sFileName + "_top")
                 bpy.ops.render.render(write_still = 1)
+                currentRenderCount +=1
+                wm.progress_update(currentRenderCount)
 
             bpy.context.scene.render.filepath = storedRenderPath
             bpy.data.objects.remove(previewCamObject, do_unlink=True)
             bpy.data.objects.remove(previewEmpty, do_unlink=True)
             bpy.data.cameras.remove(previewCamData, do_unlink=True)
+            wm.progress_end()
 
 
 
