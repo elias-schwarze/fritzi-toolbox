@@ -15,8 +15,11 @@ class FTB_PT_PreviewRender_Panel(Panel):
         bpy.types.WindowManager.bEnableLeft = bpy.props.BoolProperty()
         bpy.types.WindowManager.bEnableRight = bpy.props.BoolProperty()
         bpy.types.WindowManager.bEnableTop = bpy.props.BoolProperty()
-        bpy.types.WindowManager.bEnable45Left = bpy.props.BoolProperty()
-        bpy.types.WindowManager.bEnable45Right = bpy.props.BoolProperty()
+        bpy.types.WindowManager.bEnableBottom = bpy.props.BoolProperty()
+        bpy.types.WindowManager.bEnable45FrontLeft = bpy.props.BoolProperty()
+        bpy.types.WindowManager.bEnable45FrontRight = bpy.props.BoolProperty()
+        bpy.types.WindowManager.bEnable45RearLeft = bpy.props.BoolProperty()
+        bpy.types.WindowManager.bEnable45RearRight = bpy.props.BoolProperty()
 
         bpy.types.WindowManager.sOutputPath = bpy.props.StringProperty(subtype='DIR_PATH')
         bpy.types.WindowManager.sFileName = bpy.props.StringProperty(subtype='FILE_NAME')
@@ -59,9 +62,13 @@ class FTB_PT_PreviewSelector_Panel(Panel):
             row.prop(context.window_manager, "bEnableRight", text="Right", toggle=True)
 
             row = layout.row(align=True)
-            row.prop(context.window_manager, "bEnable45Left", text="45° Left", toggle=True)
-            row.prop(context.window_manager, "bEnable45Right", text="45° Right", toggle=True)
+            row.prop(context.window_manager, "bEnable45FrontLeft", text="45° Front Left", toggle=True)
+            row.prop(context.window_manager, "bEnable45FrontRight", text="45° Front Right", toggle=True)
 
-            row = layout.row()
+            row = layout.row(align=True)
+            row.prop(context.window_manager, "bEnable45RearLeft", text="45° Rear Left", toggle=True)
+            row.prop(context.window_manager, "bEnable45RearRight", text="45° Rear Right", toggle=True)
+
+            row = layout.row(align=True)
             row.prop(context.window_manager, "bEnableTop", text="Top", toggle=True)
-
+            row.prop(context.window_manager, "bEnableBottom", text="Bottom", toggle=True)

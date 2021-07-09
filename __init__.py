@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Elias Schwarze",
     "description" : "A suite of tools for the Fritzi Project",
     "blender" : (2, 93, 0),
-    "version" : (0, 0, 8),
+    "version" : (0, 0, 9),
     "location" : "3D Viewport > Properties panel (N) > FTB Tab",
     "warning" : "Deactivate old version, then restart Blender before installing a newer version",
     "category" : "Object"
@@ -45,7 +45,7 @@ classes = (
     FTB_OT_CopyLocation_Op,
     FTB_OT_CopyRotation_Op,
     FTB_OT_CopyScale_Op,
-    
+
     FTB_OT_SelectScaleNonOne_Op,
     FTB_OT_SelectScaleNonUniform_Op,
 
