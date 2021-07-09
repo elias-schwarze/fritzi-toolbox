@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Elias Schwarze",
     "description" : "A suite of tools for the Fritzi Project",
     "blender" : (2, 93, 0),
-    "version" : (0, 0, 7),
+    "version" : (0, 0, 8),
     "location" : "3D Viewport > Properties panel (N) > FTB Tab",
     "warning" : "Deactivate old version, then restart Blender before installing a newer version",
     "category" : "Object"
