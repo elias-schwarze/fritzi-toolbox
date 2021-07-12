@@ -52,17 +52,17 @@ def register():
 
 
 def unregister():
-    ftb_rotator_op.unregister()
-    ftb_rotator_pnl.unregister()
-
-    ftb_dataEditing_op.unregister()
-    ftb_dataEditing_pnl.unregister()
-
-    ftb_objectChecking_op.unregister()
-    ftb_objectChecking_pnl.unregister()
-
-    ftb_previewRender_op.unregister()
-    ftb_previewRender_pnl.unregister()
-
-    ftb_previewImport_op.unregister()
     ftb_previewImport_pnl.unregister()
+    ftb_previewImport_op.unregister()
+
+    ftb_previewRender_pnl.unregister()
+    ftb_previewRender_op.unregister()
+
+    ftb_objectChecking_pnl.unregister()
+    ftb_objectChecking_op.unregister()
+
+    ftb_dataEditing_pnl.unregister()
+    ftb_dataEditing_op.unregister()
+
+    ftb_rotator_pnl.unregister()
+    ftb_rotator_op.unregister()
