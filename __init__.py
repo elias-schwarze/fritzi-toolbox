@@ -35,8 +35,9 @@ from .preview_render.ftb_previewRender_pnl import *
 from .preview_import.ftb_previewImport_op import *
 from .preview_import.ftb_previewImport_pnl import *
 
+
+# Collect all classes into one list to register and unregister
 classes = (
-    FTB_OT_Apply_All_Op,
     FTB_PT_Checking_Panel,
     FTB_PT_DataEditing_Panel,
 
@@ -66,7 +67,6 @@ classes = (
 
     FTB_OT_Preview_Import_Op,
     FTB_PT_PreviewImport_Panel
-
     )
 
 def register():

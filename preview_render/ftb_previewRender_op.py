@@ -1,7 +1,6 @@
 import bpy
 import math
 from bpy.types import Operator
-#from ..ftb_utils import
 
 class FTB_OT_Preview_Render_Op(Operator):
     bl_idname = "object.preview_render"
