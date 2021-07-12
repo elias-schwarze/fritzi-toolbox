@@ -11,68 +11,58 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+from .preview_import import ftb_previewImport_pnl
+from .preview_import import ftb_previewImport_op
+from .preview_render import ftb_previewRender_pnl
+from .preview_render import ftb_previewRender_op
+from .object_checking import ftb_objectChecking_pnl
+from .object_checking import ftb_objectChecking_op
+from .data_editing import ftb_dataEditing_pnl
+from .data_editing import ftb_dataEditing_op
+from .batch_rotator import ftb_rotator_pnl
+from .batch_rotator import ftb_rotator_op
+
 bl_info = {
-    "name" : "fritziToolbox",
-    "author" : "Elias Schwarze",
-    "description" : "A suite of tools for the Fritzi Project",
-    "blender" : (2, 93, 0),
-    "version" : (0, 0, 9),
-    "location" : "3D Viewport > Properties panel (N) > FTB Tab",
-    "warning" : "Deactivate old version, then restart Blender before installing a newer version",
-    "category" : "Object"
+    "name": "fritziToolbox",
+    "author": "Elias Schwarze",
+    "description": "A suite of tools for the Fritzi Project",
+    "blender": (2, 93, 0),
+    "version": (0, 0, 9),
+    "location": "3D Viewport > Properties panel (N) > FTB Tab",
+    "warning": "Deactivate old version, then restart Blender before installing a newer version",
+    "category": "Object"
 }
 
-import bpy
-
-from . ftb_op import *
-from . ftb_pnl import *
-from .batch_rotator.ftb_rotator_op import *
-from .batch_rotator.ftb_rotator_pnl import *
-
-from .preview_render.ftb_previewRender_op import *
-from .preview_render.ftb_previewRender_pnl import *
-
-from .preview_import.ftb_previewImport_op import *
-from .preview_import.ftb_previewImport_pnl import *
-
-
-# Collect all classes into one list to register and unregister
-classes = (
-    FTB_PT_Checking_Panel,
-    FTB_PT_DataEditing_Panel,
-
-    FTB_OT_Toggle_Face_Orient_Op,
-
-    FTB_OT_CopyLocation_Op,
-    FTB_OT_CopyRotation_Op,
-    FTB_OT_CopyScale_Op,
-
-    FTB_OT_SelectScaleNonOne_Op,
-    FTB_OT_SelectScaleNonUniform_Op,
-
-    FTB_OT_SetToCenter_Op,
-    FTB_OT_OriginToCursor_Op,
-    FTB_OT_CheckNgons_Op,
-
-    FTB_OT_RemoveMaterials_Op,
-    FTB_OT_PurgeUnusedData_Op,
-    FTB_OT_OverrideRetainTransform_Op,
-
-    FTB_PT_Rotator_Panel,
-    FTB_OT_Random_Rotation_Op,
-
-    FTB_PT_PreviewRender_Panel,
-    FTB_PT_PreviewSelector_Panel,
-    FTB_OT_Preview_Render_Op,
-
-    FTB_OT_Preview_Import_Op,
-    FTB_PT_PreviewImport_Panel
-    )
 
 def register():
-    for c in classes:
-        bpy.utils.register_class(c)
+    ftb_rotator_op.register()
+    ftb_rotator_pnl.register()
+
+    ftb_dataEditing_op.register()
+    ftb_dataEditing_pnl.register()
+
+    ftb_objectChecking_op.register()
+    ftb_objectChecking_pnl.register()
+
+    ftb_previewRender_op.register()
+    ftb_previewRender_pnl.register()
+
+    ftb_previewImport_op.register()
+    ftb_previewImport_pnl.register()
+
 
 def unregister():
-    for c in classes:
-        bpy.utils.unregister_class(c)
+    ftb_rotator_op.unregister()
+    ftb_rotator_pnl.unregister()
+
+    ftb_dataEditing_op.unregister()
+    ftb_dataEditing_pnl.unregister()
+
+    ftb_objectChecking_op.unregister()
+    ftb_objectChecking_pnl.unregister()
+
+    ftb_previewRender_op.unregister()
+    ftb_previewRender_pnl.unregister()
+
+    ftb_previewImport_op.unregister()
+    ftb_previewImport_pnl.unregister()
