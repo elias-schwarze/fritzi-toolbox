@@ -50,6 +50,7 @@ class FTB_OT_Preview_Render_Op(Operator):
         previewCamObject.location = (0, -5.53, 1)
         previewCamObject.rotation_euler = ((90*math.pi/180), 0, 0)
 
+        bpy.ops.mesh.primitive_grid_add(name="test" ,x_subdivisions=60, y_subdivisions=60, size=6, enter_editmode=False, align='WORLD', location=(0,0,0), scale=(0,0,0))
 
         bpy.context.view_layer.update()
         bpy.context.scene.camera = previewCamObject

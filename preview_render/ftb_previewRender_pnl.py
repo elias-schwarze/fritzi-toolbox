@@ -21,6 +21,8 @@ class FTB_PT_PreviewRender_Panel(Panel):
         bpy.types.WindowManager.bEnable45RearLeft = bpy.props.BoolProperty()
         bpy.types.WindowManager.bEnable45RearRight = bpy.props.BoolProperty()
 
+        bpy.types.WindowManager.bRenderGrid = bpy.props.BoolProperty(default=True)
+
         bpy.types.WindowManager.sOutputPath = bpy.props.StringProperty(subtype='DIR_PATH')
         bpy.types.WindowManager.sFileName = bpy.props.StringProperty(subtype='FILE_NAME')
 
@@ -34,6 +36,9 @@ class FTB_PT_PreviewRender_Panel(Panel):
 
             col.label(text="File Name:")
             col.prop(context.window_manager, "sFileName", text="")
+
+            col = layout.column()
+            col.prop(context.window_manager, "bRenderGrid", text="Render Grid")
 
             col = layout.column()
             col.scale_y = 1.5
