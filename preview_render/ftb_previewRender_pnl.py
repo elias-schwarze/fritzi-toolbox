@@ -24,9 +24,9 @@ class FTB_PT_PreviewRender_Panel(Panel):
     bpy.types.WindowManager.bRenderGrid = bpy.props.BoolProperty(default=False)
 
     bpy.types.WindowManager.sOutputPath = bpy.props.StringProperty(
-        subtype='DIR_PATH')
+        subtype='DIR_PATH', name="Output path")
     bpy.types.WindowManager.sFileName = bpy.props.StringProperty(
-        subtype='FILE_NAME')
+        subtype='FILE_NAME', name="File name")
 
     def draw(self, context):
         layout = self.layout
