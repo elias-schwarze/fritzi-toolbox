@@ -12,18 +12,8 @@ class FTB_PT_DataEditing_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
-
         col = layout.column()
-        col.operator("object.setup_burnins")
-
-        col = layout.column()
-        col.operator("object.disable_burnins")
-
-        col.label(text="Version Number:")
-
-        split = layout.split(factor=0.05)
-        split.label(text="v")
-        split.prop(context.window_manager, "sVersionNumber", text="")
+        col.operator("object.override_retain_transform")
 
 
 class FTB_PT_DataEditingDanger_Panel(Panel):
@@ -36,9 +26,6 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        col = layout.column()
-        col.operator("object.override_retain_transform")
 
         col = layout.column(align=True)
         col.operator("object.remove_all_materials",
