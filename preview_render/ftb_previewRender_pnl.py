@@ -39,8 +39,8 @@ class FTB_PT_PreviewRender_Panel(Panel):
         col.label(text="File Name:")
         col.prop(context.window_manager, "sFileName", text="")
 
-        col = layout.column()
-        col.prop(context.window_manager, "bRenderGrid", text="Render Grid")
+        # col = layout.column()
+        # col.prop(context.window_manager, "bRenderGrid", text="Render Grid")
 
         col = layout.column()
         col.scale_y = 1.5
@@ -83,7 +83,8 @@ class FTB_PT_PreviewSelector_Panel(Panel):
                  text="45° Rear Right", toggle=True)
 
         row = layout.row(align=True)
-        row.prop(context.window_manager, "bEnableTop", text="Top", toggle=True)
+        row.prop(context.window_manager, "bEnableTop",
+                 text="Top", toggle=True)
         row.prop(context.window_manager, "bEnableBottom",
                  text="Bottom", toggle=True)
 
