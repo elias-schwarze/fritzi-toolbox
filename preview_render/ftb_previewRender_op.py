@@ -10,6 +10,12 @@ class FTB_OT_Preview_Render_Op(Operator):
     bl_description = "Render previews"
     bl_options = {"REGISTER", "UNDO"}
 
+    def invoke(self, context, event):
+        if(bpy.context.scene.render.image_settings.file_format in ['AVI_JPEG', 'AVI_RAW', 'FFMPEG']):
+            self.report(
+                {'WARNING'}, "Please select a non-animation output format")
+            return {'CANCELLED'}
+
     def execute(self, context):
 
         wm = bpy.context.window_manager
@@ -30,11 +36,6 @@ class FTB_OT_Preview_Render_Op(Operator):
 
         if (sum(renderElements) == 0):
             self.report({'WARNING'}, 'No preview angles selected')
-            return {'CANCELLED'}
-
-        if (bpy.context.scene.render.image_settings.file_format in ['AVI_JPEG', 'AVI_RAW', 'FFMPEG']):
-            self.report(
-                {'WARNING'}, 'Invalid Output Format, please select an image format')
             return {'CANCELLED'}
 
         previewEmpty = bpy.data.objects.new("ftb_preview_empty", None)
