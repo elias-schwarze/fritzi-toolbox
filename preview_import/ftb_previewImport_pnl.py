@@ -1,3 +1,4 @@
+import bpy
 import bpy.utils
 
 from bpy.types import Panel
@@ -12,8 +13,12 @@ class FTB_PT_PreviewImport_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
+        col = layout.column()
+        col.scale_y = 1.5
+        col.operator("object.preview_import")
 
         col = layout.column()
+        col.operator("object.preview_reload")
 
 
 def register():
