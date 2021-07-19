@@ -15,6 +15,8 @@ class FTB_OT_Preview_Render_Op(Operator):
             self.report(
                 {'WARNING'}, "Please select a non-animation output format")
             return {'CANCELLED'}
+        else:
+            return self.execute(context)
 
     def execute(self, context):
 
