@@ -1,5 +1,5 @@
 # fritzi-toolbox (Blender 2.9x addon)
- A suite of tools for the Fritzi Project including:
+ A suite of tools for Blender 3D production including:
  - Tools for checking objects and meshes for unwanted transformations, normals and topology
  - Tool for creating Library Overrides while keeping the transform of the instancer Object
  - Batch Rotator, to add rotation to many objects at once
