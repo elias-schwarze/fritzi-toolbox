@@ -4,7 +4,7 @@ from bpy.types import Operator
 
 from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
-from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
+from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 
 
 class FTB_OT_Toggle_Face_Orient_Op(Operator):
@@ -46,6 +46,12 @@ class FTB_OT_SelectScaleNonOne_Op(Operator):
                 if o.scale[0] != 1 or o.scale[1] != 1 or o.scale[2] != 1:
                     o.select_set(True)
 
+        counter = 0
+        for obj in bpy.context.selected_objects:
+            counter += 1
+
+        self.report({'INFO'}, str(counter) + " objects with unapplied scale")
+
         return {'FINISHED'}
 
 
@@ -72,6 +78,12 @@ class FTB_OT_SelectScaleNonUniform_Op(Operator):
             if o.type == 'MESH':
                 if not (o.scale[0] == o.scale[1] == o.scale[2]):
                     o.select_set(True)
+
+        counter = 0
+        for obj in bpy.context.selected_objects:
+            counter += 1
+
+        self.report({'INFO'}, str(counter) + " objects with non uniform scale")
 
         return {'FINISHED'}
 
@@ -144,21 +156,29 @@ class FTB_OT_CheckNgons_Op(Operator):
 
         return False
 
-    def execute(self, context):
+    def invoke(self, context, event):
         obj = context.object
 
-        # if in object mode switch to edit and select ngons
         if obj and obj.mode == 'OBJECT':
             bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_face_by_sides(
-                number=4, type='GREATER', extend=False)
-            return {'FINISHED'}
+            return self.execute(context)
 
-        # if in edit mode select ngons directly
         elif obj != None and obj.mode == 'EDIT':
-            bpy.ops.mesh.select_face_by_sides(
-                number=4, type='GREATER', extend=False)
-            return {'FINISHED'}
+            return self.execute(context)
+
+        else:
+            self.report({'ERROR'}, "Invalid Selection")
+            return {'CANCELLED'}
+
+    def execute(self, context):
+        obj = context.object
+        bpy.ops.mesh.select_face_by_sides(
+            number=4, type='GREATER', extend=False)
+
+        currentMesh = bpy.context.object.data
+        ngonCount = currentMesh.count_selected_items()[2]
+        self.report({'INFO'}, str(ngonCount) + " Ngons in Object")
+        return {'FINISHED'}
 
 
 class FTB_OT_CopyLocation_Op(Operator):
