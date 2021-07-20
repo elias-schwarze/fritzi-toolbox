@@ -222,14 +222,30 @@ class FTB_OT_Preview_Render_Op(Operator):
         bpy.data.objects.remove(previewEmpty, do_unlink=True)
         bpy.data.cameras.remove(previewCamData, do_unlink=True)
         wm.progress_end()
-        self.report({'INFO'}, 'Finished')
+        self.report({'INFO'}, "Finished")
 
+        return {'FINISHED'}
+
+
+class FTB_OT_Set_JPG_Output_Op(Operator):
+    bl_idname = "scene.set_jpg_output"
+    bl_label = "Set JPEG Output"
+    bl_description = "Set output format to still image JPG with 90% Quality"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.context.scene.render.image_settings.file_format = 'JPEG'
+        bpy.context.scene.render.image_settings.quality = 90
+        self.report({'INFO'}, "Output set to JPEG")
         return {'FINISHED'}
 
 
 def register():
     bpy.utils.register_class(FTB_OT_Preview_Render_Op)
+    bpy.utils.register_class(FTB_OT_Set_JPG_Output_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_Set_JPG_Output_Op)
     bpy.utils.unregister_class(FTB_OT_Preview_Render_Op)

@@ -32,6 +32,9 @@ class FTB_PT_PreviewRender_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+        col.operator("scene.set_jpg_output")
+
+        col = layout.column()
 
         col.label(text="Output Directory:")
         col.prop(context.window_manager, "sOutputPath", text="")
