@@ -14,6 +14,8 @@ class FTB_PT_DataEditing_Panel(Panel):
         layout = self.layout
         col = layout.column()
         col.operator("object.override_retain_transform")
+        col = layout.column()
+        col.operator("object.collection_name_to_material")
 
 
 class FTB_PT_DataEditingDanger_Panel(Panel):
