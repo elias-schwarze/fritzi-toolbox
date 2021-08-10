@@ -124,11 +124,33 @@ class FTB_OT_CollectionNameToMaterial_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_ObjectNameToMaterial_Op(Operator):
+    bl_idname = "object.object_name_to_material"
+    bl_label = "Object Name To Material"
+    bl_description = "Name the active Material the same as the active Object"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT" and obj.type == 'MESH':
+                return True
+        return False
+
+    def execute(self, context):
+        bpy.context.active_object.active_material.name = bpy.context.active_object.name
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
+    bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
 
 
 def unregister():
@@ -136,3 +158,4 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.unregister_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)
+    bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)

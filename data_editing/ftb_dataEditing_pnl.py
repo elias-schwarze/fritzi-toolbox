@@ -12,8 +12,16 @@ class FTB_PT_DataEditing_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
+
         col = layout.column()
         col.operator("object.override_retain_transform")
+
+        col = layout.column()
+        col.label(text="Naming:")
+
+        col = layout.column()
+        col.operator("object.object_name_to_material")
+
         col = layout.column()
         col.operator("object.collection_name_to_material")
 
