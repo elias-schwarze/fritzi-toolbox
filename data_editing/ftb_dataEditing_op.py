@@ -154,8 +154,8 @@ def register():
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.unregister_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)
-    bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
