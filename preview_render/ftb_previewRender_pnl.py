@@ -42,8 +42,8 @@ class FTB_PT_PreviewRender_Panel(Panel):
         col.label(text="File Name:")
         col.prop(context.window_manager, "sFileName", text="")
 
-        # col = layout.column()
-        # col.prop(context.window_manager, "bRenderGrid", text="Render Grid")
+        col = layout.column()
+        col.prop(context.window_manager, "bRenderGrid", text="Render Grid")
 
         col = layout.column()
         col.scale_y = 1.5

@@ -10,6 +10,14 @@ class FTB_OT_Preview_Render_Op(Operator):
     bl_description = "Render previews"
     bl_options = {"REGISTER", "UNDO"}
 
+    def addGrid():
+        gridMesh = bpy.data.meshes.new("gridMesh")
+        gridObject = bpy.data.objects.new("ftb_preview_grid", gridMesh)
+        bpy.context.scene.collection.objects.link(gridObject)
+
+    def removeGrid():
+        pass
+
     def invoke(self, context, event):
         if(bpy.context.scene.render.image_settings.file_format in ['AVI_JPEG', 'AVI_RAW', 'FFMPEG']):
             self.report(
@@ -56,10 +64,11 @@ class FTB_OT_Preview_Render_Op(Operator):
         previewCamObject.location = (0, -5.53, 1)
         previewCamObject.rotation_euler = ((90*math.pi/180), 0, 0)
 
-        # if (wm.bRenderGrid):
-        #     bpy.ops.mesh.primitive_grid_add(x_subdivisions=60, y_subdivisions=60, size=6,
-        #                                     enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0, 0, 0))
-
+        if (wm.bRenderGrid):
+            # bpy.ops.mesh.primitive_grid_add(x_subdivisions=60, y_subdivisions=60, size=6,
+            # enter_editmode=False, align='WORLD', location=(0, 0, 0), scale=(0, 0, 0))
+            addGrid()
+            
         bpy.context.view_layer.update()
         bpy.context.view_layer.depsgraph.update()
         bpy.context.scene.camera = previewCamObject
