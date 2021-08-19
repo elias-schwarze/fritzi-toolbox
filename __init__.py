@@ -11,7 +11,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from .preview_import import ftb_previewImport_pnl
 from .preview_import import ftb_previewImport_op
 
 from .preview_render import ftb_previewRender_pnl
@@ -56,7 +55,6 @@ def register():
     ftb_previewRender_pnl.register()
 
     ftb_previewImport_op.register()
-    ftb_previewImport_pnl.register()
 
     ftb_burnInRender_op.register()
     ftb_burnInRender_pnl.register()
@@ -67,7 +65,6 @@ def unregister():
     ftb_burnInRender_pnl.unregister()
     ftb_burnInRender_op.unregister()
 
-    ftb_previewImport_pnl.unregister()
     ftb_previewImport_op.unregister()
 
     ftb_previewRender_pnl.unregister()

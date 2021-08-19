@@ -6,7 +6,7 @@ from bpy.types import Panel
 class FTB_PT_PreviewRender_Panel(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_label = "Preview Render"
+    bl_label = "Previews"
     bl_category = "FTB"
     bl_options = {"DEFAULT_CLOSED"}
 
@@ -30,6 +30,16 @@ class FTB_PT_PreviewRender_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
+
+        col = layout.column()
+        col.scale_y = 1.5
+        col.operator("object.preview_import")
+
+        col = layout.column()
+        col.operator("object.preview_reload")
+
+        col = layout.separator()
+        col = layout.separator()
 
         col = layout.column()
         col.operator("scene.set_jpg_output")
