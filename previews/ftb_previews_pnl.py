@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Panel
 
 
-class FTB_PT_PreviewRender_Panel(Panel):
+class FTB_PT_Previews_Panel(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_label = "Preview Render"
@@ -32,6 +32,18 @@ class FTB_PT_PreviewRender_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+        col.operator("object.preview_import")
+        col.scale_y = 1.5
+
+        col = layout.column()
+        col.operator("object.preview_reload")
+
+        col = layout.column()
+        col.separator()
+        col = layout.column()
+        col.separator()
+
+        col = layout.column()
         col.operator("scene.set_jpg_output")
 
         col = layout.column()
@@ -56,7 +68,7 @@ class FTB_PT_PreviewSelector_Panel(Panel):
     bl_region_type = "UI"
     bl_label = "Preview Selection"
     bl_category = "FTB"
-    bl_parent_id = "FTB_PT_PreviewRender_Panel"
+    bl_parent_id = "FTB_PT_Previews_Panel"
 
     def draw(self, context):
         layout = self.layout
@@ -93,10 +105,10 @@ class FTB_PT_PreviewSelector_Panel(Panel):
 
 
 def register():
-    bpy.utils.register_class(FTB_PT_PreviewRender_Panel)
+    bpy.utils.register_class(FTB_PT_Previews_Panel)
     bpy.utils.register_class(FTB_PT_PreviewSelector_Panel)
 
 
 def unregister():
-    bpy.utils.unregister_class(FTB_PT_PreviewRender_Panel)
+    bpy.utils.unregister_class(FTB_PT_Previews_Panel)
     bpy.utils.unregister_class(FTB_PT_PreviewSelector_Panel)
