@@ -29,6 +29,7 @@ from .batch_rotator import ftb_rotator_op
 from .burn_in_render import ftb_burnInRender_pnl
 from .burn_in_render import ftb_burnInRender_op
 
+from .displacement_tools import ftb_displaceTools_op
 
 bl_info = {
     "name": "fritziToolbox",
@@ -61,8 +62,12 @@ def register():
     ftb_burnInRender_op.register()
     ftb_burnInRender_pnl.register()
 
+    ftb_displaceTools_op.register()
+
 
 def unregister():
+
+    ftb_displaceTools_op.unregister()
 
     ftb_burnInRender_pnl.unregister()
     ftb_burnInRender_op.unregister()
