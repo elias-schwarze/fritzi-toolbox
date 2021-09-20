@@ -29,9 +29,6 @@ class FTB_OT_SetupBurnins_Op(Operator):
 
         render = bpy.context.scene.render
 
-        render.image_settings.file_format = 'JPEG'
-        render.image_settings.quality = 90
-
         render.metadata_input = 'SCENE'
         render.use_stamp_date = True
         render.use_stamp_frame = True
