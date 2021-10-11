@@ -29,6 +29,9 @@ from .burn_in_render import ftb_burnInRender_op
 from .displacement_tools import ftb_displaceTools_op
 from .displacement_tools import ftb_displaceTools_pnl
 
+from .default_setup import ftb_default_lineart_op
+from .default_setup import ftb_default_lineart_pnl
+
 bl_info = {
     "name": "fritziToolbox",
     "author": "Elias Schwarze",
@@ -60,8 +63,14 @@ def register():
     ftb_displaceTools_op.register()
     ftb_displaceTools_pnl.register()
 
+    ftb_default_lineart_op.register()
+    ftb_default_lineart_pnl.register()
+
 
 def unregister():
+
+    ftb_default_lineart_pnl.unregister()
+    ftb_default_lineart_op.unregister()
 
     ftb_displaceTools_pnl.unregister()
     ftb_displaceTools_op.unregister()
