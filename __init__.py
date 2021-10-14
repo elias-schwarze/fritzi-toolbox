@@ -11,6 +11,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+import bpy
+
+from . import addon_updater_ops
+from . import updater_ui
+
 from .previews import ftb_previews_pnl
 from .previews import ftb_previews_op
 
@@ -44,7 +49,20 @@ bl_info = {
 }
 
 
+classes = (
+    updater_ui.DemoPreferences,
+    updater_ui.DemoUpdaterPanel
+)
+
+
 def register():
+
+    addon_updater_ops.register(bl_info)
+
+    for cls in classes:
+        addon_updater_ops.make_annotations(cls)  # Avoid blender 2.8 warnings.
+        bpy.utils.register_class(cls)
+
     ftb_rotator_op.register()
     ftb_rotator_pnl.register()
 
@@ -89,3 +107,7 @@ def unregister():
 
     ftb_rotator_pnl.unregister()
     ftb_rotator_op.unregister()
+
+    addon_updater_ops.unregister()
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
