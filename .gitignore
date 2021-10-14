@@ -6,3 +6,5 @@
 # Python cache files generated when running Blender
 # -------------------------------------------------
 *__pycache__*
+
+/fritzi-toolbox-updater/
