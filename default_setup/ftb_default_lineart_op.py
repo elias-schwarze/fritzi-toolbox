@@ -1,12 +1,12 @@
 import bpy
 
-from bpy.types import GreasePencil, Operator
+from bpy.types import Operator
 
 
 class FTB_OT_DefaultAddLineart_Op(Operator):
     bl_idname = "object.default_add_lineart"
-    bl_label = "Add Line Art Object"
-    bl_description = "Add a GPencil Object with the active collection as source. Automatically sets up default Line Art settings."
+    bl_label = "Add Default Line Art"
+    bl_description = "Add a GPencil Object with the active collection as source. Sets up default Line Art settings."
     bl_options = {"REGISTER", "UNDO"}
 
     # should only work in object mode
@@ -64,6 +64,18 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
 
         # lineModifier.source_collection
         bpy.context.scene.collection.objects.link(previewLineObj)
+
+        # add thickness modifier to gp object
+        thickModifier = previewLineObj.grease_pencil_modifiers.new(
+            "FS_Thickness", 'GP_THICK')
+
+        thickModifier.thickness_factor = 2.5
+        thickModifier.use_custom_curve = True
+        thickModifier.curve.curves[0].points.new(0.25, 0.5)
+        thickModifier.curve.curves[0].points.new(0.5, 0.5)
+        thickModifier.curve.curves[0].points.new(0.65, 0.85)
+        thickModifier.curve.curves[0].points.new(0.85, 0.4)
+        thickModifier.curve.update()
 
         return {'FINISHED'}
 
