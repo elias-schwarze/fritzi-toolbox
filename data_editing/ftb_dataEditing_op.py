@@ -145,15 +145,47 @@ class FTB_OT_ObjectNameToMaterial_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_FindOrphanedObjects_Op(Operator):
+    bl_idname = "object.find_orphaned_objects"
+    bl_label = "Find Orphaned Objects"
+    bl_description = "Find Objects that are not part of any View Layer or collection but are present in the .blend file"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def invoke(self, context, event):
+
+        orphanList = list()
+
+        for obj in bpy.data.objects:
+            if (len(obj.users_collection) <= 0):
+                orphanList.append(obj)
+
+        if (orphanList):
+            self.report({'WARNING'}, "Orphans found in File")
+            return bpy.context.window_manager.invoke_confirm(self, event)
+
+        else:
+            self.report({'INFO'}, "no orphans found")
+            return {'FINISHED'}
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            if(area.type == 'OUTLINER'):
+                area.
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
+    bpy.utils.register_class(FTB_OT_FindOrphanedObjects_Op)
 
 
 def unregister():
+
+    bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
