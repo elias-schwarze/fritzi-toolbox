@@ -45,7 +45,7 @@ bl_info = {
     "author": "Elias Schwarze",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (2, 93, 0),
-    "version": (0, 1, 6),
+    "version": (0, 1, 7),
     "location": "3D Viewport > Properties panel (N) > FTB Tab",
     "category": "Object"
 }
@@ -91,6 +91,8 @@ def register():
 
 
 def unregister():
+
+    # should be in reverse order of register()
 
     ftb_fbxToBvh_pnl.unregister()
     ftb_fbxToBvh_op.unregister()

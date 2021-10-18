@@ -145,15 +145,58 @@ class FTB_OT_ObjectNameToMaterial_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_FindOrphanedObjects_Op(Operator):
+    bl_idname = "object.find_orphaned_objects"
+    bl_label = "Find Orphaned Objects"
+    bl_description = "Find Objects that are not part of any View Layer or collection but are present in the .blend file"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def invoke(self, context, event):
+
+        orphanList = list()
+
+        for obj in bpy.data.objects:
+            if (len(obj.users_collection) <= 0):
+                orphanList.append(obj)
+
+        if (orphanList):
+            self.report({'WARNING'}, "Orphans found in File")
+            ShowMessageBox("Please check Outliner to find Objects that are not part of the current View Layer",
+                           "Orphaned objects found", 'ERROR')
+            return self.execute(context)
+
+        else:
+            self.report({'INFO'}, "no orphans found")
+            return {'FINISHED'}
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            if(area.type == 'OUTLINER'):
+                outliner_space = area.spaces[0]
+                outliner_space.display_mode = 'LIBRARIES'
+        return {'FINISHED'}
+
+
+def ShowMessageBox(message="", title="Message Box", icon='INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
+    bpy.utils.register_class(FTB_OT_FindOrphanedObjects_Op)
 
 
 def unregister():
+
+    bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)

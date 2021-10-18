@@ -25,6 +25,12 @@ class FTB_PT_DataEditing_Panel(Panel):
         col = layout.column()
         col.operator("object.collection_name_to_material")
 
+        col = layout.column()
+        col.label(text="Orphan Data:")
+
+        col = layout.column()
+        col.operator("object.find_orphaned_objects")
+
 
 class FTB_PT_DataEditingDanger_Panel(Panel):
     bl_label = "Danger Zone"
