@@ -13,28 +13,18 @@ class FTB_OT_batchFbxBvh_Op(Operator):
     def poll(cls, context):
         obj = context.object
 
+        if not obj:
+            return True
         if obj:
             if obj.mode == "OBJECT":
                 return True
         return False
 
     def invoke(self, context, event):
-        if (bpy.context.object is None):
-            self.report(
-                {'WARNING'}, "No active collection selected")
-            return {'CANCELLED'}
-
-        elif (hasattr(bpy.types, "EXPORT_OT_threejs")):
-            try:
-                bpy.ops.wm.addon_enable(module="threejs")
-            except ImportError:
-                print("Threejs importer addon not available")
-
-        else:
-            return self.execute(context)
+        return self.execute(context)
 
     def execute(self, context):
-
+        # #bpy.ops.import_scene.fbx()
         return {'FINISHED'}
 
 
