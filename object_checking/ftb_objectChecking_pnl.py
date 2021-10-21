@@ -1,3 +1,4 @@
+import bpy
 import bpy.utils
 from bpy.types import Panel
 
@@ -8,7 +9,11 @@ class FTB_PT_Checking_Panel(Panel):
     bl_label = "Object Checking"
     bl_category = "FTB"
 
+    bpy.types.WindowManager.bActiveCollectionOnly = bpy.props.BoolProperty(
+        default=True)
+
     def draw(self, context):
+
         layout = self.layout
 
         col = layout.column()
@@ -32,12 +37,17 @@ class FTB_PT_Checking_Panel(Panel):
         col.label(text="Origin")
 
         col.operator("object.center_object")
-
         col.operator("object.origin_to_cursor")
 
         col = layout.column()
         col.label(text="Mesh Checking")
         col.operator("object.check_ngons")
+
+        col = layout.column()
+        col.label(text="Material Slots")
+        col.operator("object.validate_mat_slots")
+        col.prop(context.window_manager,
+                 "bActiveCollectionOnly", text="Active Collection Only")
 
 
 def register():
