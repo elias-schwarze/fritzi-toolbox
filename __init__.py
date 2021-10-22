@@ -37,6 +37,9 @@ from .displacement_tools import ftb_displaceTools_pnl
 from .default_setup import ftb_default_lineart_op
 from .default_setup import ftb_default_lineart_pnl
 
+from .default_setup import ftb_default_render_settings_op
+from .default_setup import ftb_default_render_settings_pnl
+
 bl_info = {
     "name": "fritziToolbox",
     "author": "Elias Schwarze",
@@ -83,10 +86,16 @@ def register():
     ftb_default_lineart_op.register()
     ftb_default_lineart_pnl.register()
 
+    ftb_default_render_settings_op.register()
+    ftb_default_render_settings_pnl.register()
+
 
 def unregister():
 
     # should be in reverse order of register()
+
+    ftb_default_render_settings_pnl.unregister()
+    ftb_default_render_settings_op.unregister()
 
     ftb_default_lineart_pnl.unregister()
     ftb_default_lineart_op.unregister()
