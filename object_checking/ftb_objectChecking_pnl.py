@@ -22,14 +22,6 @@ class FTB_PT_Checking_Panel(Panel):
         col = layout.column()
         col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
 
-        col = layout.column()
-        col.label(text="Copy Attributes")
-
-        col = layout.column(align=True)
-        col.operator("object.copy_location")
-        col.operator("object.copy_rotation")
-        col.operator("object.copy_scale")
-
         col = layout.column(align=True)
         col.label(text="Scale Checking")
 

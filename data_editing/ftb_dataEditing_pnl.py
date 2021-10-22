@@ -14,6 +14,17 @@ class FTB_PT_DataEditing_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+        col.label(text="Copy Attributes")
+
+        col = layout.column(align=True)
+        col.operator("object.copy_location")
+        col.operator("object.copy_rotation")
+        col.operator("object.copy_scale")
+
+        col = layout.column()
+        col.label(text="Library Override")
+
+        col = layout.column()
         col.operator("object.override_retain_transform")
 
         col = layout.column()

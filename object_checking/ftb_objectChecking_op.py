@@ -181,84 +181,6 @@ class FTB_OT_CheckNgons_Op(Operator):
         return {'FINISHED'}
 
 
-class FTB_OT_CopyLocation_Op(Operator):
-    bl_idname = "object.copy_location"
-    bl_label = "Copy Location"
-    bl_description = "Copy location from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Loc(obj, sourceObj)
-        return {'FINISHED'}
-
-
-class FTB_OT_CopyRotation_Op(Operator):
-    bl_idname = "object.copy_rotation"
-    bl_label = "Copy Rotation"
-    bl_description = "Copy rotation from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Rot(obj, sourceObj)
-        return {'FINISHED'}
-
-
-class FTB_OT_CopyScale_Op(Operator):
-    bl_idname = "object.copy_scale"
-    bl_label = "Copy Scale"
-    bl_description = "Copy scale from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Sca(obj, sourceObj)
-        return {'FINISHED'}
-
-
 class FTB_OT_ValidateMatSlots_Op(Operator):
     bl_idname = "object.validate_mat_slots"
     bl_label = "Validate Mat Slots"
@@ -352,9 +274,6 @@ def register():
     bpy.utils.register_class(FTB_OT_SetToCenter_Op)
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.register_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.register_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.register_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
 
 
@@ -366,6 +285,3 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
     bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.unregister_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
