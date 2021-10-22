@@ -12,6 +12,9 @@ class FTB_PT_Checking_Panel(Panel):
     bpy.types.WindowManager.bActiveCollectionOnly = bpy.props.BoolProperty(
         default=True)
 
+    bpy.types.WindowManager.bIgnoreWithoutSlots = bpy.props.BoolProperty(
+        default=False)
+
     def draw(self, context):
 
         layout = self.layout
@@ -48,6 +51,8 @@ class FTB_PT_Checking_Panel(Panel):
         col.operator("object.validate_mat_slots")
         col.prop(context.window_manager,
                  "bActiveCollectionOnly", text="Active Collection Only")
+        col.prop(context.window_manager,
+                 "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
 
 
 def register():

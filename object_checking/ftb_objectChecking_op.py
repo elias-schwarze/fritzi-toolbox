@@ -285,28 +285,49 @@ class FTB_OT_ValidateMatSlots_Op(Operator):
 
         if (wm.bActiveCollectionOnly):
 
+            # Cancel if no active collection is found
             if not (bpy.context.collection):
                 self.report({'ERROR'}, "No active collection")
                 return {'CANCELLED'}
 
+            # Limit validation to Meshes Curves and Surfaces
             for obj in bpy.context.collection.all_objects:
                 if (obj.type in ['MESH', 'CURVE', 'SURFACE']):
 
-                    for slot in obj.material_slots:
-                        if slot.link == 'DATA':
-                            objList.append(obj)
+                    # Report Object if it has no material slots and user has selected option in the interface
+                    if (not obj.material_slots and wm.bIgnoreWithoutSlots == False):
+                        objList.append(obj)
+
+                    else:
+                        for slot in obj.material_slots:
+                            if slot.link == 'DATA':
+                                objList.append(obj)
 
         else:
+
+            # Limit validation to Meshes Curves and Surfaces
             for obj in bpy.context.view_layer.objects:
                 if (obj.type == ['MESH', 'CURVE', 'SURFACE']):
 
-                    for slot in obj.material_slots:
-                        if slot.link == 'DATA':
-                            objList.append(obj)
+                    # Report Object if it has no material slots and user has selected option in the interface
+                    if (not obj.material_slots and wm.bIgnoreWithoutSlots == False):
+                        objList.append(obj)
+
+                    else:
+                        for slot in obj.material_slots:
+                            if slot.link == 'DATA':
+                                objList.append(obj)
 
         if (objList):
-            self.report({'WARNING'}, "Found " + str(len(objList)) +
-                        " Objects with incorrect material slots")
+
+            if (wm.bIgnoreWithoutSlots):
+                self.report({'WARNING'}, "Found " + str(len(objList)) +
+                            " Objects with incorrect material slots")
+
+            if (not wm.bIgnoreWithoutSlots):
+                self.report({'WARNING'}, "Found " + str(len(objList)) +
+                            " Objects with incorrect or missing material slots")
+
             bpy.ops.object.select_all(action='DESELECT')
 
             if (wm.bActiveCollectionOnly):
