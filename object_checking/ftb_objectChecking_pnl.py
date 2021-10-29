@@ -40,11 +40,21 @@ class FTB_PT_Checking_Panel(Panel):
 
         col = layout.column()
         col.label(text="Material Slots")
-        col.operator("object.validate_mat_slots")
-        col.prop(context.window_manager,
-                 "bActiveCollectionOnly", text="Active Collection Only")
+
+        row = layout.row(align=True)
+        row.operator("object.validate_mat_slots")
+        row.prop(data=context.window_manager,
+                 property="bActiveCollectionOnly", toggle=True, icon_only=True, icon='OUTLINER_COLLECTION')
+
+        col = layout.column()
         col.prop(context.window_manager,
                  "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
+
+        # row = layout.row(align=True)
+        # row.prop(context.window_manager, "bEnableLeft",
+        #          text="Left", toggle=True)
+        # row.prop(context.window_manager, "bEnableRight",
+        #          text="Right", toggle=True)
 
 
 def register():
