@@ -318,11 +318,30 @@ class FTB_OT_FindOrphanTextures_Op(Operator):
     def poll(cls, context):
         return True
 
-    def execute(self, context):
-        if True:
-            pass
+    def invoke(self, context, event):
+
+        orphanList = list()
+
+        for img in bpy.data.images:
+            if (img.users <= 0):
+                orphanList.append(img)
+
+        if (orphanList):
+            self.report({'WARNING'}, "Orphan textures found in File")
+            ShowMessageBox("Please check Outliner to find Images that are do not have any users",
+                           "Orphaned objects found", 'ERROR')
+            return self.execute(context)
+
         else:
-            self.report({'INFO'}, "No invalid material slots found")
+            self.report({'INFO'}, "no unused textures")
+            return {'FINISHED'}
+
+    def execute(self, context):
+
+        for area in bpy.context.screen.areas:
+            if(area.type == 'OUTLINER'):
+                outliner_space = area.spaces[0]
+                outliner_space.display_mode = 'ORPHAN_DATA'
 
         return {'FINISHED'}
 
