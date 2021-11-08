@@ -39,6 +39,15 @@ class FTB_PT_Checking_Panel(Panel):
         col.operator("object.check_ngons")
 
         col = layout.column()
+        col.label(text="Orphan Data:")
+
+        col = layout.column()
+        col.operator("object.find_orphaned_objects")
+
+        col = layout.column()
+        col.operator("image.find_orphan_textures")
+
+        col = layout.column()
         col.label(text="Material Slots")
 
         row = layout.row(align=True)
