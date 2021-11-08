@@ -259,6 +259,92 @@ class FTB_OT_CopyScale_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_ValidateMatSlots_Op(Operator):
+    bl_idname = "object.validate_mat_slots"
+    bl_label = "Validate Mat Slots"
+    bl_description = "Validate if all objects have at least one material slot and if all material slots are stored on the object datablock"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+
+        objList = list()
+        wm = bpy.context.window_manager
+
+        if (wm.bActiveCollectionOnly):
+
+            # Cancel if no active collection is found
+            if not (bpy.context.collection):
+                self.report({'ERROR'}, "No active collection")
+                return {'CANCELLED'}
+
+            # Limit validation to Meshes Curves and Surfaces
+            for obj in bpy.context.collection.all_objects:
+                if (obj.type in ['MESH', 'CURVE', 'SURFACE']):
+
+                    # Report Object if it has no material slots and user has selected option in the interface
+                    if (not obj.material_slots and wm.bIgnoreWithoutSlots == False):
+                        objList.append(obj)
+
+                    else:
+                        for slot in obj.material_slots:
+                            if slot.link == 'DATA':
+                                objList.append(obj)
+
+        else:
+
+            # Limit validation to Meshes Curves and Surfaces
+            for obj in bpy.context.view_layer.objects:
+                if (obj.type == ['MESH', 'CURVE', 'SURFACE']):
+
+                    # Report Object if it has no material slots and user has selected option in the interface
+                    if (not obj.material_slots and wm.bIgnoreWithoutSlots == False):
+                        objList.append(obj)
+
+                    else:
+                        for slot in obj.material_slots:
+                            if slot.link == 'DATA':
+                                objList.append(obj)
+
+        if (objList):
+
+            if (wm.bIgnoreWithoutSlots):
+                self.report({'WARNING'}, "Found " + str(len(objList)) +
+                            " Objects with incorrect material slots")
+
+            if (not wm.bIgnoreWithoutSlots):
+                self.report({'WARNING'}, "Found " + str(len(objList)) +
+                            " Objects with incorrect or missing material slots")
+
+            bpy.ops.object.select_all(action='DESELECT')
+
+            if (wm.bActiveCollectionOnly):
+                for obj in objList:
+
+                    obj.select_set(True)
+
+            else:
+                for obj in objList:
+                    obj.select_set(True)
+
+        else:
+            self.report({'INFO'}, "No invalid material slots found")
+
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.register_class(FTB_OT_SelectScaleNonOne_Op)
@@ -269,9 +355,11 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyLocation_Op)
     bpy.utils.register_class(FTB_OT_CopyRotation_Op)
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
+    bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)
     bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
     bpy.utils.unregister_class(FTB_OT_SelectScaleNonUniform_Op)

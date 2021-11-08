@@ -14,6 +14,8 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
     def poll(cls, context):
         obj = context.object
 
+        if not obj:
+            return True
         if obj:
             if obj.mode == "OBJECT":
                 return True

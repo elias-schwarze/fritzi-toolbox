@@ -36,16 +36,19 @@ from .displacement_tools import ftb_displaceTools_pnl
 
 from .default_setup import ftb_default_lineart_op
 from .default_setup import ftb_default_lineart_pnl
+from .default_setup import ftb_default_render_settings_op
+from .default_setup import ftb_default_render_settings_pnl
 
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
+
 
 bl_info = {
     "name": "fritziToolbox",
     "author": "Elias Schwarze",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (2, 93, 0),
-    "version": (0, 1, 7),
+    "version": (0, 1, 8),
     "location": "3D Viewport > Properties panel (N) > FTB Tab",
     "category": "Object"
 }
@@ -86,6 +89,9 @@ def register():
     ftb_default_lineart_op.register()
     ftb_default_lineart_pnl.register()
 
+    ftb_default_render_settings_op.register()
+    ftb_default_render_settings_pnl.register()
+
     ftb_fbxToBvh_op.register()
     ftb_fbxToBvh_pnl.register()
 
@@ -93,9 +99,11 @@ def register():
 def unregister():
 
     # should be in reverse order of register()
-
     ftb_fbxToBvh_pnl.unregister()
     ftb_fbxToBvh_op.unregister()
+
+    ftb_default_render_settings_pnl.unregister()
+    ftb_default_render_settings_op.unregister()
 
     ftb_default_lineart_pnl.unregister()
     ftb_default_lineart_op.unregister()

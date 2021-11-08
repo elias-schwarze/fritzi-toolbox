@@ -8,7 +8,6 @@ class FTB_PT_DefaultAddLineart_Panel(Panel):
     bl_region_type = "UI"
     bl_label = "Line Art"
     bl_category = "FTB Defaults"
-    bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
         layout = self.layout
