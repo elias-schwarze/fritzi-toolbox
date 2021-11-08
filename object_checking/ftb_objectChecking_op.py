@@ -267,6 +267,26 @@ class FTB_OT_ValidateMatSlots_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_FindOrphanTextures_Op(Operator):
+    bl_idname = "image.find_orphan_textures"
+    bl_label = "Find Unused Textures"
+    bl_description = "Check if there are any image data blocks in .blend-file with no users"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        if True:
+            pass
+        else:
+            self.report({'INFO'}, "No invalid material slots found")
+
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.register_class(FTB_OT_SelectScaleNonOne_Op)
@@ -275,9 +295,11 @@ def register():
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.register_class(FTB_OT_CheckNgons_Op)
     bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
+    bpy.utils.register_class(FTB_OT_FindOrphanTextures_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_FindOrphanTextures_Op)
     bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)
     bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
