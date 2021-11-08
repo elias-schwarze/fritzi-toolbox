@@ -288,7 +288,7 @@ class FTB_OT_FindOrphanedObjects_Op(Operator):
             return self.execute(context)
 
         else:
-            self.report({'INFO'}, "no orphans found")
+            self.report({'INFO'}, "No orphans found")
             return {'FINISHED'}
 
     def execute(self, context):
@@ -333,7 +333,7 @@ class FTB_OT_FindOrphanTextures_Op(Operator):
             return self.execute(context)
 
         else:
-            self.report({'INFO'}, "no unused textures")
+            self.report({'INFO'}, "No unused textures")
             return {'FINISHED'}
 
     def execute(self, context):
