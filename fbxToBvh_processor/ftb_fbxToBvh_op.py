@@ -67,22 +67,41 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
         for obj in bpy.context.collection.all_objects:
             objectList.append(obj)
 
-        # list to keep track of already imported objects between each single import, so that we can find out the newest imported object and modify it
-        tempNameList = list()
+        # list to keep track of already imported rigs between each single import, so that we can find out the newest imported file
+        tempRigList = list()
+
+        # list to keep track of already imported objects between each single import, so that we can find newest object and modify it
+        tempObjList = list()
+
+        # single object that is currently being processed to bvh
+        tempObj: bpy.types.Object
+
+        # object list to contain all objects that are present in scene before import starts
+        for obj in bpy.context.collection.all_objects:
+            tempObjList.append(obj)
+
+        wm = bpy.context.window_manager
+
+        bpy.context.scene.frame_set(1)
 
         for file in self.files:
 
+            # import fbx file using the filepath from ImportHelper, set automatic bone orientation to true)
             bpy.ops.import_scene.fbx(filepath=(self.directory + file.name), global_scale=100,
                                      use_image_search=False, automatic_bone_orientation=True)
-            tempNameList.append(file.name)
-        print(tempNameList)
 
-        bpy.ops.object.select_all(action='DESELECT')
+            for obj in bpy.context.collection.all_objects:
+                if (not obj in tempObjList) and (obj.type == 'ARMATURE'):
+                    obj.name = file.name[:-4]
+                    endFrame = obj.animation_data.action.frame_range[1]
 
-        for obj in bpy.context.collection.all_objects:
-            if (not obj in objectList) and (obj.type == 'ARMATURE'):
-                obj.select_set(True)
+                    tempObjList.append(obj)
+                    tempRigList.append(obj)
 
+                    bpy.context.view_layer.objects.active = obj
+
+                    bpy.ops.export_anim.bvh(
+                        filepath=(wm.bvhOutputPath + obj.name + ".bvh"), frame_start=1, frame_end=endFrame)
         return {'FINISHED'}
 
 
