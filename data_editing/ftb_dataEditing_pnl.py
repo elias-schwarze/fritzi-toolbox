@@ -14,6 +14,17 @@ class FTB_PT_DataEditing_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+        col.label(text="Copy Attributes")
+
+        col = layout.column(align=True)
+        col.operator("object.copy_location")
+        col.operator("object.copy_rotation")
+        col.operator("object.copy_scale")
+
+        col = layout.column()
+        col.label(text="Library Override")
+
+        col = layout.column()
         col.operator("object.override_retain_transform")
 
         col = layout.column()
@@ -24,12 +35,6 @@ class FTB_PT_DataEditing_Panel(Panel):
 
         col = layout.column()
         col.operator("object.collection_name_to_material")
-
-        col = layout.column()
-        col.label(text="Orphan Data:")
-
-        col = layout.column()
-        col.operator("object.find_orphaned_objects")
 
 
 class FTB_PT_DataEditingDanger_Panel(Panel):

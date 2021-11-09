@@ -181,84 +181,6 @@ class FTB_OT_CheckNgons_Op(Operator):
         return {'FINISHED'}
 
 
-class FTB_OT_CopyLocation_Op(Operator):
-    bl_idname = "object.copy_location"
-    bl_label = "Copy Location"
-    bl_description = "Copy location from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Loc(obj, sourceObj)
-        return {'FINISHED'}
-
-
-class FTB_OT_CopyRotation_Op(Operator):
-    bl_idname = "object.copy_rotation"
-    bl_label = "Copy Rotation"
-    bl_description = "Copy rotation from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Rot(obj, sourceObj)
-        return {'FINISHED'}
-
-
-class FTB_OT_CopyScale_Op(Operator):
-    bl_idname = "object.copy_scale"
-    bl_label = "Copy Scale"
-    bl_description = "Copy scale from active object to selected"
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-
-        return False
-
-    def execute(self, context):
-
-        sourceObj = bpy.context.active_object
-
-        for obj in bpy.context.selected_objects:
-            ob_Copy_Vis_Sca(obj, sourceObj)
-        return {'FINISHED'}
-
-
 class FTB_OT_ValidateMatSlots_Op(Operator):
     bl_idname = "object.validate_mat_slots"
     bl_label = "Validate Mat Slots"
@@ -345,6 +267,85 @@ class FTB_OT_ValidateMatSlots_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_FindOrphanedObjects_Op(Operator):
+    bl_idname = "object.find_orphaned_objects"
+    bl_label = "Find Orphaned Objects"
+    bl_description = "Find Objects that are not part of any View Layer or collection but are present in the .blend file"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def invoke(self, context, event):
+
+        orphanList = list()
+
+        for obj in bpy.data.objects:
+            if (len(obj.users_collection) <= 0):
+                orphanList.append(obj)
+
+        if (orphanList):
+            self.report({'WARNING'}, "Orphans found in File")
+            ShowMessageBox("Please check Outliner to find Objects that are not part of the current View Layer",
+                           "Orphaned objects found", 'ERROR')
+            return self.execute(context)
+
+        else:
+            self.report({'INFO'}, "No orphans found")
+            return {'FINISHED'}
+
+    def execute(self, context):
+        for area in bpy.context.screen.areas:
+            if(area.type == 'OUTLINER'):
+                outliner_space = area.spaces[0]
+                outliner_space.display_mode = 'LIBRARIES'
+        return {'FINISHED'}
+
+
+def ShowMessageBox(message="", title="Message Box", icon='INFO'):
+
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+
+
+class FTB_OT_FindOrphanTextures_Op(Operator):
+    bl_idname = "image.find_orphan_textures"
+    bl_label = "Find Unused Textures"
+    bl_description = "Check if there are any image data blocks in .blend-file with no users"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def invoke(self, context, event):
+
+        orphanList = list()
+
+        for img in bpy.data.images:
+            if (img.users <= 0):
+                orphanList.append(img)
+
+        if (orphanList):
+            self.report({'WARNING'}, "Orphan textures found in File")
+            ShowMessageBox("Please check Outliner to find Images that are do not have any users",
+                           "Orphaned objects found", 'ERROR')
+            return self.execute(context)
+
+        else:
+            self.report({'INFO'}, "No unused textures")
+            return {'FINISHED'}
+
+    def execute(self, context):
+
+        for area in bpy.context.screen.areas:
+            if(area.type == 'OUTLINER'):
+                outliner_space = area.spaces[0]
+                outliner_space.display_mode = 'ORPHAN_DATA'
+
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.register_class(FTB_OT_SelectScaleNonOne_Op)
@@ -352,13 +353,14 @@ def register():
     bpy.utils.register_class(FTB_OT_SetToCenter_Op)
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.register_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.register_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.register_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
+    bpy.utils.register_class(FTB_OT_FindOrphanedObjects_Op)
+    bpy.utils.register_class(FTB_OT_FindOrphanTextures_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_FindOrphanTextures_Op)
+    bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)
     bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
@@ -366,6 +368,3 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
     bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.unregister_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
