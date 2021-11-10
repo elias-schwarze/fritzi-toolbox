@@ -42,6 +42,8 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
 
             messageString += " Shadows, Ambient Occlusion,"
 
+        # set resolution to UHD at 100% scale
+
         if wm.bsetResolution:
             bpy.context.scene.render.resolution_x = 3840
             bpy.context.scene.render.resolution_y = 2160
@@ -62,6 +64,8 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
         if wm.bsetSamples:
             bpy.context.scene.eevee.taa_samples = 256
             bpy.context.scene.eevee.taa_render_samples = 256
+
+        # print string to blender output and remove last character, which is always a comma
 
         self.report({'INFO'}, messageString[:-1])
 
