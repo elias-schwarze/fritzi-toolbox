@@ -59,6 +59,10 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
 
             messageString += " Render Engine,"
 
+        if wm.bsetSamples:
+            bpy.context.scene.eevee.taa_samples = 256
+            bpy.context.scene.eevee.taa_render_samples = 256
+
         self.report({'INFO'}, messageString[:-1])
 
         return {'FINISHED'}

@@ -17,8 +17,9 @@ class FTB_PT_DefaultRenderSettings_Panel(Panel):
     bpy.types.WindowManager.bsetFramerate = bpy.props.BoolProperty(
         default=True)
 
-    bpy.types.WindowManager.bsetEngine = bpy.props.BoolProperty(
-        default=True)
+    bpy.types.WindowManager.bsetEngine = bpy.props.BoolProperty(default=True)
+
+    bpy.types.WindowManager.bsetSamples = bpy.props.BoolProperty(default=True)
 
     def draw(self, context):
         layout = self.layout
@@ -27,6 +28,8 @@ class FTB_PT_DefaultRenderSettings_Panel(Panel):
         col.operator("scene.default_render_settings")
 
         col = layout.column()
+
+        col.prop(context.window_manager, "bsetSamples", text="Sample Count")
 
         col.prop(context.window_manager,
                  "bsetShadows", text="Shadows")
