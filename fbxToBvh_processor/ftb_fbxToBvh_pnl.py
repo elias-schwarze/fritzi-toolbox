@@ -7,7 +7,7 @@ class FTB_PT_FbxToBvh_Panel(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_label = "FbxToBvh"
-    bl_category = "FTB Batching"
+    bl_category = "FTB"
     bl_options = {"DEFAULT_CLOSED"}
 
     bpy.types.WindowManager.bvhOutputPath = StringProperty(
