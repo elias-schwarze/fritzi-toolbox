@@ -78,6 +78,8 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
         thickModifier.curve.curves[0].points.new(0.65, 0.85)
         thickModifier.curve.curves[0].points.new(0.85, 0.4)
         thickModifier.curve.update()
+        if bpy.context.scene.frame_current < 1:
+            bpy.context.scene.frame_set(1)
 
         return {'FINISHED'}
 
