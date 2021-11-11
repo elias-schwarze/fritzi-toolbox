@@ -18,14 +18,15 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
     # String Property accessed by ImportHelper to store directory path of selected files
     directory: StringProperty(subtype='DIR_PATH')
 
-    sOutputPath: StringProperty(
-        subtype='DIR_PATH', name="Output path")
+    # list of properties to be displayed in the ImportHelper sidebar
+    # sOutputPath: StringProperty(
+    #     subtype='DIR_PATH', name="Output path")
 
-    use_setting: BoolProperty(
-        name="Example Boolean",
-        description="Example Tooltip",
-        default=True,
-    )
+    # use_setting: BoolProperty(
+    #     name="Example Boolean",
+    #     description="Example Tooltip",
+    #     default=True,
+    # )
 
     # should only work in object mode
     @classmethod
