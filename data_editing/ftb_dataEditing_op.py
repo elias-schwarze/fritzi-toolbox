@@ -223,6 +223,34 @@ class FTB_OT_ObjectNameToMaterial_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_SetLineartSettings_Op(Operator):
+    bl_idname = "object.set_lineart_settings"
+    bl_label = "Set Line Settings"
+    bl_description = "Change Lineart usage for all selected objects at once"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            obj.lineart.usage = bpy.context.window_manager.lineUsage
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_PurgeUnusedData_Op)
@@ -232,10 +260,12 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyLocation_Op)
     bpy.utils.register_class(FTB_OT_CopyRotation_Op)
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
+    bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
 
 
 def unregister():
 
+    bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
     bpy.utils.unregister_class(FTB_OT_CopyRotation_Op)
     bpy.utils.unregister_class(FTB_OT_CopyLocation_Op)
