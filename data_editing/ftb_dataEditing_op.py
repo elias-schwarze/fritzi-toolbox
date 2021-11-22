@@ -36,22 +36,6 @@ class FTB_OT_RemoveMaterials_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
-class FTB_OT_PurgeUnusedData_Op(Operator):
-    bl_idname = "data.purge_unused"
-    bl_label = "Purge Unused Data"
-    bl_description = "Recursively remove all unused Datablocks from file"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        bpy.ops.outliner.orphans_purge(
-            do_local_ids=True, do_linked_ids=True, do_recursive=True)
-        self.report({'INFO'}, 'Purged unused Data')
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        return bpy.context.window_manager.invoke_confirm(self, event)
-
-
 class FTB_OT_CopyLocation_Op(Operator):
     bl_idname = "object.copy_location"
     bl_label = "Copy Location"
@@ -251,9 +235,84 @@ class FTB_OT_SetLineartSettings_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
+class FTB_OT_SetMatLinks_Op(Operator):
+    bl_idname = "object.set_material_links"
+    bl_label = "Set Material Links"
+    bl_description = "Set Material Slot links for selected objects"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def changeMatLinks(self, prop_collection):
+        wm = bpy.context.window_manager
+        for obj in prop_collection:
+            if (obj.type in ['MESH', 'CURVE', 'SURFACE']):
+
+                # Case link = Object
+                if (wm.matSlotLink == 'OBJECT'):
+                    for slot in obj.material_slots:
+                        slot.link = 'OBJECT'
+
+                # Case link = Data
+                elif (wm.matSlotLink == 'DATA'):
+                    for slot in obj.material_slots:
+                        slot.link = 'DATA'
+
+    def execute(self, context):
+        wm = bpy.context.window_manager
+
+        # Case limit = View Layer
+        if (wm.matSlotLinkLimit == 'VIEW_LAYER'):
+            if (not bpy.context.view_layer.objects):
+                self.report(
+                    {'ERROR'}, "No valid objects found in current view layer")
+                return {'CANCELLED'}
+            else:
+                self.changeMatLinks(bpy.context.view_layer.objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for view layer.")
+
+        # Case limit = Active Collection
+        if (wm.matSlotLinkLimit == 'COLLECTION'):
+            if (not bpy.context.collection):
+                self.report({'ERROR'}, "No active collection")
+                return {'CANCELLED'}
+
+            else:
+                self.changeMatLinks(bpy.context.collection.objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for active collection.")
+
+        # Case limit = Current Selection
+        if (wm.matSlotLinkLimit == 'SELECTION'):
+            if (not bpy.context.selected_objects):
+                self.report({'ERROR'}, "No objects selected")
+
+            else:
+                self.changeMatLinks(bpy.context.selected_objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for selected objects.")
+
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
-    bpy.utils.register_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
@@ -261,10 +320,12 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyRotation_Op)
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
+    bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
 
 
 def unregister():
 
+    bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
     bpy.utils.unregister_class(FTB_OT_CopyRotation_Op)
@@ -272,5 +333,4 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
-    bpy.utils.unregister_class(FTB_OT_PurgeUnusedData_Op)
     bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)

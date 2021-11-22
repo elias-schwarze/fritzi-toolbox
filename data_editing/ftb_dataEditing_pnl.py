@@ -23,14 +23,38 @@ class FTB_PT_DataEditing_Panel(Panel):
              "Only generate intersection lines for this collection."),
             ('NO_INTERSECTION', "No Intersection",
              "Include this object but do not generate intersection lines.")
-        ]
+        ],
+        default='INHERIT'
+    )
+
+    bpy.types.WindowManager.matSlotLink = bpy.props.EnumProperty(
+        name="Set to",
+        description="Material slot link type",
+        items=[
+            ('OBJECT', "Object", "Material Slots linked to object data"),
+            ('DATA', "Data", "Material Slots linked to mesh data")
+        ],
+        default='OBJECT'
+    )
+
+    bpy.types.WindowManager.matSlotLinkLimit = bpy.props.EnumProperty(
+        name="Limit",
+        description="Limit operation to certain objects",
+        items=[
+            ('VIEW_LAYER', "View Layer",
+             "Limit to objects in current view layer."),
+            ('COLLECTION', "Active Collection",
+             "Limit to objects in active collection."),
+            ('SELECTION', "Selection", "Limit to currently selected objects.")
+        ],
+        default='VIEW_LAYER'
     )
 
     def draw(self, context):
         layout = self.layout
 
         col = layout.column()
-        col.label(text="Copy Attributes")
+        col.label(text="Copy Attributes:")
 
         col = layout.column(align=True)
         col.operator("object.copy_location")
@@ -41,7 +65,22 @@ class FTB_PT_DataEditing_Panel(Panel):
         col.separator()
 
         col = layout.column()
-        col.label(text="Lineart")
+        col.label(text="Material Slot Types:")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "matSlotLink")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "matSlotLinkLimit")
+
+        col = layout.column()
+        col.operator("object.set_material_links")
+
+        col = layout.column()
+        col.separator()
+
+        col = layout.column()
+        col.label(text="Lineart:")
 
         col = layout.column()
         col.prop(bpy.context.window_manager, "lineUsage")
@@ -53,13 +92,13 @@ class FTB_PT_DataEditing_Panel(Panel):
         col.separator()
 
         col = layout.column()
-        col.label(text="Library Override")
+        col.label(text="Library Override:")
 
         col = layout.column()
         col.operator("object.override_retain_transform")
 
         col = layout.column()
-        col.label(text="Naming")
+        col.label(text="Naming:")
 
         col = layout.column()
         col.operator("object.object_name_to_material")
@@ -79,10 +118,9 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
     def draw(self, context):
         layout = self.layout
 
-        col = layout.column(align=True)
+        col = layout.column()
         col.operator("object.remove_all_materials",
                      text="Remove All Materials")
-        col.operator("data.purge_unused", text="Purge Data")
 
 
 def register():
