@@ -226,10 +226,9 @@ class FTB_OT_ValidateMatSlots_Op(Operator):
                                 objList.append(obj)
 
         else:
-
             # Limit validation to Meshes Curves and Surfaces
             for obj in bpy.context.view_layer.objects:
-                if (obj.type == ['MESH', 'CURVE', 'SURFACE']):
+                if (obj.type in ['MESH', 'CURVE', 'SURFACE']):
 
                     # Report Object if it has no material slots and user has selected option in the interface
                     if (not obj.material_slots and wm.bIgnoreWithoutSlots == False):
