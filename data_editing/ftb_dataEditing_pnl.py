@@ -1,6 +1,8 @@
 import bpy
+from bpy import context
+from bpy.props import StringProperty
 import bpy.utils
-from bpy.types import Panel
+from bpy.types import Panel, WindowManager
 
 
 class FTB_PT_DataEditing_Panel(Panel):
@@ -115,8 +117,92 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
     bl_parent_id = "FTB_PT_DataEditing_Panel"
     bl_options = {"DEFAULT_CLOSED"}
 
+    # Variable to keep references to data returned by enumShaderInputsFromNodeTree to avoid undefined behavior when using callback function to fill EnumProperty()
+    shaderFtbEnum_items = []
+
+    # UI Label text to display data type of current shader Input
+    bpy.types.WindowManager.ftbShaderInputDataType = bpy.props.StringProperty()
+
+    def enumShaderInputsFromNodeTree(self, context):
+        """callback function for ftbShaderInput enum property"""
+        global shaderFtbEnum_items
+        shaderFtbEnum_items = []
+
+        if context is None:
+            return shaderFtbEnum_items
+
+        wm = bpy.context.window_manager
+
+        if wm.shaderType is None:
+            return shaderFtbEnum_items
+
+        for dinput in wm.shaderType.inputs:
+            appendTuple = (dinput.identifier, dinput.name +
+                           " (" + dinput.identifier + ")", "")
+            shaderFtbEnum_items.append(appendTuple)
+
+        return shaderFtbEnum_items
+
+    bpy.types.WindowManager.shaderType = bpy.props.PointerProperty(name="Shader Group",
+                                                                   type=bpy.types.NodeTree)
+
+    bpy.types.WindowManager.ftbShaderInput = bpy.props.EnumProperty(
+        name="Shader Input", items=enumShaderInputsFromNodeTree)
+
+    bpy.types.WindowManager.editShaderScope = bpy.props.EnumProperty(
+        name="Limit To",
+        description="Limit operation to certain objects",
+        items=[
+            ('VIEW_LAYER', "View Layer",
+             "Limit to objects in current view layer."),
+            ('COLLECTION', "Active Collection",
+             "Limit to objects in active collection."),
+            ('SELECTION', "Selection",
+             "Limit to currently selected objects.")
+        ],
+        default='VIEW_LAYER'
+    )
+
+    def updateShaderInputType(self):
+        wm = bpy.context.window_manager
+
+        if (wm.shaderType is not None):
+            for dinput in wm.shaderType.inputs:
+                if (dinput.identifier == wm.ftbShaderInput):
+                    wm.ftbShaderInputDataType = "Type: " + dinput.type
+
+        elif (wm.shaderType is None):
+            wm.ftbShaderInputDataType = "Type: None"
+
     def draw(self, context):
         layout = self.layout
+
+        col = layout.column()
+        col.label(
+            text="WARNING! Use at own risk.", icon='ERROR')
+
+        col = layout.column()
+        col.label(text="Batch Shader Editor: ")
+
+        col = layout.column()
+        col.label(text="Scope: ")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "editShaderScope")
+
+        col = layout.column()
+        col.prop_search(data=bpy.context.window_manager, property="shaderType",
+                        search_data=bpy.data, search_property="node_groups")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "ftbShaderInput")
+
+        self.updateShaderInputType()
+
+        col.label(text=bpy.context.window_manager.ftbShaderInputDataType)
+
+        col = layout.column()
+        col.separator()
 
         col = layout.column()
         col.operator("object.remove_all_materials",

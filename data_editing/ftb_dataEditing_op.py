@@ -311,6 +311,97 @@ class FTB_OT_SetMatLinks_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
+class FTB_OT_EditShaderProperty_Op(Operator):
+    bl_idname = "material.edit_shader_prop"
+    bl_label = "Set Shader Property"
+    bl_description = "Sets selected shader property to selected value for all materials within scope."
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+        return False
+
+    def execute(self, context):
+
+        wm = bpy.context.window_manager
+
+        # Case limit = View Layer
+        if (wm.editShaderScope == 'VIEW_LAYER'):
+            if (not bpy.context.view_layer.objects):
+                self.report(
+                    {'ERROR'}, "No valid objects found in current view layer")
+                return {'CANCELLED'}
+            else:
+                self.changeMatLinks(bpy.context.view_layer.objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for view layer.")
+
+        # Case limit = Active Collection
+        if (wm.editShaderScope == 'COLLECTION'):
+            if (not bpy.context.collection):
+                self.report({'ERROR'}, "No active collection")
+                return {'CANCELLED'}
+
+            else:
+                self.changeMatLinks(bpy.context.collection.objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for active collection.")
+
+        # Case limit = Current Selection
+        if (wm.editShaderScope == 'SELECTION'):
+            if (not bpy.context.selected_objects):
+                self.report({'ERROR'}, "No objects selected")
+
+            else:
+                self.changeMatLinks(bpy.context.selected_objects)
+                self.report({'INFO'}, "Material slots linked to " +
+                            wm.matSlotLink + " for selected objects.")
+
+        tuch = bpy.data.materials["tuch"]
+
+        for node in tuch.node_tree.nodes:
+            if (type(node) == bpy.types.ShaderNodeGroup):
+
+                if (node.node_tree.name == wm.shaderType):
+                    for dinput in node.inputs:
+                        if dinput.name == "Flat / Shaded Mix":
+                            print(dinput.default_value)
+                            dinput.default_value = 0.5
+        return {'FINISHED'}
+
+
+class FTB_OT_TestShaderProperty_Op(Operator):
+    bl_idname = "material.test_shader_prop"
+    bl_label = "test Shader Property"
+    bl_description = "tests selected shader property to selected value for all materials within scope."
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+        return False
+
+    def execute(self, context):
+        wm = bpy.context.window_manager
+        for dinput in wm.shaderType.inputs:
+            print(dinput.identifier + " : " + dinput.name)
+
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
@@ -321,10 +412,11 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
+    bpy.utils.register_class(FTB_OT_TestShaderProperty_Op)
 
 
 def unregister():
-
+    bpy.utils.unregister_class(FTB_OT_TestShaderProperty_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
@@ -332,5 +424,5 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_CopyLocation_Op)
     bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
-    bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)
+    bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
