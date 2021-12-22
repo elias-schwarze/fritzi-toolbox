@@ -123,6 +123,9 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
     # UI Label text to display data type of current shader Input
     bpy.types.WindowManager.ftbShaderInputDataType = bpy.props.StringProperty()
 
+    # UI Label text to display default value of current shader Input
+    bpy.types.WindowManager.ftbShaderInputValue = bpy.props.StringProperty()
+
     def enumShaderInputsFromNodeTree(self, context):
         """callback function for ftbShaderInput enum property"""
         global shaderFtbEnum_items
@@ -163,7 +166,7 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
         default='VIEW_LAYER'
     )
 
-    def updateShaderInputType(self):
+    def updateShaderInputValues(self):
         wm = bpy.context.window_manager
 
         if (wm.shaderType is not None):
@@ -171,8 +174,21 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
                 if (dinput.identifier == wm.ftbShaderInput):
                     wm.ftbShaderInputDataType = "Type: " + dinput.type
 
+                    if (dinput.type == "VALUE"):
+                        wm.ftbShaderInputValue = "Value: " + \
+                            str(dinput.default_value)
+
+                    elif (dinput.type == "VECTOR"):
+                        wm.ftbShaderInputValue = "X: " + str(
+                            dinput.default_value[0]) + "  Y: " + str(dinput.default_value[1]) + "  Z: " + str(dinput.default_value[2])
+
+                    elif (dinput.type == "RGBA"):
+                        wm.ftbShaderInputValue = "R: " + str(
+                            dinput.default_value[0]) + "  G: " + str(dinput.default_value[1]) + "  B: " + str(dinput.default_value[2]) + "  A: " + str(dinput.default_value[3])
+
         elif (wm.shaderType is None):
             wm.ftbShaderInputDataType = "Type: None"
+            wm.ftbShaderInputValue = "Type: None"
 
     def draw(self, context):
         layout = self.layout
@@ -197,9 +213,11 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
         col = layout.column()
         col.prop(bpy.context.window_manager, "ftbShaderInput")
 
-        self.updateShaderInputType()
+        self.updateShaderInputValues()
 
         col.label(text=bpy.context.window_manager.ftbShaderInputDataType)
+
+        col.label(text=bpy.context.window_manager.ftbShaderInputValue)
 
         col = layout.column()
         col.separator()
