@@ -117,40 +117,16 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
     bl_parent_id = "FTB_PT_DataEditing_Panel"
     bl_options = {"DEFAULT_CLOSED"}
 
+    inputType = ''
+
     # Variable to keep references to data returned by enumShaderInputsFromNodeTree to avoid undefined behavior when using callback function to fill EnumProperty()
     shaderFtbEnum_items = []
 
     # UI Label text to display data type of current shader Input
     bpy.types.WindowManager.ftbShaderInputDataType = bpy.props.StringProperty()
 
-    # UI Label text to display default value of current shader Input
-    bpy.types.WindowManager.ftbShaderInputValue = bpy.props.StringProperty()
-
-    def enumShaderInputsFromNodeTree(self, context):
-        """callback function for ftbShaderInput enum property"""
-        global shaderFtbEnum_items
-        shaderFtbEnum_items = []
-
-        if context is None:
-            return shaderFtbEnum_items
-
-        wm = bpy.context.window_manager
-
-        if wm.shaderType is None:
-            return shaderFtbEnum_items
-
-        for dinput in wm.shaderType.inputs:
-            appendTuple = (dinput.identifier, dinput.name +
-                           " (" + dinput.identifier + ")", "")
-            shaderFtbEnum_items.append(appendTuple)
-
-        return shaderFtbEnum_items
-
-    bpy.types.WindowManager.shaderType = bpy.props.PointerProperty(name="Shader Group",
-                                                                   type=bpy.types.NodeTree)
-
-    bpy.types.WindowManager.ftbShaderInput = bpy.props.EnumProperty(
-        name="Shader Input", items=enumShaderInputsFromNodeTree)
+    bpy.types.WindowManager.ftbShaderType = bpy.props.PointerProperty(name="Shader Group",
+                                                                      type=bpy.types.NodeTree)
 
     bpy.types.WindowManager.editShaderScope = bpy.props.EnumProperty(
         name="Limit To",
@@ -166,31 +142,82 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
         default='VIEW_LAYER'
     )
 
+    # UI Color Picker
+    bpy.types.WindowManager.ftbShaderInputColor = bpy.props.FloatVectorProperty(
+        name="",
+        subtype="COLOR",
+        default=(0.5, 0.5, 0.5, 0.5),
+        size=4,
+        soft_max=1.0,
+        soft_min=0.0
+    )
+
+    # UI Float Value
+    bpy.types.WindowManager.ftbShaderInputValue = bpy.props.FloatProperty(
+        name="",
+        default=0.0
+    )
+
+    # UI Vector Value
+    bpy.types.WindowManager.ftbShaderInputVector = bpy.props.FloatVectorProperty(
+        name="",
+        subtype="XYZ",
+        default=(0.0, 0.0, 0.0),
+        size=3
+    )
+
+    # UI Operation Mode Enum
+    bpy.types.WindowManager.ftbShaderOperation = bpy.props.EnumProperty(
+        name="Operation:",
+        items=[
+            ('SET', "Set",
+             "Sets the values."),
+            ('ADD', "Add",
+             "Adds the values. (Use negative value to substract)"),
+            ('MUL', "Multiply",
+             "Multiply the values. (Decimals and negative values are allowed)")
+        ],
+        default='SET'
+    )
+
     def updateShaderInputValues(self):
         wm = bpy.context.window_manager
 
-        if (wm.shaderType is not None):
-            for dinput in wm.shaderType.inputs:
+        if (wm.ftbShaderType is not None):
+            for dinput in wm.ftbShaderType.inputs:
                 if (dinput.identifier == wm.ftbShaderInput):
                     wm.ftbShaderInputDataType = "Type: " + dinput.type
+                    self.inputType = dinput.type
 
-                    if (dinput.type == "VALUE"):
-                        wm.ftbShaderInputValue = "Value: " + \
-                            str(dinput.default_value)
-
-                    elif (dinput.type == "VECTOR"):
-                        wm.ftbShaderInputValue = "X: " + str(
-                            dinput.default_value[0]) + "  Y: " + str(dinput.default_value[1]) + "  Z: " + str(dinput.default_value[2])
-
-                    elif (dinput.type == "RGBA"):
-                        wm.ftbShaderInputValue = "R: " + str(
-                            dinput.default_value[0]) + "  G: " + str(dinput.default_value[1]) + "  B: " + str(dinput.default_value[2]) + "  A: " + str(dinput.default_value[3])
-
-        elif (wm.shaderType is None):
+        elif (wm.ftbShaderType is None):
             wm.ftbShaderInputDataType = "Type: None"
-            wm.ftbShaderInputValue = "Type: None"
+
+    def enumShaderInputsFromNodeTree(self, context):
+        """callback function for ftbShaderInput enum property"""
+        global shaderFtbEnum_items
+        shaderFtbEnum_items = []
+
+        if context is None:
+            return shaderFtbEnum_items
+
+        wm = bpy.context.window_manager
+
+        if wm.ftbShaderType is None:
+            return shaderFtbEnum_items
+
+        for dinput in reversed(wm.ftbShaderType.inputs):
+            appendTuple = (dinput.identifier, dinput.name +
+                           " (" + dinput.identifier + ")", "")
+            shaderFtbEnum_items.append(appendTuple)
+
+        return shaderFtbEnum_items
+
+    bpy.types.WindowManager.ftbShaderInput = bpy.props.EnumProperty(
+        name="Shader Input", items=enumShaderInputsFromNodeTree)
 
     def draw(self, context):
+
+        wm = bpy.context.window_manager
         layout = self.layout
 
         col = layout.column()
@@ -198,33 +225,47 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
             text="WARNING! Use at own risk.", icon='ERROR')
 
         col = layout.column()
-        col.label(text="Batch Shader Editor: ")
-
-        col = layout.column()
-        col.label(text="Scope: ")
-
-        col = layout.column()
-        col.prop(bpy.context.window_manager, "editShaderScope")
-
-        col = layout.column()
-        col.prop_search(data=bpy.context.window_manager, property="shaderType",
-                        search_data=bpy.data, search_property="node_groups")
-
-        col = layout.column()
-        col.prop(bpy.context.window_manager, "ftbShaderInput")
-
-        self.updateShaderInputValues()
-
-        col.label(text=bpy.context.window_manager.ftbShaderInputDataType)
-
-        col.label(text=bpy.context.window_manager.ftbShaderInputValue)
+        col.operator("object.remove_all_materials",
+                     text="Remove All Materials")
 
         col = layout.column()
         col.separator()
 
         col = layout.column()
-        col.operator("object.remove_all_materials",
-                     text="Remove All Materials")
+        col.label(text="Batch Shader Editor: ")
+
+        row = layout.row(align=True)
+        row.prop(wm, "ftbShaderOperation", expand=True)
+
+        col = layout.column()
+        col.prop(wm, "editShaderScope")
+
+        col = layout.column()
+        col.prop_search(data=wm, property="ftbShaderType",
+                        search_data=bpy.data, search_property="node_groups")
+
+        if (wm.ftbShaderType != None):
+
+            col = layout.column()
+            col.prop(wm, "ftbShaderInput")
+
+            if (wm.ftbShaderInput != None):
+                self.updateShaderInputValues()
+
+                col.label(text=wm.ftbShaderInputDataType)
+
+                if (self.inputType == 'RGBA'):
+                    col.prop(wm, "ftbShaderInputColor")
+
+                if (self.inputType == 'VALUE'):
+                    col.prop(wm, "ftbShaderInputValue")
+
+                if (self.inputType == 'VECTOR'):
+                    col.prop(wm, "ftbShaderInputVector")
+
+                col.separator()
+
+                col.operator("material.edit_shader_prop")
 
 
 def register():

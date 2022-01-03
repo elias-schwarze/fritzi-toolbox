@@ -313,20 +313,67 @@ class FTB_OT_SetMatLinks_Op(Operator):
 
 class FTB_OT_EditShaderProperty_Op(Operator):
     bl_idname = "material.edit_shader_prop"
-    bl_label = "Set Shader Property"
+    bl_label = "Edit Shader Property"
     bl_description = "Sets selected shader property to selected value for all materials within scope."
     bl_options = {"REGISTER", "UNDO"}
 
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if not obj:
-            return True
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-        return False
+    def setShaderProperty(self, materialObject):
+
+        wm = bpy.context.window_manager
+
+        # temporary list of already edited materials, in case some materials are looped over multiple times
+        editedMatList = list()
+
+        for matSlot in materialObject.material_slots:
+            if matSlot.material is not None:
+                if matSlot.material not in editedMatList:
+                    editedMatList.append(matSlot.material)
+                    for node in matSlot.material.node_tree.nodes:
+                        if (type(node) == bpy.types.ShaderNodeGroup):
+                            if (node.node_tree.name == wm.ftbShaderType.name):
+                                for dinput in node.inputs:
+                                    if (dinput.identifier == wm.ftbShaderInput):
+
+                                        if (dinput.type == 'RGBA'):
+
+                                            if (wm.ftbShaderOperation == 'SET'):
+                                                dinput.default_value = wm.ftbShaderInputColor
+
+                                            elif (wm.ftbShaderOperation == 'ADD'):
+                                                dinput.default_value[0] += wm.ftbShaderInputColor[0]
+                                                dinput.default_value[1] += wm.ftbShaderInputColor[1]
+                                                dinput.default_value[2] += wm.ftbShaderInputColor[2]
+                                                dinput.default_value[3] += wm.ftbShaderInputColor[3]
+
+                                            elif (wm.ftbShaderOperation == 'MUL'):
+                                                dinput.default_value[0] *= wm.ftbShaderInputColor[0]
+                                                dinput.default_value[1] *= wm.ftbShaderInputColor[1]
+                                                dinput.default_value[2] *= wm.ftbShaderInputColor[2]
+                                                dinput.default_value[3] *= wm.ftbShaderInputColor[3]
+
+                                        if dinput.type == ('VECTOR'):
+                                            if (wm.ftbShaderOperation == 'SET'):
+                                                dinput.default_value = wm.ftbShaderInputVector
+
+                                            elif (wm.ftbShaderOperation == 'ADD'):
+                                                dinput.default_value[0] += wm.ftbShaderInputVector[0]
+                                                dinput.default_value[1] += wm.ftbShaderInputVector[1]
+                                                dinput.default_value[2] += wm.ftbShaderInputVector[2]
+
+                                            elif (wm.ftbShaderOperation == 'MUL'):
+                                                dinput.default_value[0] *= wm.ftbShaderInputVector[0]
+                                                dinput.default_value[1] *= wm.ftbShaderInputVector[1]
+                                                dinput.default_value[2] *= wm.ftbShaderInputVector[2]
+
+                                        if dinput.type == ('VALUE'):
+                                            if (wm.ftbShaderOperation == 'SET'):
+                                                dinput.default_value = wm.ftbShaderInputValue
+
+                                            elif (wm.ftbShaderOperation == 'ADD'):
+                                                dinput.default_value += wm.ftbShaderInputValue
+
+                                            elif (wm.ftbShaderOperation == 'MUL'):
+                                                dinput.default_value *= wm.ftbShaderInputValue
 
     def execute(self, context):
 
@@ -339,9 +386,11 @@ class FTB_OT_EditShaderProperty_Op(Operator):
                     {'ERROR'}, "No valid objects found in current view layer")
                 return {'CANCELLED'}
             else:
-                self.changeMatLinks(bpy.context.view_layer.objects)
-                self.report({'INFO'}, "Material slots linked to " +
-                            wm.matSlotLink + " for view layer.")
+                for obj in bpy.context.view_layer.objects:
+                    self.setShaderProperty(obj)
+
+                self.report(
+                    {'INFO'}, "Shader property was changed for all materials in view layer.")
 
         # Case limit = Active Collection
         if (wm.editShaderScope == 'COLLECTION'):
@@ -350,9 +399,11 @@ class FTB_OT_EditShaderProperty_Op(Operator):
                 return {'CANCELLED'}
 
             else:
-                self.changeMatLinks(bpy.context.collection.objects)
-                self.report({'INFO'}, "Material slots linked to " +
-                            wm.matSlotLink + " for active collection.")
+                for obj in bpy.context.collection:
+                    self.setShaderProperty(obj)
+
+                self.report(
+                    {'INFO'}, "Shader property was changed for all materials in active collection.")
 
         # Case limit = Current Selection
         if (wm.editShaderScope == 'SELECTION'):
@@ -360,46 +411,15 @@ class FTB_OT_EditShaderProperty_Op(Operator):
                 self.report({'ERROR'}, "No objects selected")
 
             else:
-                self.changeMatLinks(bpy.context.selected_objects)
-                self.report({'INFO'}, "Material slots linked to " +
-                            wm.matSlotLink + " for selected objects.")
-
-        tuch = bpy.data.materials["tuch"]
-
-        for node in tuch.node_tree.nodes:
-            if (type(node) == bpy.types.ShaderNodeGroup):
-
-                if (node.node_tree.name == wm.shaderType):
-                    for dinput in node.inputs:
-                        if dinput.name == "Flat / Shaded Mix":
-                            print(dinput.default_value)
-                            dinput.default_value = 0.5
-        return {'FINISHED'}
-
-
-class FTB_OT_TestShaderProperty_Op(Operator):
-    bl_idname = "material.test_shader_prop"
-    bl_label = "test Shader Property"
-    bl_description = "tests selected shader property to selected value for all materials within scope."
-    bl_options = {"REGISTER", "UNDO"}
-
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
-        if not obj:
-            return True
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
-        return False
-
-    def execute(self, context):
-        wm = bpy.context.window_manager
-        for dinput in wm.shaderType.inputs:
-            print(dinput.identifier + " : " + dinput.name)
+                for obj in bpy.context.selected_objects:
+                    self.setShaderProperty(obj)
+                self.report(
+                    {'INFO'}, "Shader property was changed for all materials in selection.")
 
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
 
 def register():
@@ -412,11 +432,11 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
-    bpy.utils.register_class(FTB_OT_TestShaderProperty_Op)
+    bpy.utils.register_class(FTB_OT_EditShaderProperty_Op)
 
 
 def unregister():
-    bpy.utils.unregister_class(FTB_OT_TestShaderProperty_Op)
+    bpy.utils.unregister_class(FTB_OT_EditShaderProperty_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
