@@ -36,7 +36,10 @@ from .displacement_tools import ftb_displaceTools_pnl
 
 from .default_setup import ftb_default_lineart_op
 from .default_setup import ftb_default_render_settings_op
+from .default_setup import ftb_default_comp_setup_op
 from .default_setup import ftb_default_setup_pnl
+
+from .default_setup import ftb_default_comp_setup_pnl
 
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
@@ -89,6 +92,8 @@ def register():
     ftb_default_lineart_op.register()
     ftb_default_render_settings_op.register()
     ftb_default_setup_pnl.register()
+    ftb_default_comp_setup_op.register()
+    ftb_default_comp_setup_pnl.register()
 
     ftb_fbxToBvh_op.register()
     ftb_fbxToBvh_pnl.register()
@@ -100,6 +105,8 @@ def unregister():
     ftb_fbxToBvh_pnl.unregister()
     ftb_fbxToBvh_op.unregister()
 
+    ftb_default_comp_setup_pnl.unregister()
+    ftb_default_comp_setup_op.unregister()
     ftb_default_setup_pnl.unregister()
     ftb_default_render_settings_op.unregister()
     ftb_default_lineart_op.unregister()
