@@ -3,6 +3,7 @@ from bpy import context
 from bpy.props import StringProperty
 import bpy.utils
 from bpy.types import Panel, WindowManager
+from bpy.app.handlers import persistent
 
 
 class FTB_PT_DataEditing_Panel(Panel):
@@ -180,6 +181,17 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
         default='SET'
     )
 
+    # load handler to clear any data block referenced by ftbShaderType.
+    # If ftbShaderType is referencing a data block in the current blend file and this reference is not cleared when another file is opened,
+    # an access violation will occur and Blender will crash.
+    # This load handler function is excecuted before a new blend file is opened.
+
+    @persistent
+    def preLoad_handler(dummy):
+        bpy.context.window_manager.ftbShaderType = None
+
+    bpy.app.handlers.load_pre.append(preLoad_handler)
+
     def updateShaderInputValues(self):
         wm = bpy.context.window_manager
 
@@ -241,6 +253,7 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
         col.prop(wm, "editShaderScope")
 
         col = layout.column()
+
         col.prop_search(data=wm, property="ftbShaderType",
                         search_data=bpy.data, search_property="node_groups")
 

@@ -328,52 +328,53 @@ class FTB_OT_EditShaderProperty_Op(Operator):
             if matSlot.material is not None:
                 if matSlot.material not in editedMatList:
                     editedMatList.append(matSlot.material)
-                    for node in matSlot.material.node_tree.nodes:
-                        if (type(node) == bpy.types.ShaderNodeGroup):
-                            if (node.node_tree.name == wm.ftbShaderType.name):
-                                for dinput in node.inputs:
-                                    if (dinput.identifier == wm.ftbShaderInput):
+                    if (matSlot.material.node_tree != None):
+                        for node in matSlot.material.node_tree.nodes:
+                            if (type(node) == bpy.types.ShaderNodeGroup):
+                                if (node.node_tree.name == wm.ftbShaderType.name):
+                                    for dinput in node.inputs:
+                                        if (dinput.identifier == wm.ftbShaderInput):
 
-                                        if (dinput.type == 'RGBA'):
+                                            if (dinput.type == 'RGBA'):
 
-                                            if (wm.ftbShaderOperation == 'SET'):
-                                                dinput.default_value = wm.ftbShaderInputColor
+                                                if (wm.ftbShaderOperation == 'SET'):
+                                                    dinput.default_value = wm.ftbShaderInputColor
 
-                                            elif (wm.ftbShaderOperation == 'ADD'):
-                                                dinput.default_value[0] += wm.ftbShaderInputColor[0]
-                                                dinput.default_value[1] += wm.ftbShaderInputColor[1]
-                                                dinput.default_value[2] += wm.ftbShaderInputColor[2]
-                                                dinput.default_value[3] += wm.ftbShaderInputColor[3]
+                                                elif (wm.ftbShaderOperation == 'ADD'):
+                                                    dinput.default_value[0] += wm.ftbShaderInputColor[0]
+                                                    dinput.default_value[1] += wm.ftbShaderInputColor[1]
+                                                    dinput.default_value[2] += wm.ftbShaderInputColor[2]
+                                                    dinput.default_value[3] += wm.ftbShaderInputColor[3]
 
-                                            elif (wm.ftbShaderOperation == 'MUL'):
-                                                dinput.default_value[0] *= wm.ftbShaderInputColor[0]
-                                                dinput.default_value[1] *= wm.ftbShaderInputColor[1]
-                                                dinput.default_value[2] *= wm.ftbShaderInputColor[2]
-                                                dinput.default_value[3] *= wm.ftbShaderInputColor[3]
+                                                elif (wm.ftbShaderOperation == 'MUL'):
+                                                    dinput.default_value[0] *= wm.ftbShaderInputColor[0]
+                                                    dinput.default_value[1] *= wm.ftbShaderInputColor[1]
+                                                    dinput.default_value[2] *= wm.ftbShaderInputColor[2]
+                                                    dinput.default_value[3] *= wm.ftbShaderInputColor[3]
 
-                                        if dinput.type == ('VECTOR'):
-                                            if (wm.ftbShaderOperation == 'SET'):
-                                                dinput.default_value = wm.ftbShaderInputVector
+                                            if dinput.type == ('VECTOR'):
+                                                if (wm.ftbShaderOperation == 'SET'):
+                                                    dinput.default_value = wm.ftbShaderInputVector
 
-                                            elif (wm.ftbShaderOperation == 'ADD'):
-                                                dinput.default_value[0] += wm.ftbShaderInputVector[0]
-                                                dinput.default_value[1] += wm.ftbShaderInputVector[1]
-                                                dinput.default_value[2] += wm.ftbShaderInputVector[2]
+                                                elif (wm.ftbShaderOperation == 'ADD'):
+                                                    dinput.default_value[0] += wm.ftbShaderInputVector[0]
+                                                    dinput.default_value[1] += wm.ftbShaderInputVector[1]
+                                                    dinput.default_value[2] += wm.ftbShaderInputVector[2]
 
-                                            elif (wm.ftbShaderOperation == 'MUL'):
-                                                dinput.default_value[0] *= wm.ftbShaderInputVector[0]
-                                                dinput.default_value[1] *= wm.ftbShaderInputVector[1]
-                                                dinput.default_value[2] *= wm.ftbShaderInputVector[2]
+                                                elif (wm.ftbShaderOperation == 'MUL'):
+                                                    dinput.default_value[0] *= wm.ftbShaderInputVector[0]
+                                                    dinput.default_value[1] *= wm.ftbShaderInputVector[1]
+                                                    dinput.default_value[2] *= wm.ftbShaderInputVector[2]
 
-                                        if dinput.type == ('VALUE'):
-                                            if (wm.ftbShaderOperation == 'SET'):
-                                                dinput.default_value = wm.ftbShaderInputValue
+                                            if dinput.type == ('VALUE'):
+                                                if (wm.ftbShaderOperation == 'SET'):
+                                                    dinput.default_value = wm.ftbShaderInputValue
 
-                                            elif (wm.ftbShaderOperation == 'ADD'):
-                                                dinput.default_value += wm.ftbShaderInputValue
+                                                elif (wm.ftbShaderOperation == 'ADD'):
+                                                    dinput.default_value += wm.ftbShaderInputValue
 
-                                            elif (wm.ftbShaderOperation == 'MUL'):
-                                                dinput.default_value *= wm.ftbShaderInputValue
+                                                elif (wm.ftbShaderOperation == 'MUL'):
+                                                    dinput.default_value *= wm.ftbShaderInputValue
 
     def execute(self, context):
 
