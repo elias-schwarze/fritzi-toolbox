@@ -330,7 +330,7 @@ class FTB_OT_EditShaderProperty_Op(Operator):
                     editedMatList.append(matSlot.material)
                     if (matSlot.material.node_tree != None):
                         for node in matSlot.material.node_tree.nodes:
-                            if (type(node) == bpy.types.ShaderNodeGroup):
+                            if (type(node) == bpy.types.ShaderNodeGroup and node.node_tree != None):
                                 if (node.node_tree.name == wm.ftbShaderType.name):
                                     for dinput in node.inputs:
                                         if (dinput.identifier == wm.ftbShaderInput):
