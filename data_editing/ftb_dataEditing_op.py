@@ -400,7 +400,7 @@ class FTB_OT_EditShaderProperty_Op(Operator):
                 return {'CANCELLED'}
 
             else:
-                for obj in bpy.context.collection:
+                for obj in bpy.context.collection.all_objects:
                     self.setShaderProperty(obj)
 
                 self.report(
