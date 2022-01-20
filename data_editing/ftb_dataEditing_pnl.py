@@ -237,6 +237,10 @@ class FTB_PT_DataEditingDanger_Panel(Panel):
             text="WARNING! Use at own risk.", icon='ERROR')
 
         col = layout.column()
+        col.operator("object.remove_modifers",
+                     text="Remove All Modifiers")
+
+        col = layout.column()
         col.operator("object.remove_all_materials",
                      text="Remove All Materials")
 

@@ -36,6 +36,33 @@ class FTB_OT_RemoveMaterials_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
+class FTB_OT_RemoveModifiers_Op(Operator):
+    bl_idname = "object.remove_modifers"
+    bl_label = "Remove Modifiers"
+    bl_description = "Remove all Modifiers from all selected objects"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            for mod in obj.modifiers:
+                obj.modifiers.remove(mod)
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
+
+
 class FTB_OT_CopyLocation_Op(Operator):
     bl_idname = "object.copy_location"
     bl_label = "Copy Location"
@@ -434,9 +461,11 @@ def register():
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.register_class(FTB_OT_EditShaderProperty_Op)
+    bpy.utils.register_class(FTB_OT_RemoveModifiers_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_RemoveModifiers_Op)
     bpy.utils.unregister_class(FTB_OT_EditShaderProperty_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
