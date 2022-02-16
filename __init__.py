@@ -13,6 +13,8 @@
 
 import bpy
 
+from . import ftb_prefs
+
 from . import addon_updater_ops
 from . import updater_ui
 
@@ -44,6 +46,8 @@ from .default_setup import ftb_default_comp_setup_pnl
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
 
+from .index_override_remover import ftb_index_override_remover_op
+
 
 bl_info = {
     "name": "fritziToolbox",
@@ -57,7 +61,7 @@ bl_info = {
 
 
 classes = (
-    updater_ui.DemoPreferences,
+    ftb_prefs.FTBPreferences,
 )
 
 
@@ -96,10 +100,15 @@ def register():
     ftb_fbxToBvh_op.register()
     ftb_fbxToBvh_pnl.register()
 
+    ftb_index_override_remover_op.register()
+
 
 def unregister():
 
     # should be in reverse order of register()
+
+    ftb_index_override_remover_op.unregister()
+
     ftb_fbxToBvh_pnl.unregister()
     ftb_fbxToBvh_op.unregister()
 
@@ -130,3 +139,5 @@ def unregister():
     addon_updater_ops.unregister()
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    # ftb_prefs.unregister()
