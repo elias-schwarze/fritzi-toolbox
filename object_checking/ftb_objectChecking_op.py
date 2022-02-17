@@ -22,6 +22,71 @@ class FTB_OT_Toggle_Face_Orient_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_SelectLocationNonZero_Op(Operator):
+    bl_idname = "object.select_location_non_zero"
+    bl_label = "Unapplied Location"
+    bl_description = "Select all objects that have non-zero Location."
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        counter = 0
+
+        for o in bpy.data.objects:
+            if o.type in ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'LATTICE', 'EMPTY']:
+                if o.location[0] != 0.0 or o.location[1] != 0.0 or o.location[2] != 0.0:
+                    o.select_set(True)
+                    counter += 1
+
+        self.report({'INFO'}, str(counter) + " objects with non zero location")
+
+        return {'FINISHED'}
+
+
+class FTB_OT_SelectRotationNonZero_Op(Operator):
+    bl_idname = "object.select_rotation_non_zero"
+    bl_label = "Unapplied Rotation"
+    bl_description = "Select all objects that have unapplied Rotation."
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        counter = 0
+
+        for o in bpy.data.objects:
+            if o.type in ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'LATTICE', 'EMPTY']:
+                if o.rotation_euler[0] != 0.0 or o.rotation_euler[1] != 0.0 or o.rotation_euler[2] != 0.0:
+                    o.select_set(True)
+                    counter += 1
+
+        self.report({'INFO'}, str(counter) +
+                    " objects with unapplied rotation")
+
+        return {'FINISHED'}
+
+
 class FTB_OT_SelectScaleNonOne_Op(Operator):
     bl_idname = "object.select_scale_non_one"
     bl_label = "Unapplied Scale"
@@ -41,14 +106,12 @@ class FTB_OT_SelectScaleNonOne_Op(Operator):
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
+        counter = 0
         for o in bpy.data.objects:
-            if o.type == 'MESH':
+            if o.type in ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'LATTICE', 'EMPTY']:
                 if o.scale[0] != 1 or o.scale[1] != 1 or o.scale[2] != 1:
                     o.select_set(True)
-
-        counter = 0
-        for obj in bpy.context.selected_objects:
-            counter += 1
+                    counter += 1
 
         self.report({'INFO'}, str(counter) + " objects with unapplied scale")
 
@@ -74,14 +137,13 @@ class FTB_OT_SelectScaleNonUniform_Op(Operator):
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
-        for o in bpy.data.objects:
-            if o.type == 'MESH':
-                if not (o.scale[0] == o.scale[1] == o.scale[2]):
-                    o.select_set(True)
-
         counter = 0
-        for obj in bpy.context.selected_objects:
-            counter += 1
+        for o in bpy.data.objects:
+            if o.type in ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'LATTICE', 'EMPTY']:
+                if o.type == 'MESH':
+                    if not (o.scale[0] == o.scale[1] == o.scale[2]):
+                        o.select_set(True)
+                        counter += 1
 
         self.report({'INFO'}, str(counter) + " objects with non uniform scale")
 
@@ -349,6 +411,8 @@ def register():
     bpy.utils.register_class(FTB_OT_Toggle_Face_Orient_Op)
     bpy.utils.register_class(FTB_OT_SelectScaleNonOne_Op)
     bpy.utils.register_class(FTB_OT_SelectScaleNonUniform_Op)
+    bpy.utils.register_class(FTB_OT_SelectRotationNonZero_Op)
+    bpy.utils.register_class(FTB_OT_SelectLocationNonZero_Op)
     bpy.utils.register_class(FTB_OT_SetToCenter_Op)
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.register_class(FTB_OT_CheckNgons_Op)
@@ -361,9 +425,11 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_FindOrphanTextures_Op)
     bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)
-    bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectScaleNonUniform_Op)
-    bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
-    bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.unregister_class(FTB_OT_CheckNgons_Op)
+    bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
+    bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
+    bpy.utils.unregister_class(FTB_OT_SelectLocationNonZero_Op)
+    bpy.utils.unregister_class(FTB_OT_SelectRotationNonZero_Op)
+    bpy.utils.unregister_class(FTB_OT_SelectScaleNonUniform_Op)
+    bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
+    bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)

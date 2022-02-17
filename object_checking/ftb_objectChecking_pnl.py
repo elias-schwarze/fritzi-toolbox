@@ -23,7 +23,11 @@ class FTB_PT_Checking_Panel(Panel):
         col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
 
         col = layout.column(align=True)
-        col.label(text="Scale Checking")
+        col.label(text="Transform Checking")
+
+        col.operator("object.select_location_non_zero")
+
+        col.operator("object.select_rotation_non_zero")
 
         col.operator("object.select_scale_non_one")
         col.operator("object.select_scale_non_unform")
