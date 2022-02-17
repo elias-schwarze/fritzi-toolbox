@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Operator
 from bpy.app.handlers import persistent
+from ..utility_functions.ftb_path_utils import getFritziPreferences
 
 
 class FTB_OT_RemoveIndexOverrides_Op(Operator):
@@ -10,9 +11,10 @@ class FTB_OT_RemoveIndexOverrides_Op(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        scene = bpy.context.scene
 
-        for object in scene.objects:
+        saveScene = bpy.context.scene
+
+        for object in saveScene.objects:
             if not object.override_library:
                 continue
 
@@ -26,17 +28,18 @@ class FTB_OT_RemoveIndexOverrides_Op(Operator):
 
     @persistent
     def preSave_handler(dummy):
-        saveScene = bpy.context.scene
+        if (getFritziPreferences().skip_override_cleanup == False):
+            saveScene = bpy.context.scene
 
-        for object in saveScene.objects:
-            if not object.override_library:
-                continue
+            for object in saveScene.objects:
+                if not object.override_library:
+                    continue
 
-            object.active_material_index = object.override_library.reference.active_material_index
+                object.active_material_index = object.override_library.reference.active_material_index
 
-            for element in object.override_library.properties:
-                if (element.rna_path == "active_material_index"):
-                    object.override_library.properties.remove(element)
+                for element in object.override_library.properties:
+                    if (element.rna_path == "active_material_index"):
+                        object.override_library.properties.remove(element)
 
         return {'FINISHED'}
 

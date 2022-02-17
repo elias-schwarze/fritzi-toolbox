@@ -3,17 +3,17 @@ import bpy
 # Updater ops import, all setup in this file.
 from . import addon_updater_ops
 
+from .utility_functions import ftb_path_utils
+
 
 class FTBPreferences(bpy.types.AddonPreferences):
     """FTB preferences"""
     bl_idname = __package__
 
-    test_integer = bpy.props.IntProperty(
-        name='test integer',
-        description="test integer",
-        default=500)
-
-    test_integer = 200
+    skip_override_cleanup = bpy.props.BoolProperty(
+        name="Skip Index Override Cleanup (not recommended)",
+        description="If enabled, the addon will not automatically remove overrides of active_material_index (not recommended)",
+        default=False)
 
     # Addon updater preferences.
 
@@ -55,6 +55,9 @@ class FTBPreferences(bpy.types.AddonPreferences):
         # Works best if a column, or even just self.layout.
         mainrow = layout.row()
         col = mainrow.column()
+
+        mainrow.prop(ftb_path_utils.getFritziPreferences(),
+                     "skip_override_cleanup")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)

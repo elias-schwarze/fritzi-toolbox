@@ -87,6 +87,8 @@ class DemoPreferences(bpy.types.AddonPreferences):
         mainrow = layout.row()
         col = mainrow.column()
 
+        # __package__.split('.')[:-1]
+
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
 

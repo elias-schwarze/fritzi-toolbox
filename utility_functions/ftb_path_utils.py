@@ -54,3 +54,7 @@ def is_bvh_enabled():
                     return True
                 else:
                     return False
+
+
+def getFritziPreferences():
+    return bpy.context.preferences.addons[(__package__.split('.')[:-1])[0]].preferences
