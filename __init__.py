@@ -51,7 +51,7 @@ from .index_override_remover import ftb_index_override_remover_op
 
 bl_info = {
     "name": "fritziToolbox",
-    "author": "Elias Schwarze",
+    "author": "Elias Schwarze, Robert Lehmann",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (3, 0, 0),
     "version": (0, 2, 5),
