@@ -16,7 +16,6 @@ import bpy
 from . import ftb_prefs
 
 from . import addon_updater_ops
-from . import updater_ui
 
 from .previews import ftb_previews_pnl
 from .previews import ftb_previews_op
@@ -26,6 +25,9 @@ from .object_checking import ftb_objectChecking_op
 
 from .data_editing import ftb_dataEditing_pnl
 from .data_editing import ftb_dataEditing_op
+
+from .danger_zone import ftb_danger_zone_pnl
+from .danger_zone import ftb_danger_zone_op
 
 from .batch_rotator import ftb_rotator_pnl
 from .batch_rotator import ftb_rotator_op
@@ -38,10 +40,10 @@ from .displacement_tools import ftb_displaceTools_pnl
 
 from .default_setup import ftb_default_lineart_op
 from .default_setup import ftb_default_render_settings_op
-from .default_setup import ftb_default_comp_setup_op
+#from .default_setup import ftb_default_comp_setup_op
 from .default_setup import ftb_default_setup_pnl
 
-from .default_setup import ftb_default_comp_setup_pnl
+#from .default_setup import ftb_default_comp_setup_pnl
 
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
@@ -78,6 +80,9 @@ def register():
 
     ftb_dataEditing_op.register()
     ftb_dataEditing_pnl.register()
+
+    ftb_danger_zone_op.register()
+    ftb_danger_zone_pnl.register()
 
     ftb_objectChecking_op.register()
     ftb_objectChecking_pnl.register()
@@ -129,6 +134,9 @@ def unregister():
 
     ftb_objectChecking_pnl.unregister()
     ftb_objectChecking_op.unregister()
+
+    ftb_danger_zone_op.unregister()
+    ftb_danger_zone_pnl.unregister()
 
     ftb_dataEditing_pnl.unregister()
     ftb_dataEditing_op.unregister()
