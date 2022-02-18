@@ -11,10 +11,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-import bpy
-
 from . import ftb_prefs
-
 from . import addon_updater_ops
 
 from .previews import ftb_previews_pnl
@@ -41,9 +38,8 @@ from .displacement_tools import ftb_displaceTools_pnl
 from .default_setup import ftb_default_lineart_op
 from .default_setup import ftb_default_render_settings_op
 #from .default_setup import ftb_default_comp_setup_op
-from .default_setup import ftb_default_setup_pnl
-
 #from .default_setup import ftb_default_comp_setup_pnl
+from .default_setup import ftb_default_setup_pnl
 
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
@@ -62,18 +58,10 @@ bl_info = {
 }
 
 
-classes = (
-    ftb_prefs.FTBPreferences,
-)
-
-
 def register():
 
+    ftb_prefs.register()
     addon_updater_ops.register(bl_info)
-
-    for cls in classes:
-        addon_updater_ops.make_annotations(cls)  # Avoid blender 2.8 warnings.
-        bpy.utils.register_class(cls)
 
     ftb_rotator_op.register()
     ftb_rotator_pnl.register()
@@ -145,7 +133,4 @@ def unregister():
     ftb_rotator_op.unregister()
 
     addon_updater_ops.unregister()
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
-
-    # ftb_prefs.unregister()
+    ftb_prefs.unregister()
