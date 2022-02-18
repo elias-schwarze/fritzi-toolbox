@@ -26,6 +26,10 @@ class FTB_OT_RemoveIndexOverrides_Op(Operator):
 
         return {'FINISHED'}
 
+    # function to automatically clean active_material_index overrides
+    # this contains mostly duplicate code from the execute() function, unfortunately there seems to be no way to avoid this for now
+    # the only difference is the check for the user preference variable skip_override_cleanup
+
     @persistent
     def preSave_handler(dummy):
         if (getFritziPreferences().skip_override_cleanup == False):
