@@ -1,6 +1,7 @@
 import bpy
 
 from bpy.types import Operator
+from bpy.props import BoolProperty
 
 from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
@@ -204,42 +205,65 @@ class FTB_OT_CheckNgons_Op(Operator):
     bl_description = "Select all ngons of active object, if any"
     bl_options = {"REGISTER", "UNDO"}
 
+    showPolys: BoolProperty(name="Show in Edit Mode")
+
     # should work in edit and object mode
     @classmethod
     def poll(cls, context):
-        obj = context.object
+        selection = context.selected_objects
+        obj = context.active_object
 
-        if obj:
-            if obj.mode == "OBJECT" and obj.type == 'MESH':
+        if selection:
+            if not obj:
                 return True
 
-            elif obj.mode == "EDIT" and obj.type == 'MESH':
+            elif obj and obj.mode == 'OBJECT':
                 return True
+
+            else:
+                return False
 
         return False
 
-    def invoke(self, context, event):
-        obj = context.object
+    def execute(self, context):
+        checkObjList = context.selected_objects
+        ngonCount = 0
+        objCount = 0
+        objList = []
 
-        if obj and obj.mode == 'OBJECT':
+        bpy.ops.object.select_all(action='DESELECT')
+
+        for obj in checkObjList:
+
+            bpy.context.view_layer.objects.active = obj
+
+            if obj.type != 'MESH':
+                continue
+
             bpy.ops.object.mode_set(mode='EDIT')
-            return self.execute(context)
+            bpy.ops.mesh.select_face_by_sides(
+                number=4, type='GREATER', extend=False)
 
-        elif obj != None and obj.mode == 'EDIT':
-            return self.execute(context)
+            currentMesh = obj.data
+            ngonCount += currentMesh.count_selected_items()[2]
+
+            if (currentMesh.count_selected_items()[2] > 0):
+                objCount += 1
+                objList.append(obj)
+                obj.select_set(True)
+
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        if objList:
+            self.report({'WARNING'}, str(ngonCount) +
+                        " Ngons found in " + str(objCount) + " Objects.")
+
+            if self.showPolys:
+                bpy.ops.object.mode_set(mode='EDIT')
 
         else:
-            self.report({'ERROR'}, "Invalid Selection")
-            return {'CANCELLED'}
+            self.report({'INFO'}, "No Ngons found.")
 
-    def execute(self, context):
-        obj = context.object
-        bpy.ops.mesh.select_face_by_sides(
-            number=4, type='GREATER', extend=False)
-
-        currentMesh = bpy.context.object.data
-        ngonCount = currentMesh.count_selected_items()[2]
-        self.report({'INFO'}, str(ngonCount) + " Ngons in Object")
         return {'FINISHED'}
 
 

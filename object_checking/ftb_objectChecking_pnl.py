@@ -1,3 +1,4 @@
+from cProfile import label
 import bpy
 import bpy.utils
 from bpy.types import Panel
@@ -38,9 +39,11 @@ class FTB_PT_Checking_Panel(Panel):
         col.operator("object.center_object")
         col.operator("object.origin_to_cursor")
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.label(text="Mesh Checking")
-        col.operator("object.check_ngons")
+        col.operator("object.check_ngons").showPolys = False
+        col.operator("object.check_ngons",
+                     text="Check and Show Ngons").showPolys = True
 
         col = layout.column()
         col.label(text="Orphan Data:")
