@@ -45,6 +45,8 @@ from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
 
 from .index_override_remover import ftb_index_override_remover_op
+from .ue_export import ftb_ueexport_op
+from .ue_export import ftb_ueexport_pnl
 
 
 bl_info = {
@@ -95,8 +97,14 @@ def register():
 
     ftb_index_override_remover_op.register()
 
+    ftb_ueexport_op.register()
+    ftb_ueexport_pnl.register()
+
 
 def unregister():
+
+    ftb_ueexport_op.unregister()
+    ftb_ueexport_pnl.unregister()
 
     # should be in reverse order of register()
 
