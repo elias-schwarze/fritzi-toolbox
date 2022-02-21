@@ -44,10 +44,13 @@ from .default_setup import ftb_default_comp_setup_pnl
 from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
 
+from .ue_export import ftb_ueexport_op
+from .ue_export import ftb_ueexport_pnl
+
 
 bl_info = {
     "name": "fritziToolbox",
-    "author": "Elias Schwarze",
+    "author": "Elias Schwarze, Robert Lehmann",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (3, 0, 0),
     "version": (0, 2, 5),
@@ -96,8 +99,13 @@ def register():
     ftb_fbxToBvh_op.register()
     ftb_fbxToBvh_pnl.register()
 
+    ftb_ueexport_op.register()
+    ftb_ueexport_pnl.register()
 
 def unregister():
+
+    ftb_ueexport_op.unregister()
+    ftb_ueexport_pnl.unregister()
 
     # should be in reverse order of register()
     ftb_fbxToBvh_pnl.unregister()
