@@ -65,12 +65,6 @@ class FTB_PT_Checking_Panel(Panel):
         col.prop(context.window_manager,
                  "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
 
-        # row = layout.row(align=True)
-        # row.prop(context.window_manager, "bEnableLeft",
-        #          text="Left", toggle=True)
-        # row.prop(context.window_manager, "bEnableRight",
-        #          text="Right", toggle=True)
-
 
 def register():
     bpy.utils.register_class(FTB_PT_Checking_Panel)

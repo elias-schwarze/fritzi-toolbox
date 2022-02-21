@@ -3,10 +3,6 @@ import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty
 
-from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
-from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
-from ..utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
-
 
 class FTB_OT_Toggle_Face_Orient_Op(Operator):
     bl_idname = "view.toggle_face_orient"
