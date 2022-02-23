@@ -45,8 +45,9 @@ from .fbxToBvh_processor import ftb_fbxToBvh_op
 from .fbxToBvh_processor import ftb_fbxToBvh_pnl
 
 from .index_override_remover import ftb_index_override_remover_op
-from .ue_export import ftb_ueexport_op
-from .ue_export import ftb_ueexport_pnl
+
+from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl
+from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
 
 
 bl_info = {
@@ -59,6 +60,7 @@ bl_info = {
     "category": "Object"
 }
 
+classes =  (ftb_ueexport_op, ftb_ueexport_pnl, ftb_materialhelper_op, ftb_materialhelper_pnl)
 
 def register():
 
@@ -97,14 +99,13 @@ def register():
 
     ftb_index_override_remover_op.register()
 
-    ftb_ueexport_op.register()
-    ftb_ueexport_pnl.register()
-
+    for c in classes:
+        c.register()
 
 def unregister():
 
-    ftb_ueexport_op.unregister()
-    ftb_ueexport_pnl.unregister()
+    for c in reversed(classes):
+        c.unregister()
 
     # should be in reverse order of register()
 
