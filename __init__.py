@@ -11,46 +11,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from . import ftb_prefs
-from . import addon_updater_ops
+from . import ftb_prefs, addon_updater_ops
+from .previews import ftb_previews_pnl, ftb_previews_op
+from .object_checking import ftb_objectChecking_pnl, ftb_objectChecking_op
+from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op
+from .danger_zone import ftb_danger_zone_pnl, ftb_danger_zone_op
+from .batch_rotator import ftb_rotator_pnl, ftb_rotator_op
+from .burn_in_render import ftb_burnInRender_pnl, ftb_burnInRender_op
+from .displacement_tools import ftb_displaceTools_op, ftb_displaceTools_pnl
 
-from .previews import ftb_previews_pnl
-from .previews import ftb_previews_op
-
-from .object_checking import ftb_objectChecking_pnl
-from .object_checking import ftb_objectChecking_op
-
-from .data_editing import ftb_dataEditing_pnl
-from .data_editing import ftb_dataEditing_op
-
-from .danger_zone import ftb_danger_zone_pnl
-from .danger_zone import ftb_danger_zone_op
-
-from .batch_rotator import ftb_rotator_pnl
-from .batch_rotator import ftb_rotator_op
-
-from .burn_in_render import ftb_burnInRender_pnl
-from .burn_in_render import ftb_burnInRender_op
-
-from .displacement_tools import ftb_displaceTools_op
-from .displacement_tools import ftb_displaceTools_pnl
-
-from .default_setup import ftb_default_lineart_op
-from .default_setup import ftb_default_render_settings_op
 #from .default_setup import ftb_default_comp_setup_op
 #from .default_setup import ftb_default_comp_setup_pnl
-from .default_setup import ftb_default_setup_pnl
-
-from .fbxToBvh_processor import ftb_fbxToBvh_op
-from .fbxToBvh_processor import ftb_fbxToBvh_pnl
-
+from .default_setup import ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl
+from .fbxToBvh_processor import ftb_fbxToBvh_op ,ftb_fbxToBvh_pnl
 from .index_override_remover import ftb_index_override_remover_op
-
 from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl
 from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
-
-from .prop_rigid_rig import ftb_prop_rigid_rig_op
-from .prop_rigid_rig import ftb_prop_rigid_rig_pnl
+from .prop_rigid_rig import ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl
 
 
 bl_info = {
@@ -63,98 +40,32 @@ bl_info = {
     "category": "Object"
 }
 
-classes = (ftb_ueexport_op, ftb_ueexport_pnl,
-           ftb_materialhelper_op, ftb_materialhelper_pnl)
+classes =  (ftb_prefs,
+            ftb_previews_op, ftb_previews_pnl,
+            ftb_objectChecking_op, ftb_objectChecking_pnl,
+            ftb_dataEditing_op, ftb_dataEditing_pnl, 
+            ftb_danger_zone_op, ftb_danger_zone_pnl,
+            ftb_rotator_op, ftb_rotator_pnl,
+            ftb_burnInRender_op, ftb_burnInRender_pnl,
+            ftb_displaceTools_pnl, ftb_displaceTools_op,
+            ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl,
+            ftb_fbxToBvh_op ,ftb_fbxToBvh_pnl,
+            ftb_index_override_remover_op,
+            ftb_ueexport_op, ftb_ueexport_pnl,
+            ftb_materialhelper_op, ftb_materialhelper_pnl,
+            ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl)
 
 
 def register():
 
-    ftb_prefs.register()
     addon_updater_ops.register(bl_info)
-
-    ftb_rotator_op.register()
-    ftb_rotator_pnl.register()
-
-    ftb_dataEditing_op.register()
-    ftb_dataEditing_pnl.register()
-
-    ftb_danger_zone_op.register()
-    ftb_danger_zone_pnl.register()
-
-    ftb_objectChecking_op.register()
-    ftb_objectChecking_pnl.register()
-
-    ftb_previews_op.register()
-    ftb_previews_pnl.register()
-
-    ftb_burnInRender_op.register()
-    ftb_burnInRender_pnl.register()
-
-    ftb_displaceTools_op.register()
-    ftb_displaceTools_pnl.register()
-
-    ftb_default_lineart_op.register()
-    ftb_default_render_settings_op.register()
-    ftb_default_setup_pnl.register()
-    # ftb_default_comp_setup_op.register()
-    # ftb_default_comp_setup_pnl.register()
-
-    ftb_fbxToBvh_op.register()
-    ftb_fbxToBvh_pnl.register()
-
-    ftb_index_override_remover_op.register()
 
     for c in classes:
         c.register()
-
-    ftb_prop_rigid_rig_op.register()
-    ftb_prop_rigid_rig_pnl.register()
-
 
 def unregister():
 
     for c in reversed(classes):
         c.unregister()
 
-    ftb_prop_rigid_rig_pnl.unregister()
-    ftb_prop_rigid_rig_op.unregister()
-
-    ftb_ueexport_op.unregister()
-    ftb_ueexport_pnl.unregister()
-
-    # should be in reverse order of register()
-
-    ftb_index_override_remover_op.unregister()
-
-    ftb_fbxToBvh_pnl.unregister()
-    ftb_fbxToBvh_op.unregister()
-
-    # ftb_default_comp_setup_pnl.unregister()
-    # ftb_default_comp_setup_op.unregister()
-    ftb_default_setup_pnl.unregister()
-    ftb_default_render_settings_op.unregister()
-    ftb_default_lineart_op.unregister()
-
-    ftb_displaceTools_pnl.unregister()
-    ftb_displaceTools_op.unregister()
-
-    ftb_burnInRender_pnl.unregister()
-    ftb_burnInRender_op.unregister()
-
-    ftb_previews_pnl.unregister()
-    ftb_previews_op.unregister()
-
-    ftb_objectChecking_pnl.unregister()
-    ftb_objectChecking_op.unregister()
-
-    ftb_danger_zone_op.unregister()
-    ftb_danger_zone_pnl.unregister()
-
-    ftb_dataEditing_pnl.unregister()
-    ftb_dataEditing_op.unregister()
-
-    ftb_rotator_pnl.unregister()
-    ftb_rotator_op.unregister()
-
     addon_updater_ops.unregister()
-    ftb_prefs.unregister()
