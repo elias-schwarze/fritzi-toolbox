@@ -48,6 +48,9 @@ from .index_override_remover import ftb_index_override_remover_op
 from .ue_export import ftb_ueexport_op
 from .ue_export import ftb_ueexport_pnl
 
+from .prop_rigid_rig import ftb_prop_rigid_rig_op
+from .prop_rigid_rig import ftb_prop_rigid_rig_pnl
+
 
 bl_info = {
     "name": "fritziToolbox",
@@ -100,8 +103,14 @@ def register():
     ftb_ueexport_op.register()
     ftb_ueexport_pnl.register()
 
+    ftb_prop_rigid_rig_op.register()
+    ftb_prop_rigid_rig_pnl.register()
+
 
 def unregister():
+
+    ftb_prop_rigid_rig_pnl.unregister()
+    ftb_prop_rigid_rig_op.unregister()
 
     ftb_ueexport_op.unregister()
     ftb_ueexport_pnl.unregister()
