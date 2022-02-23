@@ -49,6 +49,9 @@ from .index_override_remover import ftb_index_override_remover_op
 from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl
 from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
 
+from .prop_rigid_rig import ftb_prop_rigid_rig_op
+from .prop_rigid_rig import ftb_prop_rigid_rig_pnl
+
 
 bl_info = {
     "name": "fritziToolbox",
@@ -60,7 +63,9 @@ bl_info = {
     "category": "Object"
 }
 
-classes =  (ftb_ueexport_op, ftb_ueexport_pnl, ftb_materialhelper_op, ftb_materialhelper_pnl)
+classes = (ftb_ueexport_op, ftb_ueexport_pnl,
+           ftb_materialhelper_op, ftb_materialhelper_pnl)
+
 
 def register():
 
@@ -102,10 +107,20 @@ def register():
     for c in classes:
         c.register()
 
+    ftb_prop_rigid_rig_op.register()
+    ftb_prop_rigid_rig_pnl.register()
+
+
 def unregister():
 
     for c in reversed(classes):
         c.unregister()
+
+    ftb_prop_rigid_rig_pnl.unregister()
+    ftb_prop_rigid_rig_op.unregister()
+
+    ftb_ueexport_op.unregister()
+    ftb_ueexport_pnl.unregister()
 
     # should be in reverse order of register()
 
