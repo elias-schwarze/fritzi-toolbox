@@ -1,4 +1,3 @@
-from urllib import robotparser
 import bpy
 from bpy.types import Operator
 
@@ -46,7 +45,8 @@ class FTB_OT_CreateRigidRig_Op(Operator):
         return False
 
     def execute(self, context):
-        childEmpty = context.object
+        childObjs = bpy.context.selected_objects
+        bpy.ops.object.select_all(action='DESELECT')
 
         handleLoc = bpy.context.window_manager.ftbHandleLoc
         rootLoc = bpy.context.window_manager.ftbRootLoc
@@ -74,11 +74,17 @@ class FTB_OT_CreateRigidRig_Op(Operator):
         # switch to object mode to finalize changes to edit_bones
         bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
-        if childEmpty:
-            childEmpty.parent = propRigObj
-            childEmpty.parent_type = 'BONE'
-            childEmpty.parent_bone = "handle"
-            childEmpty.matrix_parent_inverse = handleBone.matrix.inverted()
+        if childObjs:
+            for obj in childObjs:
+                obj.select_set(True)
+
+            propRigObj.select_set(True)
+            bpy.context.view_layer.objects.active = propRigObj
+            # set active bone to handleBone to prepare for parenting
+            propRigData.bones.active = propRigData.bones['handle']
+            propRigData.bones['handle'].select = True
+
+            bpy.ops.object.parent_set(type='BONE')
 
         return {'FINISHED'}
 
