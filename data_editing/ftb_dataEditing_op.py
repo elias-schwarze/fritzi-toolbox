@@ -6,6 +6,40 @@ from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 
+def ModifyCollectionLineArtMask(Collection, Mask):
+    Collection.lineart_use_intersection_mask = Mask[0]
+    for i in range(0, len(Collection.lineart_intersection_mask)):
+        Collection.lineart_intersection_mask[i] = Mask[(i+1)%9]
+    
+def PropagateCollectionMaskSettings(Collection, Mask, bForAllChildren = False):
+
+    if Collection.children:
+        for c in Collection.children:
+            ModifyCollectionLineArtMask(c, Mask)
+            if bForAllChildren:
+                PropagateCollectionMaskSettings(c, Mask, bForAllChildren)
+
+def GetMaskSettings(FromCollection):
+    Mask = [0]*9
+    
+    Mask[0] = FromCollection.lineart_use_intersection_mask
+    for i in range(0, len(FromCollection.lineart_intersection_mask)):
+        Mask[(i+1)%9] = FromCollection.lineart_intersection_mask[i]
+
+    return Mask
+
+def drawLineArtMaskButton(self, context):
+    layout = self.layout
+
+    col = layout.column()
+    row = col.row(align=True)
+
+    buttonlabel = "Propagate to all childs"
+    if not context.window_manager.bForAllChildren:
+        buttonlabel = "Propagate to immediate childs"
+
+    row.operator("collection.propagatelineartmask", text = buttonlabel)
+    row.prop(context.window_manager, "bForAllChildren", text="", icon = 'OUTLINER_OB_GROUP_INSTANCE')
 
 class FTB_OT_CopyLocation_Op(Operator):
     bl_idname = "object.copy_location"
@@ -281,6 +315,20 @@ class FTB_OT_SetMatLinks_Op(Operator):
     def invoke(self, context, event):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
+class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
+
+    bpy.types.WindowManager.bForAllChildren = bpy.props.BoolProperty(default = True)
+
+    bl_idname = "collection.propagatelineartmask"
+    bl_label = "Propagate to child collections"
+    bl_description = "Copies the Line Art Mask settings from this collection to all its children or its immediate children."
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        collection = context.collection
+        mask = GetMaskSettings(collection)
+        PropagateCollectionMaskSettings(collection, mask, context.window_manager.bForAllChildren)
+        return {'FINISHED'}
 
 def register():
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
@@ -291,9 +339,13 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
+    bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
+    bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
 
 def unregister():
+    bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
+    bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
