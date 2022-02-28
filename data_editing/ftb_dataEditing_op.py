@@ -1,11 +1,16 @@
 import bpy
 from bpy.types import Operator
+from bpy.app.handlers import persistent
 
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 
+@persistent
+def UpdateLayerID(self, context):
+    wm = bpy.context.window_manager
+    wm.MaskLayerID = BinToDec(bpy.context.collection.lineart_intersection_mask)
 
 def DecToBin(n, OutBinaryArray):
     if not n == 0:
@@ -23,7 +28,7 @@ def ConvertLayerIDToMask(self, context):
     LayerID = context.window_manager.MaskLayerID
 
     Mask = []
-    DecToBin(LayerID, Mask)
+    DecToBin((LayerID % 256), Mask)
     for i in range(len(Mask),8):
         Mask.append(0)
 
@@ -53,9 +58,8 @@ def GetMaskSettings(FromCollection):
     return Mask
 
 def drawLineArtMaskButton(self, context):
-    Collection = context.collection
     wm = context.window_manager
-    wm.MaskLayerID = BinToDec(Collection.lineart_intersection_mask)
+
     ButtonLabel = "Propagate to all children"
     if not wm.bForAllChildren:
         ButtonLabel = "Propagate to immediate children"
@@ -380,10 +384,12 @@ def register():
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
+    bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
+    bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
     bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
