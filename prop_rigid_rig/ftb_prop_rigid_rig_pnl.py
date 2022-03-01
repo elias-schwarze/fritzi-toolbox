@@ -30,6 +30,8 @@ class FTB_PT_PropRigging_Panel(Panel):
         col.prop(bpy.context.window_manager, "ftbHandleLoc")
         col.operator("object.set_handle_from_cursor")
 
+        col.separator()
+
         col.prop(bpy.context.window_manager, "ftbPropRigName")
 
         col.separator()
