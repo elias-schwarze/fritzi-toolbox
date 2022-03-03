@@ -140,6 +140,18 @@ def createCubeMesh(radius):
     return mesh
 
 
+def create_diamond_widget(radius=0.5):
+    """Creates a basic octahedron widget"""
+    r = radius
+    verts = [(r, 0, 0), (0, -r, 0), (0, r, 0), (0, 0, -r), (0, 0, r), (-r, 0, 0)]
+    edges = [(0, 1), (2, 3), (4, 5), (1, 5), (5, 2), (0, 2),
+             (4, 2), (3, 1), (1, 4), (5, 3), (3, 0), (4, 0)]
+    mesh = bpy.data.meshes.new((bpy.context.window_manager.ftbPropRigName + '_handle'))
+    mesh.from_pydata(verts, edges, [])
+    mesh.update()
+    return mesh
+
+
 def register():
     bpy.utils.register_class(FTB_OT_CreateRigidRig_Op)
     bpy.utils.register_class(FTB_OT_SetRootFromCursor)
