@@ -3,6 +3,7 @@ import bpy.utils
 
 from bpy.types import Panel
 
+
 class FTB_PT_UEExport_Panel(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -22,8 +23,15 @@ class FTB_PT_UEExport_Panel(Panel):
         col.operator("utils.deletemods")
         col.operator("object.flipnormals")
 
+        col.separator()
+        col.label(text="Character Tools")
+        col.operator("utils.ue_char_cleanup")
+        col.operator("utils.ue_char_weight_parent")
+
+
 def register():
     bpy.utils.register_class(FTB_PT_UEExport_Panel)
+
 
 def unregister():
     bpy.utils.unregister_class(FTB_PT_UEExport_Panel)

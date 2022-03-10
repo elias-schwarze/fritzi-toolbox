@@ -25,7 +25,7 @@ from .displacement_tools import ftb_displaceTools_op, ftb_displaceTools_pnl
 from .default_setup import ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl
 from .fbxToBvh_processor import ftb_fbxToBvh_op, ftb_fbxToBvh_pnl
 from .index_override_remover import ftb_index_override_remover_op
-from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl
+from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl, ftb_unreal_char_op
 from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
 from .prop_rigid_rig import ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl
 
@@ -51,7 +51,7 @@ classes = (ftb_prefs,
            ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl,
            ftb_fbxToBvh_op, ftb_fbxToBvh_pnl,
            ftb_index_override_remover_op,
-           ftb_ueexport_op, ftb_ueexport_pnl,
+           ftb_ueexport_op, ftb_unreal_char_op, ftb_ueexport_pnl,
            ftb_materialhelper_op, ftb_materialhelper_pnl,
            ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl)
 
