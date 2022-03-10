@@ -9,6 +9,7 @@ class FTB_PT_UEExport_Panel(Panel):
     bl_region_type = "UI"
     bl_label = "Unreal Export Scripts"
     bl_category = "FTB"
+    bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
 
