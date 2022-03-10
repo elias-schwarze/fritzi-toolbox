@@ -37,7 +37,7 @@ class FTB_OT_CreateRigidRig_Op(Operator):
         obj = context.object
 
         if not obj:
-            return False
+            return True
 
         if obj:
             if obj.mode == "OBJECT":
@@ -129,6 +129,8 @@ class FTB_OT_CreateRigidRig_Op(Operator):
             propRigData.bones['handle'].select = True
 
             bpy.ops.object.parent_set(type='BONE')
+
+        wm.ftbPropRigName = ""
 
         return {'FINISHED'}
 
