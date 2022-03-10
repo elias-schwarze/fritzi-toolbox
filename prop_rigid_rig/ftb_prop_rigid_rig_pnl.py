@@ -16,7 +16,18 @@ class FTB_PT_PropRigging_Panel(Panel):
         name="Handle Position", description="The location of the handle bone.", default=(0.0, 0.0, 0.0), subtype='TRANSLATION')
 
     bpy.types.WindowManager.ftbPropRigName = bpy.props.StringProperty(
-        default="", name="Rig Name")
+        default="", name="Name")
+
+    bpy.types.WindowManager.ftbRigCustomShape = bpy.props.EnumProperty(
+        name="Shape",
+        description="Desired custom bone shape for handle bone.",
+        items=[
+            ('CUBE', "Cube", "Cube shape"),
+            ('DIAMOND', "Diamond", "Basic octahedron shape"),
+            ('SPHERE', "Sphere", "Sphere shape made out of 3 overlapping circles")
+        ],
+        default='CUBE'
+    )
 
     def draw(self, context):
         layout = self.layout
@@ -33,6 +44,9 @@ class FTB_PT_PropRigging_Panel(Panel):
         col.separator()
 
         col.prop(bpy.context.window_manager, "ftbPropRigName")
+        col.separator()
+
+        col.prop(bpy.context.window_manager, "ftbRigCustomShape")
 
         col.separator()
         col.operator("object.create_rigid_rig")
