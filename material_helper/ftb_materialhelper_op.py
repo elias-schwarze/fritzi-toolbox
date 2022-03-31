@@ -2,13 +2,20 @@ import re
 import bpy
 
 from bpy.types import Operator
+from bpy.app.handlers import persistent
+
+@persistent
+def DepsgraphCustomUpdate(self, context):
+    self.Ng  = FindFritziShaderGroup()
+
+    #MaterialHelper.UpdateFritziNodeGroupReference(self)
 
 def FindPropID(Name):
-    propID = re.search("pr[0-9]*", Name)
-    if propID:
-        return propID.group()[2:]
-    else:
-        return None
+    match = re.search("(hpr|pr|bg|vg)[0-9]*", Name)
+    if match:
+        return match.group()
+    
+    return None
 
 def FindFritziShaderGroup():
     for group in bpy.data.node_groups:
@@ -18,20 +25,10 @@ def FindFritziShaderGroup():
         
     return None
 
-def FindBrushTexture():
+def FindImageTextureByName(RegExSearch):
     for image in bpy.data.images:
-        bFStx = re.search("fs_tx001", image.name_full)
-        bFritziEnv = re.search("Fritzi_env", image.name_full)
-        if bFStx or bFritziEnv:
-            return image
-    
-    return None
-
-def FindSplatTexture():
-    for image in bpy.data.images:
-        bFStx = re.search("fs_tx002", image.name_full)
-        bPaintSplat = re.search("paint_splat", image.name_full)
-        if bFStx or bPaintSplat:
+        match = re.search(RegExSearch, image.name_full)
+        if match:
             return image
     
     return None
@@ -46,9 +43,8 @@ def CreateFritziMaterial(Name):
     nodes.remove(nodes.get('Principled BSDF'))
     
     FritziNode = nodes.new('ShaderNodeGroup')
-    FritziShaderGroup = FindFritziShaderGroup()
     
-    FritziNode.node_tree = FritziShaderGroup
+    FritziNode.node_tree = Ng
     if FritziNode:
         FritziNode.width = 220
         FritziNode.inputs[0].default_value = (0.3, 0.3, 0.3, 1.0)
@@ -64,7 +60,7 @@ def CreateFritziMaterial(Name):
     BrushMRNode.location = (-180, 200)
     
     BrushImageNode = nodes.new('ShaderNodeTexImage')
-    BrushImageNode.image = FindBrushTexture()
+    BrushImageNode.image = FindImageTextureByName("(fs_tx001|Fritzi_env)")
     BrushImageNode.interpolation = 'Smart'
     BrushImageNode.projection = 'BOX'
     BrushImageNode.projection_blend = 0.5
@@ -81,7 +77,7 @@ def CreateFritziMaterial(Name):
     SplatMRNode.location = (-180, -200)
     
     SplatImageNode = nodes.new('ShaderNodeTexImage')
-    SplatImageNode.image = FindSplatTexture()
+    SplatImageNode.image = FindImageTextureByName("(fs_tx002|paint_splat)")
     SplatImageNode.interpolation = 'Smart'
     SplatImageNode.projection = 'BOX'
     SplatImageNode.projection_blend = 0.5
@@ -112,6 +108,18 @@ def CreateFritziMaterial(Name):
     return Material
 
 ObjWhitelist = ['MESH', 'CURVE', 'FONT', 'SURFACE', 'META'] 
+Ng = None
+
+class MaterialHelper:
+    FritziNodeGroup = None
+
+    def UpdateFritziNodeGroupReference(self):
+        for group in bpy.data.node_groups:
+            bFoundGroup = re.search("Fritzi_Props", group.name_full)
+            if bFoundGroup:
+                self.FritziNodeGroup = group
+        
+        self.FritziNodeGroup = None
 
 class FTB_OT_PopulateMatSlots_Op(Operator):
     bl_idname = "object.populatematerials"
@@ -123,7 +131,7 @@ class FTB_OT_PopulateMatSlots_Op(Operator):
     def poll(cls, context):
         obj = context.active_object
 
-        if not FindFritziShaderGroup():
+        if not Ng:
             return False
         
         if not obj.type in ObjWhitelist or len(obj.material_slots) < 1 or not obj.override_library:
@@ -177,9 +185,11 @@ class FTB_OT_PopulateMatSlotSingle_Op(Operator):
     def poll(cls, context):
         obj = context.active_object
 
-        if not FindFritziShaderGroup():
+        print("UPdate: " + str(Ng) + " " + str(FindFritziShaderGroup()))
+        print(ObjWhitelist)
+        if not Ng:
             return False
-        
+
         if not obj.type in ObjWhitelist or len(obj.material_slots) < 1:
             return False
         
@@ -208,7 +218,9 @@ class FTB_OT_PopulateMatSlotSingle_Op(Operator):
 def register():
     bpy.utils.register_class(FTB_OT_PopulateMatSlots_Op)
     bpy.utils.register_class(FTB_OT_PopulateMatSlotSingle_Op)
+    bpy.app.handlers.depsgraph_update_pre.append(DepsgraphCustomUpdate)
 
 def unregister():
+    bpy.app.handlers.depsgraph_update_pre.remove(DepsgraphCustomUpdate)
     bpy.utils.unregister_class(FTB_OT_PopulateMatSlotSingle_Op)
     bpy.utils.unregister_class(FTB_OT_PopulateMatSlots_Op)

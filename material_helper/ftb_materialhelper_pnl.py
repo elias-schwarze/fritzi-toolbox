@@ -2,7 +2,7 @@ import bpy
 import bpy.utils
 
 from bpy.types import Panel
-from .ftb_materialhelper_op import FindFritziShaderGroup
+from .ftb_materialhelper_op import Ng
 
 class FTB_PT_MaterialHelper_Panel(Panel):
     bl_space_type = 'PROPERTIES'
@@ -17,7 +17,8 @@ class FTB_PT_MaterialHelper_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
-        if not FindFritziShaderGroup():
+        
+        if not Ng:
             col.label( text="Fritzi Prop Shader Missing! Please append it.", icon='ERROR')
 
         col.operator("object.populatematerialslot")
