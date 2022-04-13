@@ -1,8 +1,209 @@
+import os
+import re
 import bpy
 
+from bpy.app.handlers import persistent
 from bpy.types import Operator
 from bpy.props import BoolProperty
 
+#D = bpy.data
+INVALID_CHARS = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
+ROGUE_OBJECTS = ['CAMERA', 'LIGHT', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'SPEAKER']
+OS_SEPARATOR = os.sep
+
+class AssetChecker:
+
+    bFileIsClean = False
+    bFileInWorkspace = False
+    bPropIDFileName = False
+    bProperFileName = False
+
+    PropCollection = None
+    bPropIDCollectionName = False
+    bProperCollectionName = False
+
+    PropEmpty = None
+    bPropIDEmptyName = False
+    bPropIDEmptyName = False
+    bPropIDEmptyName = False
+    bProperEmptyName = False
+    bEmptyOnWorldOrigin = False
+
+    bEqualNaming = False
+
+    SubDLevelErrors = []
+    ApplyScaleErrors = []
+    MaterialErrors = []
+    ParentingErrors = []
+    NGonErrors = []
+    RogueObjectErrors = []
+    MissingDisplacementErrors = []
+
+    def Initialize():
+        AssetChecker.bFileIsClean = False
+        AssetChecker.bFileInWorkspace = False
+        AssetChecker.bPropIDFileName = False
+        AssetChecker.bProperFileName = False
+
+        AssetChecker.PropCollection = None
+        AssetChecker.bPropIDCollectionName = False
+        AssetChecker.bProperCollectionName = False
+
+        AssetChecker.PropEmpty = None
+        AssetChecker.bPropIDEmptyName = False
+        AssetChecker.bPropIDEmptyName = False
+        AssetChecker.bPropIDEmptyName = False
+        AssetChecker.bProperEmptyName = False
+        AssetChecker.bEmptyOnWorldOrigin = False
+
+        AssetChecker.bEqualNaming = False
+
+        AssetChecker.SubDLevelErrors = []
+        AssetChecker.ApplyScaleErrors = []
+        AssetChecker.MaterialErrors = []
+        AssetChecker.ParentingErrors = []
+        AssetChecker.NGonErrors = []
+        AssetChecker.RogueObjectErrors = []
+        AssetChecker.MissingDisplacementErrors = []
+
+@persistent
+def DepsgraphCustomUpdate(self, context):
+    #AssetChecker.bFileInWorkspace = IsFileInWorkspace()
+    pass
+
+def IsFileInWorkspace():
+    if not bpy.data.is_saved or bpy.data.filepath == "":
+        return False
+
+    if bpy.data.filepath.find("fritzi_serie") == -1:
+        return False
+
+    return True
+
+def IsFileClean():
+    if len(bpy.data.libraries) > 0:
+        return False
+    # TODO: check for 0 users
+    return True
+
+def FindPropID(Name):
+    match = re.search("(hpr|pr|bg|vg)[0-9]*", Name)
+    if not match:
+        return False
+    
+    return True
+
+def EqualSubDLevels(Object):
+    if len(Object.modifiers) <= 0:
+        return True
+
+    for m in Object.modifiers:
+        if not m.type == 'SUBSURF':
+            continue
+
+        if m.render_levels != m.levels:
+            return False
+
+    return True
+
+def FindPropCollection():
+    for c in bpy.data.collections:
+        if FindPropID(c.name_full):
+            return c
+
+    return None
+
+def FindPropEmpty():
+    if not AssetChecker.PropCollection:
+        return None
+    
+    for o in AssetChecker.PropCollection.objects:
+        if not o.type == 'EMPTY' and not o.parent is None:
+            continue
+        
+        return o
+    
+    return None
+
+def UsesValidChars(Name):
+
+    umlaut = 0
+    for char in INVALID_CHARS:
+        umlaut += Name.find(char)
+    
+    # no special char found
+    if umlaut == (len(INVALID_CHARS) * -1):
+        return True
+    
+    return False
+
+def GetFilenameString():
+    return bpy.data.filepath[bpy.data.filepath.rindex(OS_SEPARATOR) + 1: -6]
+
+class FTB_OT_PerformAssetCheck_Op(Operator):
+    bl_idname = "utils.performassetcheck"
+    bl_label = "Run Asset Check"
+    bl_description = "Does Stuff"
+    
+    @classmethod
+    def poll(cls, context):
+        if not bpy.data.is_saved or bpy.data.filepath == "":
+            return False
+
+        return True
+
+    def execute(self, context):
+
+        bpy.ops.object.select_all(action='DESELECT')
+        AssetChecker.Initialize()
+
+        _filename = GetFilenameString()
+        _propcollection = FindPropCollection()
+        AssetChecker.PropCollection = _propcollection
+
+        AssetChecker.bFileIsClean = IsFileClean()
+
+        AssetChecker.bFileInWorkspace = IsFileInWorkspace()
+        AssetChecker.bPropIDFileName = FindPropID(_filename)
+        AssetChecker.bProperFileName = UsesValidChars(_filename)
+
+        if AssetChecker.PropCollection:
+            _propempty = FindPropEmpty()
+            AssetChecker.PropEmpty = _propempty
+
+            AssetChecker.bPropIDCollectionName = FindPropID(_propcollection.name_full)
+            AssetChecker.bProperCollectionName = UsesValidChars(_propcollection.name_full)
+
+            if AssetChecker.PropEmpty:
+
+                AssetChecker.bEqualNaming = _filename == _propcollection.name_full and _filename == _propempty.name_full
+
+                AssetChecker.bPropIDEmptyName = FindPropID(_propempty.name_full)
+                AssetChecker.bProperEmptyName = UsesValidChars(_propempty.name_full)
+
+            # check for SubD Errors
+            for o in _propcollection.objects:
+                if not EqualSubDLevels(o):
+                    AssetChecker.SubDLevelErrors.append(o)
+
+        else:
+            AssetChecker.bPropIDCollectionName = False
+            AssetChecker.bProperCollectionName = False
+            AssetChecker.bPropIDEmptyName = False
+            AssetChecker.bProperEmptyName = False
+        
+        return {'FINISHED'}
+
+class FTB_OT_ShowSubDErrors_Op(Operator):
+    bl_idname = "object.showsubderror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        for o in AssetChecker.SubDLevelErrors:
+            o.select_set(True)
+
+        return {'FINISHED'}
 
 class FTB_OT_Toggle_Face_Orient_Op(Operator):
     bl_idname = "view.toggle_face_orient"
@@ -10,12 +211,7 @@ class FTB_OT_Toggle_Face_Orient_Op(Operator):
     bl_description = "Toggle the Face Orientation overlay"
 
     def execute(self, context):
-        if bpy.context.space_data.overlay.show_face_orientation == True:
-            bpy.context.space_data.overlay.show_face_orientation = False
-
-        elif bpy.context.space_data.overlay.show_face_orientation == False:
-            bpy.context.space_data.overlay.show_face_orientation = True
-
+        bpy.context.space_data.overlay.show_face_orientation = not(bpy.context.space_data.overlay.show_face_orientation)
         return {'FINISHED'}
 
 
@@ -439,9 +635,17 @@ def register():
     bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
     bpy.utils.register_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.register_class(FTB_OT_FindOrphanTextures_Op)
+    bpy.utils.register_class(FTB_OT_PerformAssetCheck_Op)
+    bpy.utils.register_class(FTB_OT_ShowSubDErrors_Op)
+
+    bpy.app.handlers.depsgraph_update_pre.append(DepsgraphCustomUpdate)
 
 
 def unregister():
+    bpy.app.handlers.depsgraph_update_pre.remove(DepsgraphCustomUpdate)
+
+    bpy.utils.unregister_class(FTB_OT_ShowSubDErrors_Op)
+    bpy.utils.unregister_class(FTB_OT_PerformAssetCheck_Op)
     bpy.utils.unregister_class(FTB_OT_FindOrphanTextures_Op)
     bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
     bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)

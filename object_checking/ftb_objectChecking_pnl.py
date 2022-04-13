@@ -2,6 +2,8 @@ import bpy
 import bpy.utils
 from bpy.types import Panel
 
+from .ftb_objectChecking_op import AssetChecker
+
 
 class FTB_PT_Checking_Panel(Panel):
     bl_space_type = "VIEW_3D"
@@ -16,54 +18,91 @@ class FTB_PT_Checking_Panel(Panel):
         default=False)
 
     def draw(self, context):
-
         layout = self.layout
-
         col = layout.column()
         col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
+        col.operator("utils.performassetcheck")
 
-        col = layout.column(align=True)
-        col.label(text="Transform Checking")
+        if AssetChecker.PropCollection:
+            col.label(text="Prop Collection found", icon='ERROR')
 
-        col.operator("object.select_location_non_zero")
+        if AssetChecker.bFileInWorkspace:
+            col.label(text="File in Workspace", icon='ERROR')
+        
+        if AssetChecker.bPropIDFileName:
+            col.label(text="PropID in Filename", icon='ERROR')
+        
+        if AssetChecker.bProperFileName:
+            col.label(text="Chars valid in Filename", icon='ERROR')
+        
+        if AssetChecker.PropCollection:
+            if AssetChecker.bPropIDFileName:
+                col.label(text="PropID in Collection", icon='ERROR')
+            if AssetChecker.bProperCollectionName:
+                col.label(text="Chars valid in Collection", icon='ERROR')
 
-        col.operator("object.select_rotation_non_zero")
+            if AssetChecker.PropEmpty:
+                
+                if AssetChecker.bEqualNaming:
+                    col.label(text="Names are Equal")
 
-        col.operator("object.select_scale_non_one")
-        col.operator("object.select_scale_non_unform")
+                col.label(text=AssetChecker.PropEmpty.name_full)
+                if AssetChecker.bPropIDEmptyName:
+                    col.label(text="PropID in Empty", icon='ERROR')
+                if AssetChecker.bProperEmptyName:
+                    col.label(text="Chars valid in Empty", icon='ERROR')
 
-        col = layout.column(align=True)
-        col.label(text="Origin")
+            if AssetChecker.SubDLevelErrors:
+                col.operator("object.showsubderror")
 
-        col.operator("object.center_object")
-        col.operator("object.origin_to_cursor")
+        # ######## OLD DRAW
+        # layout = self.layout
 
-        col = layout.column(align=True)
-        col.label(text="Mesh Checking")
-        col.operator("object.check_ngons").showPolys = False
-        col.operator("object.check_ngons",
-                     text="Check and Show Ngons").showPolys = True
+        # col = layout.column()
+        # col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
 
-        col = layout.column()
-        col.label(text="Orphan Data:")
+        # col = layout.column(align=True)
+        # col.label(text="Transform Checking")
 
-        col = layout.column()
-        col.operator("object.find_orphaned_objects")
+        # col.operator("object.select_location_non_zero")
 
-        col = layout.column()
-        col.operator("image.find_orphan_textures")
+        # col.operator("object.select_rotation_non_zero")
 
-        col = layout.column()
-        col.label(text="Material Slots")
+        # col.operator("object.select_scale_non_one")
+        # col.operator("object.select_scale_non_unform")
 
-        row = layout.row(align=True)
-        row.operator("object.validate_mat_slots")
-        row.prop(data=context.window_manager,
-                 property="bActiveCollectionOnly", toggle=True, icon_only=True, icon='OUTLINER_COLLECTION')
+        # col = layout.column(align=True)
+        # col.label(text="Origin")
 
-        col = layout.column()
-        col.prop(context.window_manager,
-                 "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
+        # col.operator("object.center_object")
+        # col.operator("object.origin_to_cursor")
+
+        # col = layout.column(align=True)
+        # col.label(text="Mesh Checking")
+        # col.operator("object.check_ngons").showPolys = False
+        # col.operator("object.check_ngons",
+        #              text="Check and Show Ngons").showPolys = True
+
+        # col = layout.column()
+        # col.label(text="Orphan Data:")
+
+        # col = layout.column()
+        # col.operator("object.find_orphaned_objects")
+
+        # col = layout.column()
+        # col.operator("image.find_orphan_textures")
+
+        # col = layout.column()
+        # col.label(text="Material Slots")
+
+        # row = layout.row(align=True)
+        # row.operator("object.validate_mat_slots")
+        # row.prop(data=context.window_manager,
+        #          property="bActiveCollectionOnly", toggle=True, icon_only=True, icon='OUTLINER_COLLECTION')
+
+        # col = layout.column()
+        # col.prop(context.window_manager,
+        #          "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
 
 
 def register():
