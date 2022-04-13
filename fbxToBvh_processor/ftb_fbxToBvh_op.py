@@ -87,9 +87,15 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
 
         for file in self.files:
 
+            self.report({'INFO'}, "Importing " + file.name + " ...")
+            print("Importing " + file.name + " ...")
+
             # import fbx file using the filepath from ImportHelper, set automatic bone orientation to true)
             bpy.ops.import_scene.fbx(filepath=(self.directory + file.name), global_scale=100,
                                      use_image_search=False, automatic_bone_orientation=True)
+
+            self.report({'INFO'}, file.name + " Import successful.")
+            print(file.name + " Import successful.")
 
             for obj in bpy.context.collection.all_objects:
                 if (not obj in tempObjList) and (obj.type == 'ARMATURE'):
@@ -101,8 +107,13 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
 
                     bpy.context.view_layer.objects.active = obj
 
+                    self.report({'INFO'}, "Exporting " + file.name + " ...")
+                    print("Exporting " + file.name + " ...")
+
                     bpy.ops.export_anim.bvh(
                         filepath=(wm.bvhOutputPath + obj.name + ".bvh"), frame_start=1, frame_end=endFrame)
+
+                    self.report({'INFO'}, file.name + " to BVH successful")
         return {'FINISHED'}
 
 

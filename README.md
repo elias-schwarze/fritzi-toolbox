@@ -1,8 +1,7 @@
-# fritzi-toolbox (Blender 2.9x addon)
- A suite of tools for Blender 3D production including:
+# fritzi-toolbox (Blender 3.x addon)
+ A suite of tools for Blender 3D production including but not limited to:
  - Tools for checking objects and meshes for unwanted transformations, normals and topology
- - Tool for creating Library Overrides while keeping the transform of the instancer Object
- - Batch Rotator, to add rotation to many objects at once
+ - Various Batch operations such as batch editing shader parameters and batch converting bvh and fbx formats
  - Preview Render and Preview Import tools, for creating standardized previews of characters and importing them into Blender
  
  ![Screenshot 2021-07-12 093641](https://user-images.githubusercontent.com/85888167/125249073-19a46080-e2f5-11eb-91f0-d12067a8c920.jpg)
@@ -13,4 +12,4 @@
  # Installation
  - Download the .zip file of a  release from the Releases Section: https://github.com/elias-schwarze/fritzi-toolbox/releases
  - In Blender User Preferences, go to Addons and Install the .zip file
- - IMPORTANT: If updating from an older version of fritzi-toolbox, uninstall old version first, then restart Blender, then install new version
+ - IMPORTANT: To update an already existing installation of the addon, go to your user preferences and navigate to fritzi-toolbox in the Addon submenu. You'll find tools to automatically update the addon.

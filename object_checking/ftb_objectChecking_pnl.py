@@ -38,9 +38,11 @@ class FTB_PT_Checking_Panel(Panel):
         col.operator("object.center_object")
         col.operator("object.origin_to_cursor")
 
-        col = layout.column()
+        col = layout.column(align=True)
         col.label(text="Mesh Checking")
-        col.operator("object.check_ngons")
+        col.operator("object.check_ngons").showPolys = False
+        col.operator("object.check_ngons",
+                     text="Check and Show Ngons").showPolys = True
 
         col = layout.column()
         col.label(text="Orphan Data:")
@@ -62,12 +64,6 @@ class FTB_PT_Checking_Panel(Panel):
         col = layout.column()
         col.prop(context.window_manager,
                  "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
-
-        # row = layout.row(align=True)
-        # row.prop(context.window_manager, "bEnableLeft",
-        #          text="Left", toggle=True)
-        # row.prop(context.window_manager, "bEnableRight",
-        #          text="Right", toggle=True)
 
 
 def register():

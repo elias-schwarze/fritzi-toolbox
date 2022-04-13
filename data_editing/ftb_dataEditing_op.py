@@ -1,66 +1,78 @@
 import bpy
-
 from bpy.types import Operator
+from bpy.app.handlers import persistent
 
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 
+@persistent
+def UpdateLayerID(self, context):
+    wm = bpy.context.window_manager
+    wm.MaskLayerID = BinToDec(bpy.context.collection.lineart_intersection_mask)
 
-class FTB_OT_RemoveMaterials_Op(Operator):
-    bl_idname = "object.remove_all_materials"
-    bl_label = "Remove All Materials"
-    bl_description = "Remove all Material slots from all selected Objects"
-    bl_options = {"REGISTER", "UNDO"}
+def DecToBin(n, OutBinaryArray):
+    if not n == 0:
+        OutBinaryArray.append(n % 2)
+        DecToBin(n>>1, OutBinaryArray)
 
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
+def BinToDec(BinaryArray):
+    n = 0
+    for i in reversed(range(len(BinaryArray))):
+        n += BinaryArray[i] * pow(2,i)
+    return n
 
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
+def ConvertLayerIDToMask(self, context):
+    Collection = context.collection
+    LayerID = context.window_manager.MaskLayerID
 
-        return False
+    Mask = []
+    DecToBin((LayerID % 256), Mask)
+    for i in range(len(Mask),8):
+        Mask.append(0)
 
-    def execute(self, context):
-        for m in bpy.data.materials:
-            bpy.data.materials.remove(m)
+    for i in range(0, len(Collection.lineart_intersection_mask)):
+        Collection.lineart_intersection_mask[i] = Mask[i]
 
-        self.report({'INFO'}, 'Removed all Materials')
-        return {'FINISHED'}
+def ModifyCollectionLineArtMask(Collection, Mask):
+    Collection.lineart_use_intersection_mask = Mask[0]
+    for i in range(0, len(Collection.lineart_intersection_mask)):
+        Collection.lineart_intersection_mask[i] = Mask[(i+1) % 9]
 
-    def invoke(self, context, event):
-        return bpy.context.window_manager.invoke_confirm(self, event)
+def PropagateCollectionMaskSettings(Collection, Mask, bForAllChildren=False):
 
+    if Collection.children:
+        for c in Collection.children:
+            ModifyCollectionLineArtMask(c, Mask)
+            if bForAllChildren:
+                PropagateCollectionMaskSettings(c, Mask, bForAllChildren)
 
-class FTB_OT_RemoveModifiers_Op(Operator):
-    bl_idname = "object.remove_modifers"
-    bl_label = "Remove Modifiers"
-    bl_description = "Remove all Modifiers from all selected objects"
-    bl_options = {"REGISTER", "UNDO"}
+def GetMaskSettings(FromCollection):
+    Mask = [0]*9
 
-    # should only work in object mode
-    @classmethod
-    def poll(cls, context):
-        obj = context.object
+    Mask[0] = FromCollection.lineart_use_intersection_mask
+    for i in range(0, len(FromCollection.lineart_intersection_mask)):
+        Mask[(i+1) % 9] = FromCollection.lineart_intersection_mask[i]
 
-        if obj:
-            if obj.mode == "OBJECT":
-                return True
+    return Mask
 
-        return False
+def drawLineArtMaskButton(self, context):
+    wm = context.window_manager
 
-    def execute(self, context):
-        for obj in bpy.context.selected_objects:
-            for mod in obj.modifiers:
-                obj.modifiers.remove(mod)
-        return{'FINISHED'}
+    ButtonLabel = "Propagate to all children"
+    if not wm.bForAllChildren:
+        ButtonLabel = "Propagate to immediate children"
 
-    def invoke(self, context, event):
-        return bpy.context.window_manager.invoke_confirm(self, event)
+    layout = self.layout
+    col = layout.column()
+    col.alignment = 'RIGHT'
+    col.prop(wm, "MaskLayerID", text = "Layer")
+    col.separator()
+
+    row = col.row(align=True)
+    row.operator("collection.propagatelineartmask", text=ButtonLabel)
+    row.prop(wm, "bForAllChildren", text="", icon='OUTLINER_OB_GROUP_INSTANCE')
 
 
 class FTB_OT_CopyLocation_Op(Operator):
@@ -338,120 +350,31 @@ class FTB_OT_SetMatLinks_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
-class FTB_OT_EditShaderProperty_Op(Operator):
-    bl_idname = "material.edit_shader_prop"
-    bl_label = "Edit Shader Property"
-    bl_description = "Sets selected shader property to selected value for all materials within scope."
+class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
+
+    bpy.types.WindowManager.bForAllChildren = bpy.props.BoolProperty(
+        default=True)
+    bpy.types.WindowManager.MaskLayerID = bpy.props.IntProperty(min=0, max=255, update = ConvertLayerIDToMask)
+
+    bl_idname = "collection.propagatelineartmask"
+    bl_label = "Propagate to child collections"
+    bl_description = "Copies the Line Art Mask settings from this collection to all its children or its immediate children."
     bl_options = {"REGISTER", "UNDO"}
 
-    def setShaderProperty(self, materialObject):
-
-        wm = bpy.context.window_manager
-
-        # temporary list of already edited materials, in case some materials are looped over multiple times
-        editedMatList = list()
-
-        for matSlot in materialObject.material_slots:
-            if matSlot.material is not None:
-                if matSlot.material not in editedMatList:
-                    editedMatList.append(matSlot.material)
-                    if (matSlot.material.node_tree != None):
-                        for node in matSlot.material.node_tree.nodes:
-                            if (type(node) == bpy.types.ShaderNodeGroup and node.node_tree != None):
-                                if (node.node_tree.name == wm.ftbShaderType.name):
-                                    for dinput in node.inputs:
-                                        if (dinput.identifier == wm.ftbShaderInput):
-
-                                            if (dinput.type == 'RGBA'):
-
-                                                if (wm.ftbShaderOperation == 'SET'):
-                                                    dinput.default_value = wm.ftbShaderInputColor
-
-                                                elif (wm.ftbShaderOperation == 'ADD'):
-                                                    dinput.default_value[0] += wm.ftbShaderInputColor[0]
-                                                    dinput.default_value[1] += wm.ftbShaderInputColor[1]
-                                                    dinput.default_value[2] += wm.ftbShaderInputColor[2]
-                                                    dinput.default_value[3] += wm.ftbShaderInputColor[3]
-
-                                                elif (wm.ftbShaderOperation == 'MUL'):
-                                                    dinput.default_value[0] *= wm.ftbShaderInputColor[0]
-                                                    dinput.default_value[1] *= wm.ftbShaderInputColor[1]
-                                                    dinput.default_value[2] *= wm.ftbShaderInputColor[2]
-                                                    dinput.default_value[3] *= wm.ftbShaderInputColor[3]
-
-                                            if dinput.type == ('VECTOR'):
-                                                if (wm.ftbShaderOperation == 'SET'):
-                                                    dinput.default_value = wm.ftbShaderInputVector
-
-                                                elif (wm.ftbShaderOperation == 'ADD'):
-                                                    dinput.default_value[0] += wm.ftbShaderInputVector[0]
-                                                    dinput.default_value[1] += wm.ftbShaderInputVector[1]
-                                                    dinput.default_value[2] += wm.ftbShaderInputVector[2]
-
-                                                elif (wm.ftbShaderOperation == 'MUL'):
-                                                    dinput.default_value[0] *= wm.ftbShaderInputVector[0]
-                                                    dinput.default_value[1] *= wm.ftbShaderInputVector[1]
-                                                    dinput.default_value[2] *= wm.ftbShaderInputVector[2]
-
-                                            if dinput.type == ('VALUE'):
-                                                if (wm.ftbShaderOperation == 'SET'):
-                                                    dinput.default_value = wm.ftbShaderInputValue
-
-                                                elif (wm.ftbShaderOperation == 'ADD'):
-                                                    dinput.default_value += wm.ftbShaderInputValue
-
-                                                elif (wm.ftbShaderOperation == 'MUL'):
-                                                    dinput.default_value *= wm.ftbShaderInputValue
-
     def execute(self, context):
+        collection = context.collection
+        mask = GetMaskSettings(collection)
+        PropagateCollectionMaskSettings(
+            collection, mask, context.window_manager.bForAllChildren)
 
-        wm = bpy.context.window_manager
-
-        # Case limit = View Layer
-        if (wm.editShaderScope == 'VIEW_LAYER'):
-            if (not bpy.context.view_layer.objects):
-                self.report(
-                    {'ERROR'}, "No valid objects found in current view layer")
-                return {'CANCELLED'}
-            else:
-                for obj in bpy.context.view_layer.objects:
-                    self.setShaderProperty(obj)
-
-                self.report(
-                    {'INFO'}, "Shader property was changed for all materials in view layer.")
-
-        # Case limit = Active Collection
-        if (wm.editShaderScope == 'COLLECTION'):
-            if (not bpy.context.collection):
-                self.report({'ERROR'}, "No active collection")
-                return {'CANCELLED'}
-
-            else:
-                for obj in bpy.context.collection.all_objects:
-                    self.setShaderProperty(obj)
-
-                self.report(
-                    {'INFO'}, "Shader property was changed for all materials in active collection.")
-
-        # Case limit = Current Selection
-        if (wm.editShaderScope == 'SELECTION'):
-            if (not bpy.context.selected_objects):
-                self.report({'ERROR'}, "No objects selected")
-
-            else:
-                for obj in bpy.context.selected_objects:
-                    self.setShaderProperty(obj)
-                self.report(
-                    {'INFO'}, "Shader property was changed for all materials in selection.")
+        if context.window_manager.bForAllChildren:
+            self.report({'INFO'}, "Mask settings applied to all children")
+        else:
+            self.report({'INFO'}, "Mask settings applied to immediate children")
 
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        return bpy.context.window_manager.invoke_confirm(self, event)
-
-
 def register():
-    bpy.utils.register_class(FTB_OT_RemoveMaterials_Op)
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
@@ -460,13 +383,14 @@ def register():
     bpy.utils.register_class(FTB_OT_CopyScale_Op)
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
-    bpy.utils.register_class(FTB_OT_EditShaderProperty_Op)
-    bpy.utils.register_class(FTB_OT_RemoveModifiers_Op)
-
+    bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
+    bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
+    bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
 def unregister():
-    bpy.utils.unregister_class(FTB_OT_RemoveModifiers_Op)
-    bpy.utils.unregister_class(FTB_OT_EditShaderProperty_Op)
+    bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
+    bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
+    bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
@@ -475,4 +399,3 @@ def unregister():
     bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
     bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)
-    bpy.utils.unregister_class(FTB_OT_RemoveMaterials_Op)
