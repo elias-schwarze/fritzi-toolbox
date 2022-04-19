@@ -1,4 +1,5 @@
 import os
+import math
 import re
 import bpy
 
@@ -7,6 +8,7 @@ from bpy.types import Operator
 from bpy.props import BoolProperty
 
 #D = bpy.data
+TRESHOLD = 0.001
 INVALID_CHARS = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
 ROGUE_OBJECTS = ['CAMERA', 'LIGHT', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'SPEAKER']
 OS_SEPARATOR = os.sep
@@ -19,21 +21,25 @@ class AssetChecker:
     bProperFileName = False
 
     PropCollection = None
+    PropCollectionOverride = None
     bPropIDCollectionName = False
     bProperCollectionName = False
 
     PropEmpty = None
     bPropIDEmptyName = False
-    bPropIDEmptyName = False
-    bPropIDEmptyName = False
     bProperEmptyName = False
     bEmptyOnWorldOrigin = False
 
+    bEqualFileCollectionName = False
+    bEqualFileEmptyName = False
+    bEqualCollectonEmptyName = False
     bEqualNaming = False
 
     SubDLevelErrors = []
     ApplyScaleErrors = []
-    MaterialErrors = []
+    MissingSlotErrors = []
+    SlotLinkErrors = []
+    UnusedSlotErrors = []
     ParentingErrors = []
     NGonErrors = []
     RogueObjectErrors = []
@@ -51,16 +57,19 @@ class AssetChecker:
 
         AssetChecker.PropEmpty = None
         AssetChecker.bPropIDEmptyName = False
-        AssetChecker.bPropIDEmptyName = False
-        AssetChecker.bPropIDEmptyName = False
         AssetChecker.bProperEmptyName = False
         AssetChecker.bEmptyOnWorldOrigin = False
 
+        AssetChecker.bEqualFileCollectionName = False
+        AssetChecker.bEqualFileEmptyName = False
+        AssetChecker.bEqualCollectonEmptyName = False
         AssetChecker.bEqualNaming = False
 
         AssetChecker.SubDLevelErrors = []
         AssetChecker.ApplyScaleErrors = []
-        AssetChecker.MaterialErrors = []
+        AssetChecker.MissingSlotErrors = []
+        AssetChecker.SlotLinkErrors = []
+        AssetChecker.UnusedSlotErrors = []
         AssetChecker.ParentingErrors = []
         AssetChecker.NGonErrors = []
         AssetChecker.RogueObjectErrors = []
@@ -85,6 +94,25 @@ def IsFileClean():
         return False
     # TODO: check for 0 users
     return True
+
+def IsOnWorldOrigin(Object):
+    return math.isclose(Object.location[0], 0, abs_tol = TRESHOLD) and math.isclose(Object.location[1], 0, abs_tol = TRESHOLD) and math.isclose(Object.location[2], 0, abs_tol = TRESHOLD)
+
+def IsScaleApplied(Object):
+    return math.isclose(Object.scale[0], 1, abs_tol = TRESHOLD) and math.isclose(Object.scale[1], 1, abs_tol = TRESHOLD) and math.isclose(Object.scale[2], 1, abs_tol = TRESHOLD)
+
+def IsRotationApplied(Object):
+    return math.isclose(Object.rotation_euler[0], 0, abs_tol = TRESHOLD) and math.isclose(Object.rotation_euler[1], 0, abs_tol = TRESHOLD) and math.isclose(Object.rotation_euler[2], 0, abs_tol = TRESHOLD)
+
+def HasNGons(Object):
+    if Object.type != 'MESH':
+        return False
+    
+    for p in Object.data.polygons:
+        if len(p.vertices) > 4:
+            return True
+
+    return False
 
 def FindPropID(Name):
     match = re.search("(hpr|pr|bg|vg)[0-9]*", Name)
@@ -113,6 +141,9 @@ def FindPropCollection():
 
     return None
 
+def SetPropCollection(Collection):
+    AssetChecker.PropCollectionOverride = Collection
+
 def FindPropEmpty():
     if not AssetChecker.PropCollection:
         return None
@@ -140,6 +171,27 @@ def UsesValidChars(Name):
 def GetFilenameString():
     return bpy.data.filepath[bpy.data.filepath.rindex(OS_SEPARATOR) + 1: -6]
 
+def IsParented(Object, ToParent):
+    if Object.parent:
+        if Object.parent != ToParent:
+            IsParented(Object.parent, ToParent)
+        else:
+            return True
+    else:
+        return False
+
+def SelectErrors(ErrorList):
+    if bpy.context.mode != 'OBJECT':
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    bpy.ops.object.select_all(action='DESELECT')
+
+    for o in ErrorList:
+        o.select_set(True)
+
+    bpy.context.view_layer.objects.active = ErrorList[0]
+
+
 class FTB_OT_PerformAssetCheck_Op(Operator):
     bl_idname = "utils.performassetcheck"
     bl_label = "Run Asset Check"
@@ -154,7 +206,11 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
 
     def execute(self, context):
 
+        if bpy.context.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode = 'OBJECT')
+
         bpy.ops.object.select_all(action='DESELECT')
+
         AssetChecker.Initialize()
 
         _filename = GetFilenameString()
@@ -170,21 +226,65 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
         if AssetChecker.PropCollection:
             _propempty = FindPropEmpty()
             AssetChecker.PropEmpty = _propempty
+            AssetChecker.bEqualFileCollectionName = (_filename == _propcollection.name_full)
 
             AssetChecker.bPropIDCollectionName = FindPropID(_propcollection.name_full)
             AssetChecker.bProperCollectionName = UsesValidChars(_propcollection.name_full)
 
             if AssetChecker.PropEmpty:
+                AssetChecker.bEmptyOnWorldOrigin = IsOnWorldOrigin(_propempty)
 
-                AssetChecker.bEqualNaming = _filename == _propcollection.name_full and _filename == _propempty.name_full
+                AssetChecker.bEqualFileEmptyName = (_filename == _propempty.name_full)
+                AssetChecker.bEqualCollectonEmptyName = (_propcollection.name_full == _propempty.name_full)
+                AssetChecker.bEqualNaming = AssetChecker.bEqualFileCollectionName and AssetChecker.bEqualCollectonEmptyName and AssetChecker.bEqualFileEmptyName
 
                 AssetChecker.bPropIDEmptyName = FindPropID(_propempty.name_full)
                 AssetChecker.bProperEmptyName = UsesValidChars(_propempty.name_full)
 
-            # check for SubD Errors
-            for o in _propcollection.objects:
-                if not EqualSubDLevels(o):
-                    AssetChecker.SubDLevelErrors.append(o)
+            for o in _propcollection.objects:              
+                if o.type in ROGUE_OBJECTS:
+                    AssetChecker.RogueObjectErrors.append(o)
+                    continue
+
+                if o.type in ['MESH', 'CURVE', 'SURFACE']:
+                    
+                    _bSubDError = False
+                    _bDisplaceError = True
+                    for m in o.modifiers:
+                        if not m.type in ['SUBSURF', 'DISPLACE']:
+                            continue
+
+                        if m.type == 'SUBSURF':
+                            if m.render_levels != m.levels:
+                                _bSubDError = True
+                        elif m.type == 'DISPLACE':
+                            _bDisplaceError = False
+
+                    if _bSubDError:
+                        AssetChecker.SubDLevelErrors.append(o)
+                    if _bDisplaceError:
+                        AssetChecker.MissingDisplacementErrors.append(o)
+
+                    if not IsScaleApplied(o):
+                        AssetChecker.ApplyScaleErrors.append(o)
+
+                    _usedmatslots = []
+                    for f in o.data.polygons:
+                        _usedmatslots.append(f.material_index)
+                        if len(f.vertices) > 4:
+                            AssetChecker.NGonErrors.append(o)    
+        
+                    if not o.material_slots:
+                        AssetChecker.MissingSlotErrors.append(o)
+                    else:
+                        for i in range(len(o.material_slots)):
+                            if o.material_slots[i].link != 'OBJECT':
+                                AssetChecker.SlotLinkErrors.append(o)
+                            if _usedmatslots.count(i) <= 0:
+                                AssetChecker.UnusedSlotErrors.append(o)
+
+                    if not IsParented(o, _propempty):
+                        AssetChecker.ParentingErrors.append(o)
 
         else:
             AssetChecker.bPropIDCollectionName = False
@@ -194,14 +294,94 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
         
         return {'FINISHED'}
 
+class FTB_OT_ShowRoguesError_Op(Operator):
+    bl_idname = "object.showrogues"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.RogueObjectErrors)
+        return {'FINISHED'}
+        
 class FTB_OT_ShowSubDErrors_Op(Operator):
     bl_idname = "object.showsubderror"
     bl_label = "Select SubD Errors"
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        for o in AssetChecker.SubDLevelErrors:
-            o.select_set(True)
+        SelectErrors(AssetChecker.SubDLevelErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowDisplaceErrors_Op(Operator):
+    bl_idname = "object.showdisplaceerror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.MissingDisplacementErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowScaleErrors_Op(Operator):
+    bl_idname = "object.showscaleerror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.ApplyScaleErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowNGonErrors_Op(Operator):
+    bl_idname = "object.showngonerror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.NGonErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowMissingSlotErrors_Op(Operator):
+    bl_idname = "object.showmissingsloterror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.MissingSlotErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowSlotLinkErrors_Op(Operator):
+    bl_idname = "object.showslotlinkerror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.SlotLinkErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowUnusedSlotErrors_Op(Operator):
+    bl_idname = "object.showunusedsloterror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.UnusedSlotErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ShowParentingErrors_Op(Operator):
+    bl_idname = "object.showparentingerror"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        SelectErrors(AssetChecker.ParentingErrors)
+        return {'FINISHED'}
+
+class FTB_OT_ResolveFilenameError_Op(Operator):
+    bl_idname = "wm.savefile"
+    bl_label = "Select SubD Errors"
+    bl_description = "Does Stuff"
+
+    def execute(self, context):
+        bpy.ops.wm.save_as_mainfile('INVOKE_AREA')
 
         return {'FINISHED'}
 
@@ -622,38 +802,26 @@ class FTB_OT_FindOrphanTextures_Op(Operator):
 
         return {'FINISHED'}
 
+classes =   (
+                FTB_OT_Toggle_Face_Orient_Op, FTB_OT_SelectScaleNonOne_Op, FTB_OT_SelectScaleNonUniform_Op,
+                FTB_OT_SelectRotationNonZero_Op, FTB_OT_SelectLocationNonZero_Op, FTB_OT_SetToCenter_Op,
+                FTB_OT_OriginToCursor_Op, FTB_OT_CheckNgons_Op, FTB_OT_ValidateMatSlots_Op,
+                FTB_OT_FindOrphanedObjects_Op, FTB_OT_FindOrphanTextures_Op, FTB_OT_PerformAssetCheck_Op,
+                FTB_OT_ShowSubDErrors_Op, FTB_OT_ShowRoguesError_Op, FTB_OT_ResolveFilenameError_Op,
+                FTB_OT_ShowDisplaceErrors_Op, FTB_OT_ShowScaleErrors_Op, FTB_OT_ShowNGonErrors_Op,
+                FTB_OT_ShowMissingSlotErrors_Op, FTB_OT_ShowSlotLinkErrors_Op, FTB_OT_ShowUnusedSlotErrors_Op,
+                FTB_OT_ShowParentingErrors_Op
+            )
+
 
 def register():
-    bpy.utils.register_class(FTB_OT_Toggle_Face_Orient_Op)
-    bpy.utils.register_class(FTB_OT_SelectScaleNonOne_Op)
-    bpy.utils.register_class(FTB_OT_SelectScaleNonUniform_Op)
-    bpy.utils.register_class(FTB_OT_SelectRotationNonZero_Op)
-    bpy.utils.register_class(FTB_OT_SelectLocationNonZero_Op)
-    bpy.utils.register_class(FTB_OT_SetToCenter_Op)
-    bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
-    bpy.utils.register_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.register_class(FTB_OT_ValidateMatSlots_Op)
-    bpy.utils.register_class(FTB_OT_FindOrphanedObjects_Op)
-    bpy.utils.register_class(FTB_OT_FindOrphanTextures_Op)
-    bpy.utils.register_class(FTB_OT_PerformAssetCheck_Op)
-    bpy.utils.register_class(FTB_OT_ShowSubDErrors_Op)
+    for c in classes:
+        bpy.utils.register_class(c)
 
     bpy.app.handlers.depsgraph_update_pre.append(DepsgraphCustomUpdate)
-
 
 def unregister():
     bpy.app.handlers.depsgraph_update_pre.remove(DepsgraphCustomUpdate)
 
-    bpy.utils.unregister_class(FTB_OT_ShowSubDErrors_Op)
-    bpy.utils.unregister_class(FTB_OT_PerformAssetCheck_Op)
-    bpy.utils.unregister_class(FTB_OT_FindOrphanTextures_Op)
-    bpy.utils.unregister_class(FTB_OT_FindOrphanedObjects_Op)
-    bpy.utils.unregister_class(FTB_OT_ValidateMatSlots_Op)
-    bpy.utils.unregister_class(FTB_OT_CheckNgons_Op)
-    bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
-    bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectLocationNonZero_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectRotationNonZero_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectScaleNonUniform_Op)
-    bpy.utils.unregister_class(FTB_OT_SelectScaleNonOne_Op)
-    bpy.utils.unregister_class(FTB_OT_Toggle_Face_Orient_Op)
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)

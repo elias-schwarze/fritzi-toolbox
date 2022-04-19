@@ -4,6 +4,10 @@ from bpy.types import Panel
 
 from .ftb_objectChecking_op import AssetChecker
 
+def ObjectsString(ObjectCount):
+    return ((" Object", " Objects")[ObjectCount > 1])
+
+
 
 class FTB_PT_Checking_Panel(Panel):
     bl_space_type = "VIEW_3D"
@@ -17,43 +21,69 @@ class FTB_PT_Checking_Panel(Panel):
     bpy.types.WindowManager.bIgnoreWithoutSlots = bpy.props.BoolProperty(
         default=False)
 
+    bpy.types.WindowManager.PropCollectionOverride = bpy.props.PointerProperty(type = bpy.types.Collection)
+    bpy.types.WindowManager.PropEmptyOverride = bpy.props.PointerProperty(type = bpy.types.Object)
+
     def draw(self, context):
+        
+        def DrawErrorButton(ErrorList, OperatorString, Label):
+            if ErrorList:
+                ErrorCount = len(ErrorList)
+                col.label(text = Label)
+                col.operator(OperatorString, text = str(ErrorCount) + ObjectsString(ErrorCount))
+        
         layout = self.layout
         col = layout.column()
         col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
+        
+        col.prop(context.window_manager, "PropCollectionOverride")
+        col.prop(context.window_manager, "PropEmptyOverride")
         col.operator("utils.performassetcheck")
+        
+        if not AssetChecker.bFileInWorkspace:
+            col.alert = True
+            col.operator("wm.savefile", text="File saved outside workspace!")
+            col.alert = False
 
-        if AssetChecker.PropCollection:
-            col.label(text="Prop Collection found", icon='ERROR')
+        if not AssetChecker.bPropIDFileName:
+            col.operator("wm.savefile", text="Invalid Prop ID filename!")
+        
+        if not AssetChecker.bProperFileName:
+            col.operator("wm.savefile", text="Invalid letters in filename!")
 
-        if AssetChecker.bFileInWorkspace:
-            col.label(text="File in Workspace", icon='ERROR')
-        
-        if AssetChecker.bPropIDFileName:
-            col.label(text="PropID in Filename", icon='ERROR')
-        
-        if AssetChecker.bProperFileName:
-            col.label(text="Chars valid in Filename", icon='ERROR')
-        
-        if AssetChecker.PropCollection:
-            if AssetChecker.bPropIDFileName:
-                col.label(text="PropID in Collection", icon='ERROR')
-            if AssetChecker.bProperCollectionName:
-                col.label(text="Chars valid in Collection", icon='ERROR')
+        if not AssetChecker.PropCollection:
+            col.label(text="Unable to find prop collection!")
+        else:
+            if not AssetChecker.bEqualFileCollectionName:
+                col.label(text="File and collection name not equal!")
+            if not AssetChecker.bPropIDCollectionName:
+                col.label(text="Invalid Prop ID collection!")
+            if not AssetChecker.bProperCollectionName:
+                col.label(text="Invalid letters in collection!")
 
             if AssetChecker.PropEmpty:
-                
-                if AssetChecker.bEqualNaming:
-                    col.label(text="Names are Equal")
+                if not AssetChecker.bEqualCollectonEmptyName:
+                    col.label(text="Empty and collection name not equal!")
+                if not AssetChecker.bEqualFileEmptyName:
+                    col.label(text="File and Empty name not equal!")
+                if not AssetChecker.bPropIDEmptyName:
+                    col.label(text="Invalid Prop ID empty!")
+                if not AssetChecker.bProperEmptyName:
+                    col.label(text="Invalid letters in empty!")
 
-                col.label(text=AssetChecker.PropEmpty.name_full)
-                if AssetChecker.bPropIDEmptyName:
-                    col.label(text="PropID in Empty", icon='ERROR')
-                if AssetChecker.bProperEmptyName:
-                    col.label(text="Chars valid in Empty", icon='ERROR')
+            DrawErrorButton(AssetChecker.RogueObjectErrors, "object.showrogues", "Invalid Objects in Collection!")
+            DrawErrorButton(AssetChecker.SubDLevelErrors, "object.showsubderror", "SubD Level Errors!")
+            DrawErrorButton(AssetChecker.MissingDisplacementErrors, "object.showdisplaceerror", "Displacement Errors!")
+            DrawErrorButton(AssetChecker.ApplyScaleErrors, "object.showscaleerror", "Apply Scale Errors!")
+            DrawErrorButton(AssetChecker.NGonErrors, "object.showngonerror", "NGon Errors!")
+            DrawErrorButton(AssetChecker.MissingSlotErrors, "object.showmissingsloterror", "Missing Material Slots!")
+            DrawErrorButton(AssetChecker.SlotLinkErrors, "object.showslotlinkerror", "Material Link Error!")
+            DrawErrorButton(AssetChecker.UnusedSlotErrors, "object.showunusedsloterror", "Unusued Material Slot!")
+            DrawErrorButton(AssetChecker.ParentingErrors, "object.showparentingerror", "Parenting Errors!")
 
-            if AssetChecker.SubDLevelErrors:
-                col.operator("object.showsubderror")
+
+        col.label(text="", icon='ERROR')
+        col.label(text="", icon='CHECKMARK')
 
         # ######## OLD DRAW
         # layout = self.layout
