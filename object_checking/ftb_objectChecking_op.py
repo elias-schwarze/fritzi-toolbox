@@ -2,86 +2,25 @@ import os
 import math
 import re
 import bpy
+from . import Asset
 
 from bpy.app.handlers import persistent
 from bpy.types import Operator
 from bpy.props import BoolProperty
 
-#D = bpy.data
+# TODO: check possible relocation of generic constants and functions to ftb_string_utils.py
 TRESHOLD = 0.001
 INVALID_CHARS = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
 ROGUE_OBJECTS = ['CAMERA', 'LIGHT', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'SPEAKER']
 OS_SEPARATOR = os.sep
 
-class AssetChecker:
-
-    bFileIsClean: bool
-    bFileInWorkspace = False
-    bPropIDFileName = False
-    bProperFileName = False
-
-    PropCollection = None
-    PropCollectionOverride = None
-    bPropIDCollectionName = False
-    bProperCollectionName = False
-
-    PropEmpty = None
-    bPropIDEmptyName = False
-    bProperEmptyName = False
-    bEmptyOnWorldOrigin = False
-
-    bEqualFileCollectionName = False
-    bEqualFileEmptyName = False
-    bEqualCollectonEmptyName = False
-    bEqualNaming = False
-
-    SubDLevelErrors = []
-    ApplyScaleErrors = []
-    MissingSlotErrors = []
-    SlotLinkErrors = []
-    UnusedSlotErrors = []
-    ParentingErrors = []
-    NGonErrors = []
-    RogueObjectErrors = []
-    MissingDisplacementErrors = []
-
-    def Initialize(self):
-        AssetChecker.bFileIsClean = False
-        AssetChecker.bFileInWorkspace = False
-        AssetChecker.bPropIDFileName = False
-        AssetChecker.bProperFileName = False
-
-        AssetChecker.PropCollection = None
-        AssetChecker.bPropIDCollectionName = False
-        AssetChecker.bProperCollectionName = False
-
-        AssetChecker.PropEmpty = None
-        AssetChecker.bPropIDEmptyName = False
-        AssetChecker.bProperEmptyName = False
-        AssetChecker.bEmptyOnWorldOrigin = False
-
-        AssetChecker.bEqualFileCollectionName = False
-        AssetChecker.bEqualFileEmptyName = False
-        AssetChecker.bEqualCollectonEmptyName = False
-        AssetChecker.bEqualNaming = False
-
-        AssetChecker.SubDLevelErrors = []
-        AssetChecker.ApplyScaleErrors = []
-        AssetChecker.MissingSlotErrors = []
-        AssetChecker.SlotLinkErrors = []
-        AssetChecker.UnusedSlotErrors = []
-        AssetChecker.ParentingErrors = []
-        AssetChecker.NGonErrors = []
-        AssetChecker.RogueObjectErrors = []
-        AssetChecker.MissingDisplacementErrors = []
-
 @persistent
 def DepsgraphCustomUpdate(self, context):
-    #AssetChecker.bFileInWorkspace = IsFileInWorkspace()
+    #Asset.bFileInWorkspace = IsFileInWorkspace()
     pass
 
 def IsFileInWorkspace():
-    if not bpy.data.is_saved or bpy.data.filepath == "":
+    if not Asset.IsSaved:
         return False
 
     if bpy.data.filepath.find("fritzi_serie") == -1:
@@ -141,12 +80,9 @@ def FindPropCollection():
 
     return None
 
-def SetPropCollection(Collection):
-    AssetChecker.PropCollectionOverride = Collection
-
 def FindPropEmpty():
-    # if not AssetChecker.PropCollection:
-    #     return None
+    if not bpy.context.window_manager.PropCollectionOverride:
+        return None
     
     for o in bpy.context.window_manager.PropCollectionOverride.objects:
         if not o.type == 'EMPTY' and not o.parent is None:
@@ -187,6 +123,11 @@ def SelectErrors(ErrorList: list):
     bpy.ops.object.select_all(action='DESELECT')
 
     for o in ErrorList:
+        if o.hide_get():
+            o.hide_set(False)
+        if o.hide_viewport:
+            o.hide_viewport = False
+
         o.select_set(True)
 
     bpy.context.view_layer.objects.active = ErrorList[0]
@@ -201,14 +142,17 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
     @classmethod
     def poll(cls, context):
         wm = context.window_manager
-        if not bpy.data.is_saved or bpy.data.filepath == "" or not wm.PropCollectionOverride or not wm.PropEmptyOverride :
+        if not(Asset.IsSaved() and wm.PropCollectionOverride and wm.PropEmptyOverride):
+            return False
+
+        if wm.PropEmptyOverride.type != 'EMPTY':
             return False
 
         return True
 
     def execute(self, context):
-        if not self.Checker:
-            self.Checker = AssetChecker()
+        if not Asset.bChecked:
+            Asset.bChecked = True
 
         wm = context.window_manager
         _propcollection = wm.PropCollectionOverride
@@ -219,39 +163,39 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
 
         bpy.ops.object.select_all(action='DESELECT')
 
-        self.Checker.Initialize()
+        Asset.InitializeCheck(Asset)
 
         _filename = GetFilenameString()
         #_propcollection = FindPropCollection()
-        self.Checker.PropCollection = _propcollection
+        Asset.PropCollection = _propcollection
 
-        AssetChecker.bFileIsClean = IsFileClean()
+        Asset.bFileIsClean = IsFileClean()
 
-        AssetChecker.bFileInWorkspace = IsFileInWorkspace()
-        AssetChecker.bPropIDFileName = FindPropID(_filename)
-        AssetChecker.bProperFileName = UsesValidChars(_filename)
+        Asset.bFileInWorkspace = IsFileInWorkspace()
+        Asset.bPropIDFileName = FindPropID(_filename)
+        Asset.bProperFileName = UsesValidChars(_filename)
 
-        if AssetChecker.PropCollection:
+        if Asset.PropCollection:
             #_propempty = FindPropEmpty()
-            AssetChecker.PropEmpty = _propempty
-            AssetChecker.bEqualFileCollectionName = (_filename == _propcollection.name_full)
+            Asset.PropEmpty = _propempty
+            Asset.bEqualFileCollectionName = (_filename == _propcollection.name_full)
 
-            AssetChecker.bPropIDCollectionName = FindPropID(_propcollection.name_full)
-            AssetChecker.bProperCollectionName = UsesValidChars(_propcollection.name_full)
+            Asset.bPropIDCollectionName = FindPropID(_propcollection.name_full)
+            Asset.bProperCollectionName = UsesValidChars(_propcollection.name_full)
 
-            if AssetChecker.PropEmpty:
-                AssetChecker.bEmptyOnWorldOrigin = IsOnWorldOrigin(_propempty)
+            if Asset.PropEmpty:
+                Asset.bEmptyOnWorldOrigin = IsOnWorldOrigin(_propempty)
 
-                AssetChecker.bEqualFileEmptyName = (_filename == _propempty.name_full)
-                AssetChecker.bEqualCollectonEmptyName = (_propcollection.name_full == _propempty.name_full)
-                AssetChecker.bEqualNaming = AssetChecker.bEqualFileCollectionName and AssetChecker.bEqualCollectonEmptyName and AssetChecker.bEqualFileEmptyName
+                Asset.bEqualFileEmptyName = (_filename == _propempty.name_full)
+                Asset.bEqualCollectonEmptyName = (_propcollection.name_full == _propempty.name_full)
+                Asset.bEqualNaming = Asset.bEqualFileCollectionName and Asset.bEqualCollectonEmptyName and Asset.bEqualFileEmptyName
 
-                AssetChecker.bPropIDEmptyName = FindPropID(_propempty.name_full)
-                AssetChecker.bProperEmptyName = UsesValidChars(_propempty.name_full)
+                Asset.bPropIDEmptyName = FindPropID(_propempty.name_full)
+                Asset.bProperEmptyName = UsesValidChars(_propempty.name_full)
 
             for o in _propcollection.objects:              
                 if o.type in ROGUE_OBJECTS:
-                    AssetChecker.RogueObjectErrors.append(o)
+                    Asset.RogueObjectErrors.append(o)
                     continue
 
                 if o.type in ['MESH', 'CURVE', 'SURFACE']:
@@ -261,7 +205,8 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                     for m in o.modifiers:
                         if not m.type in ['SUBSURF', 'DISPLACE']:
                             continue
-
+                        
+                        #TODO: Check for disabled Modifiers and general integrity
                         if m.type == 'SUBSURF':
                             if m.render_levels != m.levels:
                                 _bSubDError = True
@@ -269,12 +214,12 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                             _bDisplaceError = False
 
                     if _bSubDError:
-                        AssetChecker.SubDLevelErrors.append(o)
+                        Asset.SubDLevelErrors.append(o)
                     if _bDisplaceError:
-                        AssetChecker.MissingDisplacementErrors.append(o)
+                        Asset.MissingDisplacementErrors.append(o)
 
                     if not IsScaleApplied(o):
-                        AssetChecker.ApplyScaleErrors.append(o)
+                        Asset.ApplyScaleErrors.append(o)
 
                     _usedmatslots = []
                     
@@ -283,25 +228,19 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                         for f in o.data.polygons:
                             _usedmatslots.append(f.material_index)
                             if len(f.vertices) > 4:
-                                AssetChecker.NGonErrors.append(o)    
+                                Asset.NGonErrors.append(o)    
                 
                     if not o.material_slots:
-                        AssetChecker.MissingSlotErrors.append(o)
+                        Asset.MissingSlotErrors.append(o)
                     else:
                         for i in range(len(o.material_slots)):
                             if o.material_slots[i].link != 'OBJECT':
-                                AssetChecker.SlotLinkErrors.append(o)
+                                Asset.SlotLinkErrors.append(o)
                             if _usedmatslots.count(i) <= 0:
-                                AssetChecker.UnusedSlotErrors.append(o)
+                                Asset.UnusedSlotErrors.append(o)
 
                     if not IsParented(o, _propempty):
-                        AssetChecker.ParentingErrors.append(o)
-
-        # else:
-        #     AssetChecker.bPropIDCollectionName = False
-        #     AssetChecker.bProperCollectionName = False
-        #     AssetChecker.bPropIDEmptyName = False
-        #     AssetChecker.bProperEmptyName = False
+                        Asset.ParentingErrors.append(o)
         
         return {'FINISHED'}
 
@@ -309,13 +248,6 @@ class FTB_OT_DetectPropEmptyCollection_Op(Operator):
     bl_idname = "utils.detectpropemptycollection"
     bl_label = "Find Prop Empty & Collection"
     bl_description = "Does Stuff"
-    
-    @classmethod
-    def poll(cls, context):
-        if not bpy.data.is_saved or bpy.data.filepath == "":
-            return False
-
-        return True
 
     def execute(self, context):
         context.window_manager.PropCollectionOverride = FindPropCollection()
@@ -328,7 +260,7 @@ class FTB_OT_ShowRoguesError_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.RogueObjectErrors)
+        SelectErrors(Asset.RogueObjectErrors)
         return {'FINISHED'}
         
 class FTB_OT_ShowSubDErrors_Op(Operator):
@@ -337,7 +269,7 @@ class FTB_OT_ShowSubDErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.SubDLevelErrors)
+        SelectErrors(Asset.SubDLevelErrors)
         #TODO: Select Modifier Panel
         return {'FINISHED'}
 
@@ -347,7 +279,7 @@ class FTB_OT_ShowDisplaceErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.MissingDisplacementErrors)
+        SelectErrors(Asset.MissingDisplacementErrors)
         #TODO: Select Modifier Panel
         return {'FINISHED'}
 
@@ -357,7 +289,7 @@ class FTB_OT_ShowScaleErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.ApplyScaleErrors)
+        SelectErrors(Asset.ApplyScaleErrors)
         #TODO: Select Object Panel
         return {'FINISHED'}
 
@@ -367,7 +299,7 @@ class FTB_OT_ShowNGonErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.NGonErrors)
+        SelectErrors(Asset.NGonErrors)
         #TODO: Switch into edit mode and select ngons
         return {'FINISHED'}
 
@@ -377,7 +309,7 @@ class FTB_OT_ShowMissingSlotErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.MissingSlotErrors)
+        SelectErrors(Asset.MissingSlotErrors)
         #TODO: Select material Panel
         return {'FINISHED'}
 
@@ -387,7 +319,7 @@ class FTB_OT_ShowSlotLinkErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.SlotLinkErrors)
+        SelectErrors(Asset.SlotLinkErrors)
         #TODO: Select material Panel
         return {'FINISHED'}
 
@@ -397,7 +329,7 @@ class FTB_OT_ShowUnusedSlotErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.UnusedSlotErrors)
+        SelectErrors(Asset.UnusedSlotErrors)
         #TODO: Select material Panel
         return {'FINISHED'}
 
@@ -407,7 +339,7 @@ class FTB_OT_ShowParentingErrors_Op(Operator):
     bl_description = "Does Stuff"
 
     def execute(self, context):
-        SelectErrors(AssetChecker.ParentingErrors)
+        SelectErrors(Asset.ParentingErrors)
         return {'FINISHED'}
 
 class FTB_OT_ResolveFilenameError_Op(Operator):
@@ -430,12 +362,12 @@ class FTB_OT_ResolveCollectionNameError_Op(Operator):
 
     @classmethod
     def poll(cls, context):
-        if AssetChecker.PropCollection:
+        if Asset.PropCollection:
              return True
         return False
 
     def execute(self, context):
-        AssetChecker.PropCollection.name = self.NewName
+        Asset.PropCollection.name = self.NewName
 
         return {'FINISHED'}
 

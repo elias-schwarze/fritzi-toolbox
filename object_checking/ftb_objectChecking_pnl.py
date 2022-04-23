@@ -1,12 +1,8 @@
-from importlib import import_module
 import bpy
 import bpy.utils
 from bpy.types import Panel
 
-from .ftb_objectChecking_op import AssetChecker
-from .ftb_objectChecking_op import FTB_OT_PerformAssetCheck_Op
-
-AC = AssetChecker
+from . import Asset
 
 def PluralizeString(ObjectCount):
     return (("", "s")[ObjectCount > 1])
@@ -23,8 +19,14 @@ class FTB_PT_Checking_Panel(Panel):
     bpy.types.WindowManager.bIgnoreWithoutSlots = bpy.props.BoolProperty(
         default=False)
 
-    bpy.types.WindowManager.PropCollectionOverride = bpy.props.PointerProperty(name= "", type = bpy.types.Collection)
-    bpy.types.WindowManager.PropEmptyOverride = bpy.props.PointerProperty(name = "", type = bpy.types.Object)
+    bpy.types.WindowManager.PropCollectionOverride = bpy.props.PointerProperty(
+        name = "",
+        description = "Prop Collection in this file. This will be used to scan for Prop errors",
+        type = bpy.types.Collection)
+    bpy.types.WindowManager.PropEmptyOverride = bpy.props.PointerProperty(
+        name = "",
+        description = "Prop Empty in this file. This will be used to scan for Prop errors",
+        type = bpy.types.Object)
 
     def draw(self, context):
         
@@ -32,93 +34,101 @@ class FTB_PT_Checking_Panel(Panel):
             if ErrorList:
                 ErrorCount = len(ErrorList)
                 col.operator(OperatorString, text = str(ErrorCount) + " - " + Label + PluralizeString(ErrorCount))
-        
-        _bFileError = not(AC.bFileInWorkspace and AC.bPropIDFileName and AC.bProperFileName and AC.bFileIsClean)
-        _bCollectionError = not(AC.PropCollection and AC.bEqualFileCollectionName and 
-                                AC.bProperCollectionName and AC.bPropIDCollectionName)
-        _bEmptyError = not(AC.PropEmpty and AC.bEmptyOnWorldOrigin and AC.bEqualFileEmptyName and 
-                            AC.bEqualCollectonEmptyName and AC.bPropIDEmptyName and AC.bProperEmptyName)
-        _bObjectError = AC.RogueObjectErrors or AC.SubDLevelErrors or AC.MissingDisplacementErrors or \
-                        AC.ApplyScaleErrors or AC.NGonErrors or AC.MissingSlotErrors or \
-                        AC.SlotLinkErrors or AC.UnusedSlotErrors or AC.ParentingErrors
+
+        wm = context.window_manager
 
         layout = self.layout
         col = layout.column()
         col.operator("view.toggle_face_orient", text="Toggle Face Orientation")
         
         col.operator("utils.detectpropemptycollection")
-        col.prop(context.window_manager, "PropCollectionOverride")
-        col.prop(context.window_manager, "PropEmptyOverride")
-        col.operator("utils.performassetcheck")
-        
-        if not context.window_manager.PropCollectionOverride or not context.window_manager.PropEmptyOverride or not FTB_OT_PerformAssetCheck_Op.Checker:
-            return
+        col.prop(wm, "PropCollectionOverride")
+        col.prop(wm, "PropEmptyOverride")
 
-        if _bFileError:
-            col.separator(factor = 2)
-            col.label(text = "File Errors", icon = 'FILE')
+        # continue only if we have a collection and empty
+        if wm.PropCollectionOverride and wm.PropEmptyOverride:
 
-            if not AC.bFileInWorkspace:
-                col.alert = True
-                col.operator("wm.savefile", text="File saved outside workspace!")
-                col.alert = False
+            # cancel if file has not been saved
+            if not Asset.IsSaved():
+                col.label(text = "Please save .blend file!", icon = 'ERROR')
+                return
 
-            if not AC.bPropIDFileName:
-                col.operator("wm.savefile", text="Filename - Invalid Prop ID!")
-            
-            if not AC.bProperFileName:
-                col.operator("wm.savefile", text="Filename - Invalid letters!")
-            
-            if not AC.bFileInWorkspace:
-                col.label(text = "File unclean!")
+            # cancel if recognized Empty Object is not an EMPTY
+            if wm.PropEmptyOverride.type != 'EMPTY':
+                col.label(text = "Empty Object Type not 'EMPTY'")
+                return
 
-        
-        if _bCollectionError:
-            col.separator(factor = 2)
-            col.label(text = "Collection Errors", icon = 'OUTLINER_COLLECTION')
+            col.operator("utils.performassetcheck")
 
-        if not AC.PropCollection:
-            col.label(text="Unable to find prop collection!")
-        else:
-            if not AC.bEqualFileCollectionName:
-                col.operator("utils.changecollectionname", text="Name - Not Equal to Filename!")
-            if not AC.bPropIDCollectionName:
-                col.operator("utils.changecollectionname", text="Name - Invalid Prop ID!")
-            if not AC.bProperCollectionName:
-                col.operator("utils.changecollectionname", text="Name - Invalid letters!")
+            # cancel error display until an initial check has been performed
+            if not Asset.bChecked:
+                return
 
-            if _bEmptyError:
+            if Asset.HasFileErrors():
                 col.separator(factor = 2)
-                col.label(text = "Empty Errors", icon = 'OUTLINER_OB_EMPTY')
+                col.label(text = "File Errors", icon = 'FILE')
 
-                if not AC.bEqualCollectonEmptyName:
-                    col.label(text="Name - Not Equal to Collection!")
-                if not AC.bEqualFileEmptyName:
-                    col.label(text="Name - Not Equal to Filename!")
-                if not AC.bPropIDEmptyName:
-                    col.label(text="Name - Invalid Prop ID!")
-                if not AC.bProperEmptyName:
-                    col.label(text="Name - Invalid letters!")
-                if not AC.bEmptyOnWorldOrigin:
-                    col.label(text="Not on World Origin!")
+                if not Asset.bFileInWorkspace:
+                    col.alert = True
+                    col.operator("wm.savefile", text="File saved outside workspace!")
+                    col.alert = False
 
-            if _bObjectError:
+                if not Asset.bPropIDFileName:
+                    col.operator("wm.savefile", text="Filename - Invalid Prop ID!")
+                
+                if not Asset.bProperFileName:
+                    col.operator("wm.savefile", text="Filename - Invalid letters!")
+                
+                if not Asset.bFileInWorkspace:
+                    col.label(text = "File unclean!")
+
+            
+            if Asset.HasCollectionErrors():
                 col.separator(factor = 2)
-                col.label(text = "Object Errors", icon = 'OUTLINER_OB_MESH')
+                col.label(text = "Collection Errors", icon = 'OUTLINER_COLLECTION')
 
-                DrawErrorButton(AC.RogueObjectErrors, "object.showrogues", "Invalid Object")
-                DrawErrorButton(AC.SubDLevelErrors, "object.showsubderror", "SubD Level Error")
-                DrawErrorButton(AC.MissingDisplacementErrors, "object.showdisplaceerror", "Displacement Error")
-                DrawErrorButton(AC.ApplyScaleErrors, "object.showscaleerror", "Apply Scale Error")
-                DrawErrorButton(AC.NGonErrors, "object.showngonerror", "NGon Error")
-                DrawErrorButton(AC.MissingSlotErrors, "object.showmissingsloterror", "Missing Material Slot")
-                DrawErrorButton(AC.SlotLinkErrors, "object.showslotlinkerror", "Material Link Error")
-                DrawErrorButton(AC.UnusedSlotErrors, "object.showunusedsloterror", "Unusued Material Slot")
-                DrawErrorButton(AC.ParentingErrors, "object.showparentingerror", "Parenting Error")
+            if not Asset.PropCollection:
+                col.label(text="Unable to find prop collection!")
+            else:
+                if not Asset.bEqualFileCollectionName:
+                    col.operator("utils.changecollectionname", text="Name - Not Equal to Filename!")
+                if not Asset.bPropIDCollectionName:
+                    col.operator("utils.changecollectionname", text="Name - Invalid Prop ID!")
+                if not Asset.bProperCollectionName:
+                    col.operator("utils.changecollectionname", text="Name - Invalid letters!")
+
+                if Asset.HasEmptyErrors():
+                    col.separator(factor = 2)
+                    col.label(text = "Empty Errors", icon = 'OUTLINER_OB_EMPTY')
+
+                    if not Asset.bEqualCollectonEmptyName:
+                        col.label(text="Name - Not Equal to Collection!")
+                    if not Asset.bEqualFileEmptyName:
+                        col.label(text="Name - Not Equal to Filename!")
+                    if not Asset.bPropIDEmptyName:
+                        col.label(text="Name - Invalid Prop ID!")
+                    if not Asset.bProperEmptyName:
+                        col.label(text="Name - Invalid letters!")
+                    if not Asset.bEmptyOnWorldOrigin:
+                        col.label(text="Not on World Origin!")
+
+                if Asset.HasObjectErrors():
+                    col.separator(factor = 2)
+                    col.label(text = "Object Errors", icon = 'OUTLINER_OB_MESH')
+
+                    DrawErrorButton(Asset.RogueObjectErrors, "object.showrogues", "Invalid Object")
+                    DrawErrorButton(Asset.SubDLevelErrors, "object.showsubderror", "SubD Level Error")
+                    DrawErrorButton(Asset.MissingDisplacementErrors, "object.showdisplaceerror", "Displacement Error")
+                    DrawErrorButton(Asset.ApplyScaleErrors, "object.showscaleerror", "Apply Scale Error")
+                    DrawErrorButton(Asset.NGonErrors, "object.showngonerror", "NGon Error")
+                    DrawErrorButton(Asset.MissingSlotErrors, "object.showmissingsloterror", "Missing Material Slot")
+                    DrawErrorButton(Asset.SlotLinkErrors, "object.showslotlinkerror", "Material Link Error")
+                    DrawErrorButton(Asset.UnusedSlotErrors, "object.showunusedsloterror", "Unusued Material Slot")
+                    DrawErrorButton(Asset.ParentingErrors, "object.showparentingerror", "Parenting Error")
 
 
-        col.label(text="", icon='ERROR')
-        col.label(text="", icon='CHECKMARK')
+            col.label(text="", icon='ERROR')
+            col.label(text="", icon='CHECKMARK')
 
         # ######## OLD DRAW
         # layout = self.layout
@@ -162,11 +172,11 @@ class FTB_PT_Checking_Panel(Panel):
 
         # row = layout.row(align=True)
         # row.operator("object.validate_mat_slots")
-        # row.prop(data=context.window_manager,
+        # row.prop(data=wm,
         #          property="bActiveCollectionOnly", toggle=True, icon_only=True, icon='OUTLINER_COLLECTION')
 
         # col = layout.column()
-        # col.prop(context.window_manager,
+        # col.prop(wm,
         #          "bIgnoreWithoutSlots", text="Ignore Objects Without Slots")
 
 def register():
