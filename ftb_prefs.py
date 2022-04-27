@@ -15,6 +15,11 @@ class FTBPreferences(bpy.types.AddonPreferences):
         description="If enabled, the addon will not automatically remove overrides of active_material_index (not recommended)",
         default=False)
 
+    hide_fritzi_shader_warning: bpy.props.BoolProperty(
+        name="Hide Missing Prop Shader Warning",
+        description="If enabled, the Warning about missing Fritzi shaders will not be displayed in the Material Panel",
+        default=False)
+
     # Addon updater preferences.
 
     auto_check_update: bpy.props.BoolProperty(
@@ -56,8 +61,9 @@ class FTBPreferences(bpy.types.AddonPreferences):
         mainrow = layout.row()
         col = mainrow.column()
 
-        col.prop(ftb_path_utils.getFritziPreferences(),
-                 "skip_override_cleanup")
+        col.prop(ftb_path_utils.getFritziPreferences(), "skip_override_cleanup")
+
+        col.prop(ftb_path_utils.getFritziPreferences(), "hide_fritzi_shader_warning")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
