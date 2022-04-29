@@ -53,6 +53,11 @@ class FTB_PT_DataEditing_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+
+        col.label(text = "Active Object:")
+        col.operator("object.center_object")
+        col.operator("object.origin_to_cursor")
+
         col.label(text="Copy Attributes:")
 
         col = layout.column(align=True)
