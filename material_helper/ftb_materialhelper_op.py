@@ -1,37 +1,60 @@
+import os
 import re
 import bpy
 
 from bpy.types import Operator
+from bpy.app.handlers import persistent
+
+OS_SEPARATOR = os.sep
+TEXTURES_PATH = "060_textures" + OS_SEPARATOR + "010_textures_basic" + OS_SEPARATOR
+SHADERS_PATH = "050_shaders" + OS_SEPARATOR
+ASSETS_DIRNAME = "060_assets"
+FRITZISHADER_FILENAME =  "fritzi_shader_props.blend"
+BRUSHTEXTURE_NAME = "fs_tx001_pinselflecke.jpg"
+SPLATTEXTURE_NAME = "fs_tx002_gesprenkelt.png"
+
+class MaterialHelper:
+    FritziNodeGroup = None
+    BrushTexture = None
+    SplatTexture = None
+
+@persistent
+def DepsgraphCustomUpdate(self, context):
+    MaterialHelper.FritziNodeGroup = FindFritziShaderGroup()
+    MaterialHelper.BrushTexture = FindImageTextureByName("(fs_tx001|Fritzi_env)")
+    MaterialHelper.SplatTexture = FindImageTextureByName("(fs_tx002|paint_splat)")
 
 def FindPropID(Name):
-    propID = re.search("pr[0-9]*", Name)
-    if propID:
-        return propID.group()[2:]
-    else:
-        return None
-
-def FindFritziShaderGroup():
-    for group in bpy.data.node_groups:
-        bFoundGroup = re.search("Fritzi_Props", group.name_full)
-        if bFoundGroup:
-            return group
-        
-    return None
-
-def FindBrushTexture():
-    for image in bpy.data.images:
-        bFStx = re.search("fs_tx001", image.name_full)
-        bFritziEnv = re.search("Fritzi_env", image.name_full)
-        if bFStx or bFritziEnv:
-            return image
+    match = re.search("(hpr|pr|bg|vg)[0-9]*", Name)
+    if match:
+        return match.group()
     
     return None
 
-def FindSplatTexture():
+def GetAssetsDirPath(FilePath):
+    if FilePath.find(ASSETS_DIRNAME) == -1:
+        return ""
+
+    return FilePath[:FilePath.find(ASSETS_DIRNAME) + len(ASSETS_DIRNAME)]
+
+def FindFritziShaderGroup():
+    for group in bpy.data.node_groups:
+        if group.library != None:  # skip if group is a linked asset
+            continue
+
+        bFoundGroup = re.search("Fritzi_Props", group.name_full)
+        if bFoundGroup:
+            return group
+    
+    return None
+
+def FindImageTextureByName(RegExSearch):
     for image in bpy.data.images:
-        bFStx = re.search("fs_tx002", image.name_full)
-        bPaintSplat = re.search("paint_splat", image.name_full)
-        if bFStx or bPaintSplat:
+        if image.library != None: # skip if image is a linked asset
+            continue
+
+        match = re.search(RegExSearch, image.name_full)
+        if match:
             return image
     
     return None
@@ -46,9 +69,8 @@ def CreateFritziMaterial(Name):
     nodes.remove(nodes.get('Principled BSDF'))
     
     FritziNode = nodes.new('ShaderNodeGroup')
-    FritziShaderGroup = FindFritziShaderGroup()
     
-    FritziNode.node_tree = FritziShaderGroup
+    FritziNode.node_tree = MaterialHelper.FritziNodeGroup
     if FritziNode:
         FritziNode.width = 220
         FritziNode.inputs[0].default_value = (0.3, 0.3, 0.3, 1.0)
@@ -64,7 +86,7 @@ def CreateFritziMaterial(Name):
     BrushMRNode.location = (-180, 200)
     
     BrushImageNode = nodes.new('ShaderNodeTexImage')
-    BrushImageNode.image = FindBrushTexture()
+    BrushImageNode.image = MaterialHelper.BrushTexture
     BrushImageNode.interpolation = 'Smart'
     BrushImageNode.projection = 'BOX'
     BrushImageNode.projection_blend = 0.5
@@ -81,7 +103,7 @@ def CreateFritziMaterial(Name):
     SplatMRNode.location = (-180, -200)
     
     SplatImageNode = nodes.new('ShaderNodeTexImage')
-    SplatImageNode.image = FindSplatTexture()
+    SplatImageNode.image = MaterialHelper.SplatTexture
     SplatImageNode.interpolation = 'Smart'
     SplatImageNode.projection = 'BOX'
     SplatImageNode.projection_blend = 0.5
@@ -113,6 +135,115 @@ def CreateFritziMaterial(Name):
 
 ObjWhitelist = ['MESH', 'CURVE', 'FONT', 'SURFACE', 'META'] 
 
+class FTB_OT_AppendFritziShader_Op(Operator):
+    bl_idname = "wm.appendfritzishader"
+    bl_label = "Click to append Fritzi Prop Shader"
+    bl_description = "Tries to append the Fritzi Prop Shader. File needs to be saved beforehand to execute this command"
+
+    @classmethod
+    def poll(cls, context):
+        if not bpy.data.is_saved or bpy.data.filepath == '':
+            return False
+
+        return True
+
+    def execute(self, context):
+        path = bpy.data.filepath
+
+        if path.find("fritzi_serie") == -1:
+            self.report({'WARNING'}, "File does not seem to be a part of the Fritzi-Project folder structure! Please save it within the Fritzi Project to use this feature")
+            return {'CANCELLED'}
+
+        abspath = GetAssetsDirPath(path) + OS_SEPARATOR + SHADERS_PATH + FRITZISHADER_FILENAME
+
+        if not os.path.exists(abspath):
+            self.report({'WARNING'}, "Couldn't find shader file in path: " + abspath + ". Please check if you have downloaded all assets to you machine.")
+            return {'CANCELLED'}
+
+        section   = "\\NodeTree\\"
+        object    = "shader-Fritzi_Props"
+
+        filepath  = abspath + section + object
+        directory = abspath + section
+        filename  = object
+        
+        try:
+            bpy.ops.wm.append(filepath=filepath, filename=filename, directory=directory)
+        except RuntimeError as err:
+            self.report({'WARNING'}, str(err), end="")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "Fritzi Props Shader appended")
+        return {'FINISHED'}
+
+class FTB_OT_OpenBrushTexture_Op(Operator):
+    bl_idname = "image.openbrushtexture"
+    bl_label = "Click to open brush"
+    bl_description = "Tries to add the '" + BRUSHTEXTURE_NAME + "' texture to the scene"
+
+    @classmethod
+    def poll(cls, context):
+        if not bpy.data.is_saved or bpy.data.filepath == '':
+            return False
+
+        return True
+
+    def execute(self, context):
+        path = bpy.data.filepath
+
+        if path.find("fritzi_serie") == -1:
+            self.report({'WARNING'}, "File does not seem to be a part of the Fritzi-Project folder structure! Please save it within the Fritzi Project to use this feature")
+            return {'CANCELLED'}
+
+        abspath = GetAssetsDirPath(path) + OS_SEPARATOR + TEXTURES_PATH + BRUSHTEXTURE_NAME
+
+        if not os.path.exists(abspath):
+            self.report({'WARNING'}, "Couldn't find texture file in path: " + abspath + ". Please check if you have downloaded all assets to you machine.")
+            return {'CANCELLED'}
+
+        try:
+            bpy.ops.image.open(filepath = abspath, relative_path = True)
+        except RuntimeError as err:
+            self.report({'WARNING'}, str(err), end="")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "Brush Texture added to scene.")
+        return {'FINISHED'}
+
+class FTB_OT_OpenSplatTexture_Op(Operator):
+    bl_idname = "image.opensplattexture"
+    bl_label = "Click to open splat texture"
+    bl_description = "Tries to add the '" + SPLATTEXTURE_NAME + "' texture to the scene"
+
+    @classmethod
+    def poll(cls, context):
+        if not bpy.data.is_saved or bpy.data.filepath == '':
+            return False
+
+        return True
+
+    def execute(self, context):
+        path = bpy.data.filepath
+
+        if path.find("fritzi_serie") == -1:
+            self.report({'WARNING'}, "File does not seem to be a part of the Fritzi-Project folder structure! Please save it within the Fritzi Project to use this feature")
+            return {'CANCELLED'}
+
+        abspath = GetAssetsDirPath(path) + OS_SEPARATOR + TEXTURES_PATH + SPLATTEXTURE_NAME
+
+        if not os.path.exists(abspath):
+            self.report({'WARNING'}, "Couldn't find texture file in path: " + abspath + ". Please check if you have downloaded all assets to you machine.")
+            return {'CANCELLED'}
+
+        try:
+            bpy.ops.image.open(filepath = abspath, relative_path = True)
+        except RuntimeError as err:
+            self.report({'WARNING'}, str(err), end="")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "Splat Texture added to scene.")
+        return {'FINISHED'}
+
 class FTB_OT_PopulateMatSlots_Op(Operator):
     bl_idname = "object.populatematerials"
     bl_label = "Create Materials for All"
@@ -123,7 +254,7 @@ class FTB_OT_PopulateMatSlots_Op(Operator):
     def poll(cls, context):
         obj = context.active_object
 
-        if not FindFritziShaderGroup():
+        if not MaterialHelper.FritziNodeGroup:
             return False
         
         if not obj.type in ObjWhitelist or len(obj.material_slots) < 1 or not obj.override_library:
@@ -177,9 +308,9 @@ class FTB_OT_PopulateMatSlotSingle_Op(Operator):
     def poll(cls, context):
         obj = context.active_object
 
-        if not FindFritziShaderGroup():
+        if not MaterialHelper.FritziNodeGroup:
             return False
-        
+
         if not obj.type in ObjWhitelist or len(obj.material_slots) < 1:
             return False
         
@@ -206,9 +337,17 @@ class FTB_OT_PopulateMatSlotSingle_Op(Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 def register():
+    bpy.utils.register_class(FTB_OT_AppendFritziShader_Op)
+    bpy.utils.register_class(FTB_OT_OpenBrushTexture_Op)
+    bpy.utils.register_class(FTB_OT_OpenSplatTexture_Op)
     bpy.utils.register_class(FTB_OT_PopulateMatSlots_Op)
     bpy.utils.register_class(FTB_OT_PopulateMatSlotSingle_Op)
+    bpy.app.handlers.depsgraph_update_pre.append(DepsgraphCustomUpdate)
 
 def unregister():
+    bpy.app.handlers.depsgraph_update_pre.remove(DepsgraphCustomUpdate)
     bpy.utils.unregister_class(FTB_OT_PopulateMatSlotSingle_Op)
     bpy.utils.unregister_class(FTB_OT_PopulateMatSlots_Op)
+    bpy.utils.unregister_class(FTB_OT_OpenSplatTexture_Op)
+    bpy.utils.unregister_class(FTB_OT_OpenBrushTexture_Op)
+    bpy.utils.unregister_class(FTB_OT_AppendFritziShader_Op)
