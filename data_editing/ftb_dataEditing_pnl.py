@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Panel
+from .ftb_dataEditing_op import BinToDec
 
 
 class FTB_PT_DataEditing_Panel(Panel):
@@ -111,9 +112,44 @@ class FTB_PT_DataEditing_Panel(Panel):
         col.operator("object.collection_name_to_material")
 
 
+class FTB_PT_CollectionLineUsage_Panel(Panel):
+    bl_label = "Line Art Layer Usage"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'collection'
+    bl_category = "FTB"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        layout = self.layout
+        
+        if bpy.context.active_object:
+            gpobject = bpy.context.active_object
+
+            # check for any valid lineart modifiers
+            if gpobject.type == 'GPENCIL':
+                if gpobject.grease_pencil_modifiers:
+                    for mod in gpobject.grease_pencil_modifiers:
+                        if mod.type == 'GP_LINEART':
+
+                            row = layout.row(align=True)
+
+                            nameString = mod.name + ": "
+                            layerNumberString = str(BinToDec(mod.use_intersection_mask))
+
+                            # create warning string if "Exact Match" option is unchecked
+                            if mod.use_intersection_match == False:
+                                layerNumberString = layerNumberString + ", Exact Match disabled!"
+
+                            row.label(text=nameString)
+                            row.label(text=layerNumberString)
+
+
 def register():
     bpy.utils.register_class(FTB_PT_DataEditing_Panel)
+    bpy.utils.register_class(FTB_PT_CollectionLineUsage_Panel)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_PT_CollectionLineUsage_Panel)
     bpy.utils.unregister_class(FTB_PT_DataEditing_Panel)

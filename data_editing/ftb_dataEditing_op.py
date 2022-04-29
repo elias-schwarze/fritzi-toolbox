@@ -7,21 +7,25 @@ from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 
+
 @persistent
 def UpdateLayerID(self, context):
     wm = bpy.context.window_manager
     wm.MaskLayerID = BinToDec(bpy.context.collection.lineart_intersection_mask)
 
+
 def DecToBin(n, OutBinaryArray):
     if not n == 0:
         OutBinaryArray.append(n % 2)
-        DecToBin(n>>1, OutBinaryArray)
+        DecToBin(n >> 1, OutBinaryArray)
+
 
 def BinToDec(BinaryArray):
     n = 0
     for i in reversed(range(len(BinaryArray))):
-        n += BinaryArray[i] * pow(2,i)
+        n += BinaryArray[i] * pow(2, i)
     return n
+
 
 def ConvertLayerIDToMask(self, context):
     Collection = context.collection
@@ -29,16 +33,18 @@ def ConvertLayerIDToMask(self, context):
 
     Mask = []
     DecToBin((LayerID % 256), Mask)
-    for i in range(len(Mask),8):
+    for i in range(len(Mask), 8):
         Mask.append(0)
 
     for i in range(0, len(Collection.lineart_intersection_mask)):
         Collection.lineart_intersection_mask[i] = Mask[i]
 
+
 def ModifyCollectionLineArtMask(Collection, Mask):
     Collection.lineart_use_intersection_mask = Mask[0]
     for i in range(0, len(Collection.lineart_intersection_mask)):
         Collection.lineart_intersection_mask[i] = Mask[(i+1) % 9]
+
 
 def PropagateCollectionMaskSettings(Collection, Mask, bForAllChildren=False):
 
@@ -48,6 +54,7 @@ def PropagateCollectionMaskSettings(Collection, Mask, bForAllChildren=False):
             if bForAllChildren:
                 PropagateCollectionMaskSettings(c, Mask, bForAllChildren)
 
+
 def GetMaskSettings(FromCollection):
     Mask = [0]*9
 
@@ -56,6 +63,7 @@ def GetMaskSettings(FromCollection):
         Mask[(i+1) % 9] = FromCollection.lineart_intersection_mask[i]
 
     return Mask
+
 
 def drawLineArtMaskButton(self, context):
     wm = context.window_manager
@@ -67,7 +75,7 @@ def drawLineArtMaskButton(self, context):
     layout = self.layout
     col = layout.column()
     col.alignment = 'RIGHT'
-    col.prop(wm, "MaskLayerID", text = "Layer")
+    col.prop(wm, "MaskLayerID", text="Layer")
     col.separator()
 
     row = col.row(align=True)
@@ -399,7 +407,8 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
     bpy.types.WindowManager.bForAllChildren = bpy.props.BoolProperty(
         default=True)
-    bpy.types.WindowManager.MaskLayerID = bpy.props.IntProperty(min=0, max=255, update = ConvertLayerIDToMask)
+    bpy.types.WindowManager.MaskLayerID = bpy.props.IntProperty(
+        min=0, max=255, update=ConvertLayerIDToMask)
 
     bl_idname = "collection.propagatelineartmask"
     bl_label = "Propagate to child collections"
@@ -419,6 +428,7 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
         return {'FINISHED'}
 
+
 def register():
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
     bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
@@ -433,6 +443,7 @@ def register():
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
+
 
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
