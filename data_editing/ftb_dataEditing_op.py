@@ -74,6 +74,51 @@ def drawLineArtMaskButton(self, context):
     row.operator("collection.propagatelineartmask", text=ButtonLabel)
     row.prop(wm, "bForAllChildren", text="", icon='OUTLINER_OB_GROUP_INSTANCE')
 
+class FTB_OT_SetToCenter_Op(Operator):
+    bl_idname = "object.center_object"
+    bl_label = "Center Object"
+    bl_description = "Set the object to World Origin"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        offsetMode = bpy.context.tool_settings.transform_pivot_point
+        bpy.ops.view3d.snap_cursor_to_center()
+        bpy.context.tool_settings.transform_pivot_point = 'ACTIVE_ELEMENT'
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=True)
+        bpy.context.tool_settings.transform_pivot_point = offsetMode
+        return {'FINISHED'}
+
+class FTB_OT_OriginToCursor_Op(Operator):
+    bl_idname = "object.origin_to_cursor"
+    bl_label = "Origin to cursor"
+    bl_description = "Set object origin to 3D Cursor"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+        bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+        return {'FINISHED'}
 
 class FTB_OT_CopyLocation_Op(Operator):
     bl_idname = "object.copy_location"
@@ -384,12 +429,16 @@ def register():
     bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
     bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
+    bpy.utils.register_class(FTB_OT_SetToCenter_Op)
+    bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
+    bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
+    bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
     bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
     bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
     bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
