@@ -3,7 +3,7 @@ import re
 import bpy
 
 OS_SEPARATOR = os.sep
-PROPID_REGEX = "(hpr|pr|bg|vg)[0-9]*"
+PROPID_REGEX = "(hpr|pr|bg|vg)\d{1,}"
 WORKSPACE_ROOT = "fritzi_serie"
 INVALID_CHARS = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
 
@@ -63,9 +63,8 @@ def ReplaceInvalidChars(Name: str):
     """
     replacechars = ["ae", "AE", "ue", "UE", "oe", "OE", "ss" , "", "", ""]
 
-    if UsesInvalidChars(Name):
-        NewName = ""  
+    if UsesInvalidChars(Name): 
         for i in range(len(INVALID_CHARS)):
-            NewName = Name.replace(INVALID_CHARS[i], replacechars[i])
-        return NewName
-    return None
+            Name = Name.replace(INVALID_CHARS[i], replacechars[i])
+        return Name
+    return Name
