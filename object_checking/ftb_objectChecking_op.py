@@ -139,10 +139,13 @@ def SuggestValidName():
         emptyName = wm.PropEmptyReference.name_full
 
     if filename.find("fs_") == 0 and ContainsPropID(filename):
+        filename = ReplaceInvalidChars(filename)
         return filename
     elif collectionName.find("fs_") == 0 and ContainsPropID(collectionName):
+        collectionName = ReplaceInvalidChars(collectionName)
         return collectionName
     elif emptyName.find("fs_") == 0 and ContainsPropID(emptyName):
+        emptyName = ReplaceInvalidChars(emptyName)
         return emptyName
     else:
         return "fs_pr00000_"
@@ -367,7 +370,7 @@ class FTB_OT_ShowSubDErrors_Op(Operator):
 class FTB_OT_ShowDisplaceErrors_Op(Operator):
     bl_idname = "object.show_displace_error"
     bl_label = "Displacement Error"
-    bl_description = "Shows all objects with displacement modifiers without a valid texture or wrong direction settings."
+    bl_description = "Shows all objects with displacement modifiers without a valid texture or wrong direction settings"
 
     @classmethod
     def poll(cls, context):
@@ -542,7 +545,7 @@ class FTB_OT_ResolveCollectionNameError_Op(Operator):
 
     def invoke(self, context, event):
         self.NewName = SuggestValidName()
-        return context.window_manager.invoke_props_dialog(self, width = 400)
+        return context.window_manager.invoke_props_dialog(self, width = 500)
 
     def draw(self, context):
         layout = self.layout
@@ -561,6 +564,11 @@ class FTB_OT_ResolveCollectionNameError_Op(Operator):
         #     col.alert = True
         #     col.label(text = "MISSING FS")
         #     col.alert = False
+        row = col.row()
+        row.alignment = 'LEFT'
+        split = row.split(factor = 0.31)
+        split.label(text = "Old Name: ")
+        split.label(text = context.window_manager.PropCollectionReference.name_full)
         col.prop(self, "NewName", expand = True)
 
     @classmethod
@@ -601,6 +609,11 @@ class FTB_OT_ResolveEmptyNameError_Op(Operator):
         #     col.alert = True
         #     col.label(text = "MISSING FS")
         #     col.alert = False
+        row = col.row()
+        row.alignment = 'LEFT'
+        split = row.split(factor = 0.31)
+        split.label(text = "Old Name: ")
+        split.label(text = context.window_manager.PropCollectionReference.name_full)
         col.prop(self, "NewName", expand = True)
 
     @classmethod
