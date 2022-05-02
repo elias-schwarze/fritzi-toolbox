@@ -22,7 +22,7 @@ class FTB_PT_MaterialHelper_Panel(Panel):
             col = layout.column()
             if not MaterialHelper.FritziNodeGroup:
                 col.operator("wm.appendfritzishader",
-                             text="Fritzi Prop Shader Missing! Click tp append!", icon='ERROR')
+                             text="Fritzi Prop Shader Missing! Click to append!", icon='ERROR')
             elif not MaterialHelper.BrushTexture:
                 col.operator("image.openbrushtexture",
                              text="Brush Texture Missing! Click to import!", icon='ERROR')
