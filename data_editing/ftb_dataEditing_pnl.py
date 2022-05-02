@@ -132,8 +132,6 @@ class FTB_PT_CollectionLineUsage_Panel(Panel):
                     for mod in gpobject.grease_pencil_modifiers:
                         if mod.type == 'GP_LINEART':
 
-                            row = layout.row(align=True)
-
                             nameString = mod.name + ": "
                             layerNumberString = str(BinToDec(mod.use_intersection_mask))
 
@@ -141,8 +139,22 @@ class FTB_PT_CollectionLineUsage_Panel(Panel):
                             if mod.use_intersection_match == False:
                                 layerNumberString = layerNumberString + ", Exact Match disabled!"
 
+                            row = layout.row()
+
                             row.label(text=nameString)
                             row.label(text=layerNumberString)
+
+                            usageString = ""
+
+                            for usage in mod.use_intersection_mask:
+                                if usage:
+                                    usageString = usageString + "X"
+                                else:
+                                    usageString = usageString + "0"
+                            outputString = usageString[0:4] + " | " + usageString[4:8]
+
+                            row.label(text=outputString)
+
 
 
 def register():
