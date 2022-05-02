@@ -613,7 +613,7 @@ class FTB_OT_ResolveEmptyNameError_Op(Operator):
         row.alignment = 'LEFT'
         split = row.split(factor = 0.31)
         split.label(text = "Old Name: ")
-        split.label(text = context.window_manager.PropCollectionReference.name_full)
+        split.label(text = context.window_manager.PropEmptyReference.name_full)
         col.prop(self, "NewName", expand = True)
 
     @classmethod
