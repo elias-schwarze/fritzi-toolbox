@@ -8,20 +8,23 @@ from ..utility_functions.ftb_path_utils import getFritziPreferences
 # the only difference is the check for the user preference variable skip_override_cleanup
 
 
+def RemoveMaterialIndexOverride():
+    saveScene = bpy.context.scene
+
+    for object in saveScene.objects:
+        if not(object.override_library and object.override_library.reference):
+            continue
+
+        object.active_material_index = object.override_library.reference.active_material_index
+
+        for element in object.override_library.properties:
+            if (element.rna_path == "active_material_index"):
+                object.override_library.properties.remove(element)
+
 @persistent
 def preSave_handler(dummy):
     if (getFritziPreferences().skip_override_cleanup == False):
-        saveScene = bpy.context.scene
-
-        for object in saveScene.objects:
-            if not object.override_library:
-                continue
-
-            object.active_material_index = object.override_library.reference.active_material_index
-
-            for element in object.override_library.properties:
-                if (element.rna_path == "active_material_index"):
-                    object.override_library.properties.remove(element)
+        RemoveMaterialIndexOverride()
 
     return {'FINISHED'}
 
@@ -33,19 +36,7 @@ class FTB_OT_RemoveIndexOverrides_Op(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-
-        saveScene = bpy.context.scene
-
-        for object in saveScene.objects:
-            if not object.override_library:
-                continue
-
-            object.active_material_index = object.override_library.reference.active_material_index
-
-            for element in object.override_library.properties:
-                if (element.rna_path == "active_material_index"):
-                    object.override_library.properties.remove(element)
-
+        RemoveMaterialIndexOverride()
         return {'FINISHED'}
 
 
