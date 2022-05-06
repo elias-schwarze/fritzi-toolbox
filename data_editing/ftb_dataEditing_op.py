@@ -1,4 +1,6 @@
+
 import bpy
+
 from bpy.types import Operator
 from bpy.app.handlers import persistent
 
@@ -403,6 +405,68 @@ class FTB_OT_SetMatLinks_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
+class FTB_OT_ClearMaterialSlots_Op(Operator):
+    bl_idname = "object.clear_material_slots"
+    bl_label = "Clear Material Slots"
+    bl_description = "Clears all material slots by setting it to None"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def description(cls, context, properties):
+        wm = context.window_manager
+        selection = wm.matSlotLinkLimit
+
+        desc = "Clears all material slots on objects"
+        if selection == 'VIEW_LAYER':
+            desc = "Clears all material slots on visible objects in view layer"
+        elif selection == 'COLLECTION':
+            desc = "Clears all material slots on objects in active collection"
+        elif selection == 'SELECTION':
+            desc = "Clears all material slots on selected objects"
+
+        return desc
+
+    def execute(self, context):
+        wm = context.window_manager
+        selection = wm.matSlotLinkLimit
+        objects = []
+
+        if selection == 'VIEW_LAYER':
+            objects = context.view_layer.objects
+        elif selection == 'COLLECTION':
+            objects = context.collection.objects
+        elif selection == 'SELECTION':
+            objects = context.view_layer.objects.selected
+
+        if not objects:
+            self.report({'WARNING'}, "No objects in active selection. Operation cancelled")
+            return {'CANCELLED'}
+
+        objCount = 0
+        slotCount = 0
+        for obj in objects:
+            if obj.override_library or len(obj.material_slots) <= 0:
+                continue
+            
+            objCount += 1
+            for slot in obj.material_slots:
+                if slot.material == None:
+                    continue
+
+                slot.material = None
+                slotCount += 1
+
+        if objCount == 0:
+            self.report({'INFO'}, "Operation Finished. No objects with editable slots in selection.")
+            return {'CANCELLED'}
+        elif slotCount == 0:
+            self.report({'INFO'}, "Operation Finished. All slots in selection are already cleared.")
+            return {'CANCELLED'}
+        else:
+            self.report({'INFO'}, "Operation Finished. Successfully cleared " + str(slotCount) + " slots on " + str(objCount) + " objects.")
+
+        return {'FINISHED'}
+
 class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
     bpy.types.WindowManager.bForAllChildren = bpy.props.BoolProperty(
@@ -428,19 +492,17 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
         return {'FINISHED'}
 
+classes = (
+FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
+FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
+FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
+FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op
+)
 
 def register():
-    bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
-    bpy.utils.register_class(FTB_OT_CollectionNameToMaterial_Op)
-    bpy.utils.register_class(FTB_OT_ObjectNameToMaterial_Op)
-    bpy.utils.register_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.register_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.register_class(FTB_OT_CopyScale_Op)
-    bpy.utils.register_class(FTB_OT_SetLineartSettings_Op)
-    bpy.utils.register_class(FTB_OT_SetMatLinks_Op)
-    bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
-    bpy.utils.register_class(FTB_OT_SetToCenter_Op)
-    bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
+    for c in classes:
+        bpy.utils.register_class(c)
+
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
@@ -448,14 +510,6 @@ def register():
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
-    bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
-    bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
-    bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
-    bpy.utils.unregister_class(FTB_OT_SetMatLinks_Op)
-    bpy.utils.unregister_class(FTB_OT_SetLineartSettings_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyScale_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyRotation_Op)
-    bpy.utils.unregister_class(FTB_OT_CopyLocation_Op)
-    bpy.utils.unregister_class(FTB_OT_ObjectNameToMaterial_Op)
-    bpy.utils.unregister_class(FTB_OT_CollectionNameToMaterial_Op)
-    bpy.utils.unregister_class(FTB_OT_OverrideRetainTransform_Op)
+
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)

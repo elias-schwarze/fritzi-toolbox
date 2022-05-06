@@ -28,7 +28,7 @@ class FTB_PT_DataEditing_Panel(Panel):
     )
 
     bpy.types.WindowManager.matSlotLink = bpy.props.EnumProperty(
-        name="Set to",
+        name="Set link to...",
         description="Material slot link type",
         items=[
             ('OBJECT', "Object", "Material Slots linked to object data"),
@@ -70,16 +70,24 @@ class FTB_PT_DataEditing_Panel(Panel):
         col.separator()
 
         col = layout.column()
-        col.label(text="Material Slot Types:")
+        col.label(text="Material Operations:")
 
-        col = layout.column()
-        col.prop(bpy.context.window_manager, "matSlotLink")
-
-        col = layout.column()
         col.prop(bpy.context.window_manager, "matSlotLinkLimit")
 
-        col = layout.column()
-        col.operator("object.set_material_links")
+        btnLabel = "Set Links To Object"
+        iconEnum = 'OBJECT_DATAMODE'
+        if context.window_manager.matSlotLink == 'OBJECT':
+            btnLabel = "Set Links To Object"
+            iconEnum = 'OBJECT_DATAMODE'
+        elif context.window_manager.matSlotLink == 'DATA':
+            btnLabel = "Set Links To Mesh"
+            iconEnum = 'OUTLINER_DATA_MESH'
+
+        row = col.row(align = True)
+        row.operator("object.set_material_links", text = btnLabel)
+        row.prop(context.window_manager, "matSlotLink", icon_only = True, icon = iconEnum)
+
+        col.operator("object.clear_material_slots", text = "Clear Slots")
 
         col = layout.column()
         col.separator()
