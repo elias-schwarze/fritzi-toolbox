@@ -111,6 +111,44 @@ class FTB_PT_DataEditing_Panel(Panel):
         col = layout.column()
         col.operator("object.collection_name_to_material")
 
+class FTB_PT_Subdiv_Panel(Panel):
+    bl_label = "Subdivision Tools"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "FTB"
+    bl_parent_id = "FTB_PT_DataEditing_Panel"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    bpy.types.WindowManager.ftbSubdivType = bpy.props.EnumProperty(
+        name="Operation",
+        items=[
+            ('VIEWPORT', "Viewport",
+             "Adjusts viewport subdivision level"),
+            ('RENDER', "Render",
+             "Adjusts render subdivision level")
+        ],
+        default='VIEWPORT'
+    )
+
+    bpy.types.WindowManager.ftbSubdivScope = bpy.props.EnumProperty(
+        name="Affect",
+        items=[
+            ('SELECTION', "Selection",
+             "Affects selected objects"),
+            ('COLLECTION', "Collection",
+             "Affects objects active collection and all child collections")
+        ],
+        default='SELECTION'
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row = layout.row(align=True)
+        row.prop(bpy.context.window_manager, "ftbSubdivScope")
+        row = layout.row(align=True)
+        row.prop(bpy.context.window_manager, "ftbSubdivType", expand=True)
+
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):
     bl_label = "Line Art Layer Usage"
@@ -159,9 +197,11 @@ class FTB_PT_CollectionLineUsage_Panel(Panel):
 
 def register():
     bpy.utils.register_class(FTB_PT_DataEditing_Panel)
+    bpy.utils.register_class(FTB_PT_Subdiv_Panel)
     bpy.utils.register_class(FTB_PT_CollectionLineUsage_Panel)
 
 
 def unregister():
     bpy.utils.unregister_class(FTB_PT_CollectionLineUsage_Panel)
+    bpy.utils.unregister_class(FTB_PT_Subdiv_Panel)
     bpy.utils.unregister_class(FTB_PT_DataEditing_Panel)

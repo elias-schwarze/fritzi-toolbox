@@ -428,6 +428,15 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
         return {'FINISHED'}
 
+class FTB_OT_SetSubdivLevels_Op(Operator):
+    bl_idname = "object.set_subdiv_levels"
+    bl_label = "Set Subdivision"
+    bl_description = "Modifies subdivision modifers of all objects within the chosen Scope"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        return {'FINISHED'}
+
 
 def register():
     bpy.utils.register_class(FTB_OT_OverrideRetainTransform_Op)
@@ -441,6 +450,7 @@ def register():
     bpy.utils.register_class(FTB_OT_PropagateLineArtMaskSettings_Op)
     bpy.utils.register_class(FTB_OT_SetToCenter_Op)
     bpy.utils.register_class(FTB_OT_OriginToCursor_Op)
+    bpy.utils.register_class(FTB_OT_SetSubdivLevels_Op)
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
@@ -448,6 +458,7 @@ def register():
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
+    bpy.utils.unregister_class(FTB_OT_SetSubdivLevels_Op)
     bpy.utils.unregister_class(FTB_OT_OriginToCursor_Op)
     bpy.utils.unregister_class(FTB_OT_SetToCenter_Op)
     bpy.utils.unregister_class(FTB_OT_PropagateLineArtMaskSettings_Op)
