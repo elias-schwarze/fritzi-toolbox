@@ -113,9 +113,11 @@ class FTB_OT_UEExport_Op(Operator):
             ConvertCurvesToMesh(object)
             bModsApplied &= ApplyModifiers(object)
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-            RecalculateNormals(object)
-            RemoveSpecialChars(object)
 
+            if bpy.context.window_manager.ftbExportRecalcNormals:
+                RecalculateNormals(object)
+
+            RemoveSpecialChars(object)
             object.select_set(False)
 
         if bModsApplied:
