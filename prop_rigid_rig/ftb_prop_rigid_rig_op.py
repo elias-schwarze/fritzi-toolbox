@@ -118,6 +118,11 @@ class FTB_OT_CreateRigidRig_Op(Operator):
         propRigObj.pose.bones['root'].custom_shape = rootMeshObj
         propRigObj.pose.bones['handle'].custom_shape = handleMeshObj
 
+        # set rotation mode
+
+        propRigObj.pose.bones['root'].rotation_mode = wm.ftbBoneRotationMode
+        propRigObj.pose.bones['handle'].rotation_mode = wm.ftbBoneRotationMode
+
         if childObjs:
             for obj in childObjs:
                 obj.select_set(True)

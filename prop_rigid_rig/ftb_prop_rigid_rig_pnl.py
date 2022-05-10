@@ -19,7 +19,7 @@ class FTB_PT_PropRigging_Panel(Panel):
         default="", name="Name")
 
     bpy.types.WindowManager.ftbRigCustomShape = bpy.props.EnumProperty(
-        name="Shape",
+        name="Handle",
         description="Desired custom bone shape for handle bone.",
         items=[
             ('CUBE', "Cube", "Cube shape"),
@@ -27,6 +27,16 @@ class FTB_PT_PropRigging_Panel(Panel):
             ('SPHERE', "Sphere", "Sphere shape made out of 3 overlapping circles")
         ],
         default='CUBE'
+    )
+    bpy.types.WindowManager.ftbBoneRotationMode = bpy.props.EnumProperty(
+        name= "Mode",
+        description= "Set the rotation mode of all bones",
+        items=[
+            ('QUATERNION', "Quaternion", ""),
+            ('XYZ', "XYZ Euler", "")
+        ],
+        default='XYZ'
+
     )
 
     def draw(self, context):
@@ -47,6 +57,7 @@ class FTB_PT_PropRigging_Panel(Panel):
         col.separator()
 
         col.prop(bpy.context.window_manager, "ftbRigCustomShape")
+        col.prop(bpy.context.window_manager, "ftbBoneRotationMode")
 
         col.separator()
         col.operator("object.create_rigid_rig")
