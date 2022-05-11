@@ -34,6 +34,7 @@ class FTB_PT_UEExport_Panel(Panel):
         col.label(text="Character Tools")
         col.operator("utils.ue_char_cleanup")
         col.operator("utils.ue_char_weight_parent")
+        col.operator("utils.ue_char_add_rig")
 
 
 def register():
