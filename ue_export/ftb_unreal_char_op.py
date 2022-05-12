@@ -71,6 +71,7 @@ class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
         
         # switch to edit mode to modify edit_bones
         bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+        rig.use_mirror_x = True
 
 
         for bone in rig.edit_bones:
