@@ -75,6 +75,7 @@ class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
 
         for bone in rig.edit_bones:
             # delete layer 0 bones (face)
+            if bone.layers[0]:
                 rig.edit_bones.remove(bone)
 
         # new for each loop to avoid iterating over an already deleted bone, which would result in a missing reference
