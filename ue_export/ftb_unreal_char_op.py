@@ -1,5 +1,6 @@
 import bpy
 from bpy.types import Operator
+from bpy.app.handlers import persistent
 
 
 class FTB_OT_UE_Char_Cleanup_Op(Operator):
@@ -26,8 +27,8 @@ class FTB_OT_UE_Char_Cleanup_Op(Operator):
 
 class FTB_OT_UE_Char_WeightParent_Op(Operator):
     bl_idname = "utils.ue_char_weight_parent"
-    bl_label = "Weight Paint To Bone"
-    bl_description = "Weight paints all vertices of all selected objects to active bone"
+    bl_label = "Weight Paint To spine.006"
+    bl_description = "Weight paints all vertices of all selected objects to metarig head bone"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -90,14 +91,57 @@ class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
 
         return {'FINISHED'}
 
+class FTB_OT_UE_Char_DataTransferFromActive_Op(Operator):
+    bl_idname = "utils.ue_char_data_transfer_from_active"
+    bl_label = "Data Transfer From Active"
+    bl_description = "Transfers Weights from active object to all selected objects, using nearest face interpolated setting"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode when active object exists
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+
+        if obj and context.selected_objects:
+            if len(context.selected_objects) >= 2:
+                if obj.mode == "OBJECT":
+                    return True
+
+        return False
+
+    def execute(self, context):
+
+        sourceObject = bpy.context.active_object
+
+        for selObj in bpy.context.selected_objects:
+            if selObj != sourceObject:
+
+                dataTransMod = selObj.modifiers.new(name="FTB_DataTransfer", type="DATA_TRANSFER")
+                dataTransMod.use_vert_data = True
+                dataTransMod.data_types_verts = {'VGROUP_WEIGHTS'}
+                dataTransMod.vert_mapping = 'POLYINTERP_NEAREST'
+
+                dataTransMod.object = sourceObject
+
+                bpy.context.view_layer.objects.active = selObj
+                bpy.ops.object.modifier_apply(modifier="FTB_DataTransfer")
+                bpy.ops.paint.weight_paint_toggle()
+                bpy.ops.object.vertex_group_smooth(group_select_mode='ALL', repeat=3)
+                bpy.ops.paint.weight_paint_toggle()
+
+        
+        return {'FINISHED'}
+
+
 
 def register():
     bpy.utils.register_class(FTB_OT_UE_Char_AddUnrealRig_Op)
     bpy.utils.register_class(FTB_OT_UE_Char_Cleanup_Op)
     bpy.utils.register_class(FTB_OT_UE_Char_WeightParent_Op)
-
+    bpy.utils.register_class(FTB_OT_UE_Char_DataTransferFromActive_Op)
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_UE_Char_DataTransferFromActive_Op)
     bpy.utils.unregister_class(FTB_OT_UE_Char_WeightParent_Op)
     bpy.utils.unregister_class(FTB_OT_UE_Char_Cleanup_Op)
     bpy.utils.unregister_class(FTB_OT_UE_Char_AddUnrealRig_Op)
