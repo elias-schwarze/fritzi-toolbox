@@ -1,3 +1,11 @@
+#####
+# This is a build script to automatically copy and pack the needed files into a single archive which may be distributed to end users.
+# Automatically excludes files that are not needed to run the addon in Blender.
+# To build the addon, simply set the config variables down below.
+# Once variables are set, run this script by either running it with python directly or press the play button in the top right corner of VSCode.
+#####
+
+
 import os
 import shutil
 
