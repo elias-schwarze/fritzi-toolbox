@@ -28,6 +28,7 @@ from .index_override_remover import ftb_index_override_remover_op
 from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl, ftb_unreal_char_op
 from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
 from .prop_rigid_rig import ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl
+from .auto_key_alert import ftb_auto_key_alert_op
 
 
 bl_info = {
@@ -53,7 +54,8 @@ classes = (ftb_prefs,
            ftb_index_override_remover_op,
            ftb_ueexport_op, ftb_unreal_char_op, ftb_ueexport_pnl,
            ftb_materialhelper_op, ftb_materialhelper_pnl,
-           ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl)
+           ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl,
+           ftb_auto_key_alert_op)
 
 
 def register():
