@@ -20,6 +20,11 @@ class FTBPreferences(bpy.types.AddonPreferences):
         description="If enabled, the Warning about missing Fritzi shaders will not be displayed in the Material Panel",
         default=False)
 
+    alert_autokey: bpy.props.BoolProperty(
+        name="Alert when Auto Keying is active (Popup message after loading blend file)",
+        description="If enabled, a popup dialog is shown every time a blend file with enabled auto keying is loaded",
+        default=False)
+
     # Addon updater preferences.
 
     auto_check_update: bpy.props.BoolProperty(
@@ -64,6 +69,8 @@ class FTBPreferences(bpy.types.AddonPreferences):
         col.prop(ftb_path_utils.getFritziPreferences(), "skip_override_cleanup")
 
         col.prop(ftb_path_utils.getFritziPreferences(), "hide_fritzi_shader_warning")
+
+        col.prop(ftb_path_utils.getFritziPreferences(), "alert_autokey")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
