@@ -8,6 +8,10 @@ from ..utility_functions.ftb_path_utils import getFritziPreferences
 def alertUserAutoKey():
     if (bpy.context.scene.tool_settings.use_keyframe_insert_auto):
         bpy.ops.utils.alert_user_auto_key('INVOKE_DEFAULT')
+
+def disableAutoKey():
+    if (bpy.context.scene.tool_settings.use_keyframe_insert_auto):
+        bpy.context.scene.tool_settings.use_keyframe_insert_auto = False
         
 
 class FTB_OT_AlertUserAutoKey_Op(bpy.types.Operator):
@@ -26,7 +30,11 @@ class FTB_OT_AlertUserAutoKey_Op(bpy.types.Operator):
 
 @persistent
 def auto_key_postLoad_handler(dummy):
-    if (getFritziPreferences().alert_autokey == True):
+    if (getFritziPreferences().always_disable_autokey):
+        disableAutoKey()
+
+
+    if (getFritziPreferences().alert_autokey and getFritziPreferences().always_disable_autokey == False):
         alertUserAutoKey()
 
     return {'FINISHED'}
