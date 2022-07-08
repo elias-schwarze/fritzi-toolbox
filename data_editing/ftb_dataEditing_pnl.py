@@ -130,10 +130,10 @@ class FTB_PT_Subdiv_Panel(Panel):
     bpy.types.WindowManager.ftbSubdivType = bpy.props.EnumProperty(
         name="Operation",
         items=[
-            ('VIEWPORT', "Viewport",
-             "Adjusts viewport subdivision level"),
-            ('RENDER', "Render",
-             "Adjusts render subdivision level")
+            ('VIEWPORT', "Viewport Match Render",
+             "Adjusts viewport subdivision level to match render level"),
+            ('RENDER', "Render Match Viewport",
+             "Adjusts render subdivision level to match viewport level")
         ],
         default='VIEWPORT'
     )
@@ -155,7 +155,7 @@ class FTB_PT_Subdiv_Panel(Panel):
         row = layout.row(align=True)
         row.prop(bpy.context.window_manager, "ftbSubdivScope")
         row = layout.row(align=True)
-        row.prop(bpy.context.window_manager, "ftbSubdivType", expand=True)
+        row.prop(bpy.context.window_manager, "ftbSubdivType", expand=False)
 
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):
