@@ -125,21 +125,16 @@ class FTB_PT_DangerZone_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
-        col.label(
-            text="WARNING! Use at own risk.", icon='ERROR')
-
-        col = layout.column()
+        col.label(text="WARNING! Use at own risk.", icon='ERROR')
         col.operator("object.remove_modifers",
                      text="Remove All Modifiers")
-
-        col = layout.column()
         col.operator("object.remove_all_materials",
                      text="Remove All Materials")
+        col.operator("data.remove_image_duplicates")
+        col.operator("data.remove_material_duplicates")
 
-        col = layout.column()
-        col.separator()
+        col.separator(factor = 2.0)
 
-        col = layout.column()
         col.label(text="Batch Shader Editor: ")
 
         row = layout.row(align=True)
