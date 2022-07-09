@@ -48,7 +48,7 @@ def is_material_duplicate(source: Material, duplicate: Material) -> bool:
         source_nodes = sorted(source.node_tree.nodes, key=lambda node: node.name)
     if duplicate.node_tree:
         duplicate_nodes = sorted(duplicate.node_tree.nodes, key=lambda node: node.name)
-    
+
     identical_node_tree = (source_nodes == duplicate_nodes)
     if source_nodes and duplicate_nodes:
         if len(source_nodes) != len(duplicate_nodes):
@@ -57,13 +57,13 @@ def is_material_duplicate(source: Material, duplicate: Material) -> bool:
         identical_node_tree = True
         for i in range(len(source_nodes)):
             identical_node_tree &= is_equal_node(source_nodes[i], duplicate_nodes[i])
-    
+
     source_pixels = np.array(list())
     duplicate_pixels = np.array(list())
     if source.preview and duplicate.preview:
-        # using material thumbnail comparision to further validate a duplicate match 
+        # using material thumbnail comparision to further validate a duplicate match
         # not ideal but better than looping over every input, on every node in the node_tree for all materials...
-        # recently changed materials won't update their thumbnail immediately. This obviously affects the 
+        # recently changed materials won't update their thumbnail immediately. This obviously affects the
         # outcome of the script
         source_pixels = np.array(source.preview.icon_pixels)
         duplicate_pixels = np.array(duplicate.preview.icon_pixels)
@@ -278,9 +278,9 @@ class FTB_OT_EditShaderProperty_Op(Operator):
 class FTB_OT_RemoveImageDuplicates_Op(Operator):
     bl_idname = "data.remove_image_duplicates"
     bl_label = "Remove Image Dupes"
-    bl_description = ("Removes image duplicates from blend file (ignores linked images). Duplicates will be remapped, setting"
-                      " users to zero. All duplicates will be deleted automatically when closing the file or after performing manual clean up using"
-                      " File Menu")
+    bl_description = ("Removes image duplicates from blend file (ignores linked images). Duplicates will be remapped, "
+                      "setting users to zero. All duplicates will be deleted automatically when closing the file or "
+                      "after performing manual clean up using File Menu")
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -312,7 +312,9 @@ class FTB_OT_RemoveImageDuplicates_Op(Operator):
 class FTB_OT_RemoveMaterialDuplicates_Op(Operator):
     bl_idname = "data.remove_material_duplicates"
     bl_label = "Remove Material Dupes"
-    bl_description = ("")
+    bl_description = ("Removes material duplicates from blend file (ignores linked materials). Duplicates will be "
+                      "remapped, setting users to zero. All duplicates will be deleted when closing the file or "
+                      "performing manual clean up using File Menu")
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
