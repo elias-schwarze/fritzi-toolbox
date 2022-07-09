@@ -15,6 +15,14 @@ def strip_End_Numbers(inputString: str):
     else:
         return inputString
 
+def is_name_duplicate(source: str, duplicate: str):
+    """
+    Returns True if the Duplicate and Source strings are identical except for the trailing numbering scheme added by blender. 
+    e.g. name == name.001 == name.002
+    but name.001 != name001
+    """
+    return strip_End_Numbers(source) == strip_End_Numbers(duplicate)
+
 def GetFilenameString():
     """Returns the filename of the current blend file without the '.blend' file ending"""
     return bpy.data.filepath[bpy.data.filepath.rindex(OS_SEPARATOR) + 1: -6]
