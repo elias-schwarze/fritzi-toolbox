@@ -75,7 +75,7 @@ def custom_pre_save_handler(dummy):
     alert_on_absolute_paths = getFritziPreferences().alert_absolute_paths
 
     # only alert if file is within fritzi workspace and alerts are enabled
-    if alert_on_absolute_paths and IsFileInWorkspace():
+    if alert_on_absolute_paths: # and IsFileInWorkspace():
         
         abs_path_errors: str = list()
         for img in bpy.data.images:
