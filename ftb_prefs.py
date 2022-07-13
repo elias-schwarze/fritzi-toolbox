@@ -30,6 +30,12 @@ class FTBPreferences(bpy.types.AddonPreferences):
         description="If enabled, auto keying will always be disabled upon loading a blend file",
         default=False)
 
+    alert_absolute_paths: bpy.props.BoolProperty(
+        name="Absolute path alert for assets",
+        description="If enabled, a popup dialog is shown while saving when the file contains assets with an absolute path." + 
+                    " Only alerts on files saved within Fritzi Workspace",
+        default=True)
+
     # Addon updater preferences.
 
     auto_check_update: bpy.props.BoolProperty(
@@ -84,6 +90,8 @@ class FTBPreferences(bpy.types.AddonPreferences):
             row.enabled = True
         else:
             row.enabled = False
+
+        col.prop(getFritziPreferences(), "alert_absolute_paths")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
