@@ -3,7 +3,7 @@ import bpy
 # Updater ops import, all setup in this file.
 from . import addon_updater_ops
 
-from .utility_functions import ftb_path_utils
+from .utility_functions.ftb_path_utils import getFritziPreferences
 
 
 class FTBPreferences(bpy.types.AddonPreferences):
@@ -19,6 +19,22 @@ class FTBPreferences(bpy.types.AddonPreferences):
         name="Hide Missing Prop Shader Warning",
         description="If enabled, the Warning about missing Fritzi shaders will not be displayed in the Material Panel",
         default=False)
+
+    alert_autokey: bpy.props.BoolProperty(
+        name="Alert when Auto Keying is active (Popup message after loading blend file)",
+        description="If enabled, a popup dialog is shown every time a blend file with enabled auto keying is loaded",
+        default=False)
+
+    always_disable_autokey : bpy.props.BoolProperty(
+        name= "Always turn off Auto Keying when loading a blend file",
+        description="If enabled, auto keying will always be disabled upon loading a blend file",
+        default=False)
+
+    alert_absolute_paths: bpy.props.BoolProperty(
+        name="Absolute path alert for assets",
+        description="If enabled, a popup dialog is shown while saving when the file contains assets with an absolute path." + 
+                    " Only alerts on files saved within Fritzi Workspace",
+        default=True)
 
     # Addon updater preferences.
 
@@ -61,9 +77,21 @@ class FTBPreferences(bpy.types.AddonPreferences):
         mainrow = layout.row()
         col = mainrow.column()
 
-        col.prop(ftb_path_utils.getFritziPreferences(), "skip_override_cleanup")
+        col.prop(getFritziPreferences(), "skip_override_cleanup")
 
-        col.prop(ftb_path_utils.getFritziPreferences(), "hide_fritzi_shader_warning")
+        col.prop(getFritziPreferences(), "hide_fritzi_shader_warning")
+
+        col.prop(getFritziPreferences(), "always_disable_autokey")
+
+        row = col.row()
+        row.prop(getFritziPreferences(), "alert_autokey")
+
+        if (getFritziPreferences().always_disable_autokey == False):
+            row.enabled = True
+        else:
+            row.enabled = False
+
+        col.prop(getFritziPreferences(), "alert_absolute_paths")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
