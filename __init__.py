@@ -18,11 +18,8 @@ from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op
 from .danger_zone import ftb_danger_zone_pnl, ftb_danger_zone_op
 from .batch_rotator import ftb_rotator_pnl, ftb_rotator_op
 from .burn_in_render import ftb_burnInRender_pnl, ftb_burnInRender_op
-from .displacement_tools import ftb_displaceTools_op, ftb_displaceTools_pnl
 
-#from .default_setup import ftb_default_comp_setup_op
-#from .default_setup import ftb_default_comp_setup_pnl
-from .default_setup import ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl
+from .default_setup import ftb_default_lineart_op, ftb_default_render_settings_op, ftb_defaultDisplace_op, ftb_default_setup_pnl
 from .fbxToBvh_processor import ftb_fbxToBvh_op, ftb_fbxToBvh_pnl
 from .index_override_remover import ftb_index_override_remover_op
 from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl, ftb_unreal_char_op
@@ -47,9 +44,8 @@ classes = (ftb_prefs,
            ftb_dataEditing_op, ftb_dataEditing_pnl,
            ftb_danger_zone_op, ftb_danger_zone_pnl,
            ftb_rotator_op, ftb_rotator_pnl,
-           ftb_burnInRender_op, ftb_burnInRender_pnl,
-           ftb_displaceTools_pnl, ftb_displaceTools_op,
-           ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl,
+           ftb_burnInRender_op, ftb_burnInRender_pnl, 
+           ftb_defaultDisplace_op, ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl,
            ftb_fbxToBvh_op, ftb_fbxToBvh_pnl,
            ftb_index_override_remover_op,
            ftb_ueexport_op, ftb_unreal_char_op, ftb_ueexport_pnl,

@@ -10,14 +10,11 @@ class FTB_PT_Defaults_Panel(Panel):
     bl_category = "FTB"
     bl_options = {"DEFAULT_CLOSED"}
 
-    bpy.types.WindowManager.bsetShadows = bpy.props.BoolProperty(
-        default=True)
+    bpy.types.WindowManager.bsetShadows = bpy.props.BoolProperty(default=True)
 
-    bpy.types.WindowManager.bsetResolution = bpy.props.BoolProperty(
-        default=True)
+    bpy.types.WindowManager.bsetResolution = bpy.props.BoolProperty(default=True)
 
-    bpy.types.WindowManager.bsetFramerate = bpy.props.BoolProperty(
-        default=True)
+    bpy.types.WindowManager.bsetFramerate = bpy.props.BoolProperty(default=True)
 
     bpy.types.WindowManager.bsetEngine = bpy.props.BoolProperty(default=True)
 
@@ -25,6 +22,23 @@ class FTB_PT_Defaults_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
+
+        col = layout.column()
+        col.label(text="Add Displacement:")
+
+        col = layout.column()
+        col.operator("object.add_displace_modifier",
+                     text="Displace XYZ").direction = 'XYZ'
+
+        col = layout.column(align=True)
+        col.operator("object.add_displace_modifier",
+                     text="Displace X").direction = 'X'
+
+        col.operator("object.add_displace_modifier",
+                     text="Displace Y").direction = 'Y'
+
+        col.operator("object.add_displace_modifier",
+                     text="Displace Z").direction = 'Z'
 
         col = layout.column()
         col = layout.label(text="Line Art")
