@@ -492,11 +492,46 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
         return {'FINISHED'}
 
+class FTB_OT_LimitToThisViewLayer_Op(Operator):
+    bl_idname = "collection.limit_to_view_layer"
+    bl_label = "Limit to View Layer"
+    bl_description = "Disable active collection in all view layers except the active one"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # should not work when Scene Collection is active
+
+    @classmethod
+    def poll(cls, context):
+        if bpy.context.collection.name == "Scene Collection":
+            return False
+        else:
+            return True
+
+    def execute(self, context):
+
+        # create list of all view layers except active one
+        viewLayerList = list(bpy.context.scene.view_layers)
+        viewLayerList.remove(bpy.context.view_layer)
+
+        # count exclude occurrences to notify user in UI
+        excludeCount = 0
+
+        for layer in viewLayerList:
+            for childcol in layer.layer_collection.children:
+                if bpy.context.collection == childcol.collection:
+                    childcol.exclude = True
+                    excludeCount += 1
+
+        excludeString = "Excluded active collection in " + str(excludeCount) + " other view layers except active layer." 
+
+        self.report({'INFO'}, excludeString)
+        return {'FINISHED'}
+
 classes = (
 FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
 FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
 FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
-FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op
+FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op
 )
 
 def register():
