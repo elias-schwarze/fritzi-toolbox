@@ -3,8 +3,7 @@
 import bpy
 from bpy.app.handlers import persistent
 from ..utility_functions.ftb_path_utils import getFritziPreferences
-from ..utility_functions.ftb_string_utils import asset_path_is_absolute
-from ..object_checking.Asset import IsFileInWorkspace
+from ..utility_functions.ftb_string_utils import asset_path_is_absolute, file_is_in_workspace
 
 
 def alertUserAutoKey():
@@ -41,10 +40,10 @@ class FTB_OT_Alert_Absolute_Asset_Path_Op(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def invoke(self, context, event):
-        self.report({'WARNING'}, "\033[93m \033[1m Absolute paths found." + 
-            "Check detailed item list below: \033[0m")
+        self.report({'WARNING'}, "\033[93m \033[1m Absolute paths found." +
+                    "Check detailed item list below: \033[0m")
         return context.window_manager.invoke_props_dialog(self, width=400)
-    
+
     def draw(self, context):
         layout = self.layout
         col = layout.column()
@@ -53,7 +52,7 @@ class FTB_OT_Alert_Absolute_Asset_Path_Op(bpy.types.Operator):
         col.alert = False
         col.label(text="File contains assets with absolute paths. Check terminal for detailed list.")
         col.label(text="Please resolve absolute to relative paths.")
-    
+
     def execute(self, context):
         return {'FINISHED'}
 
@@ -62,7 +61,6 @@ class FTB_OT_Alert_Absolute_Asset_Path_Op(bpy.types.Operator):
 def auto_key_postLoad_handler(dummy):
     if (getFritziPreferences().always_disable_autokey):
         disableAutoKey()
-
 
     if (getFritziPreferences().alert_autokey and getFritziPreferences().always_disable_autokey == False):
         alertUserAutoKey()
@@ -75,17 +73,17 @@ def custom_pre_save_handler(dummy):
     alert_on_absolute_paths = getFritziPreferences().alert_absolute_paths
 
     # only alert if file is within fritzi workspace and alerts are enabled
-    if alert_on_absolute_paths: # and IsFileInWorkspace():
-        
+    if alert_on_absolute_paths and file_is_in_workspace():
+
         abs_path_errors: str = list()
         for img in bpy.data.images:
             # ignore linked + packed images
             if img.library != None or img.packed_file != None:
                 continue
 
-            if asset_path_is_absolute(img.filepath): 
+            if asset_path_is_absolute(img.filepath):
                 abs_path_errors.append("\t Image \"" + img.name_full + "\" with absolute path:  " +
-                    img.filepath[:15] + "...")
+                                       img.filepath[:15] + "...")
 
         for library in bpy.data.libraries:
             # ignore indirect libraries
@@ -93,8 +91,8 @@ def custom_pre_save_handler(dummy):
                 continue
 
             if asset_path_is_absolute(library.filepath):
-                abs_path_errors.append("\t Library \"" + library.name_full +"\" with absolute path:  " +
-                    library.filepath[:15] + "...")
+                abs_path_errors.append("\t Library \"" + library.name_full + "\" with absolute path:  " +
+                                       library.filepath[:15] + "...")
 
         if abs_path_errors:
             bpy.ops.utils.alert_absolute_asset_path('INVOKE_DEFAULT')
