@@ -71,6 +71,10 @@ class FTB_PT_DataEditing_Panel(Panel):
         layout = self.layout
 
         col = layout.column()
+        col.label(text="GNodes Mat Replacer:")
+        col.operator("object.set_gnodes_materials")
+
+        col = layout.column()
 
         col.label(text="Active Object:")
         col.operator("object.center_object")
