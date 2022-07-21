@@ -6,46 +6,46 @@ def createSetMatNodes(replaceMat = False):
     param replaceMat: Set to True to create a setup to replace only specific Material slots, set to False to create setup that overrides all material slots of the given object
     """
 
-    # create node group and set name
+    # create node group, set name
     if replaceMat:
         nodeGroupName = "FTB_replaceLocalMaterial"
+        setMatNodeGroup = bpy.data.node_groups.new(name=nodeGroupName, type='GeometryNodeTree')
 
     else:
         nodeGroupName = "FTB_setLocalMaterial"
-
-    setMatNodes = bpy.data.node_groups.new(name=nodeGroupName, type='GeometryNodeTree')
+        setMatNodeGroup = bpy.data.node_groups.new(name=nodeGroupName, type='GeometryNodeTree')
 
     # I/O Nodes
-    geoInput = setMatNodes.nodes.new(type="NodeGroupInput")
-    geoOutput = setMatNodes.nodes.new(type="NodeGroupOutput")
+    geoInput = setMatNodeGroup.nodes.new(type="NodeGroupInput")
+    geoOutput = setMatNodeGroup.nodes.new(type="NodeGroupOutput")
     geoOutput.location = (700.0, 0.0)
 
     # I/O Sockets for the entire node group
-    setMatNodes.inputs.new(name="Geometry", type="NodeSocketGeometry")
+    setMatNodeGroup.inputs.new(name="Geometry", type="NodeSocketGeometry")
 
     if replaceMat:
-        setMatNodes.inputs.new(name="Replace", type="NodeSocketMaterial")
-        setMatNodes.inputs.new(name="With", type="NodeSocketMaterial")
-        geoSetMat = setMatNodes.nodes.new(type="GeometryNodeReplaceMaterial")
+        setMatNodeGroup.inputs.new(name="Replace", type="NodeSocketMaterial")
+        setMatNodeGroup.inputs.new(name="With", type="NodeSocketMaterial")
+        geoSetMat = setMatNodeGroup.nodes.new(type="GeometryNodeReplaceMaterial")
 
     else: 
-        setMatNodes.inputs.new(name="Material", type="NodeSocketMaterial")
-        geoSetMat = setMatNodes.nodes.new(type="GeometryNodeSetMaterial")
+        setMatNodeGroup.inputs.new(name="Material", type="NodeSocketMaterial")
+        geoSetMat = setMatNodeGroup.nodes.new(type="GeometryNodeSetMaterial")
 
-    setMatNodes.outputs.new(name="Geometry", type="NodeSocketGeometry")
+    setMatNodeGroup.outputs.new(name="Geometry", type="NodeSocketGeometry")
     geoSetMat.location = (350.0, 0.0)
 
     # create links between available nodes
-    setMatNodes.links.new(input=geoInput.outputs[0], output=geoSetMat.inputs["Geometry"])
+    setMatNodeGroup.links.new(input=geoInput.outputs[0], output=geoSetMat.inputs["Geometry"])
 
     if replaceMat:
-        setMatNodes.links.new(input=geoInput.outputs[1], output=geoSetMat.inputs[1])
-        setMatNodes.links.new(input=geoInput.outputs[2], output=geoSetMat.inputs[2])
+        setMatNodeGroup.links.new(input=geoInput.outputs[1], output=geoSetMat.inputs[1])
+        setMatNodeGroup.links.new(input=geoInput.outputs[2], output=geoSetMat.inputs[2])
 
     else:
-        setMatNodes.links.new(input=geoInput.outputs[1], output=geoSetMat.inputs[2])
+        setMatNodeGroup.links.new(input=geoInput.outputs[1], output=geoSetMat.inputs[2])
     
-    setMatNodes.links.new(input=geoSetMat.outputs[0], output=geoOutput.inputs[0])
+    setMatNodeGroup.links.new(input=geoSetMat.outputs[0], output=geoOutput.inputs[0])
 
 
 class FTB_OT_GnodesSetMaterials_Op(bpy.types.Operator):
@@ -71,7 +71,6 @@ class FTB_OT_GnodesSetMaterials_Op(bpy.types.Operator):
     def execute(self, context):
 
         createSetMatNodes(replaceMat=True)
-        
         return {'FINISHED'}
 
 def register():
