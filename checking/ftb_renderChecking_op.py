@@ -1,3 +1,4 @@
+from typing import Tuple
 import bpy
 from dataclasses import dataclass
 from bpy.app.handlers import persistent
@@ -29,6 +30,8 @@ class RenderCheckData:
     outColor : str = 'RGBA'
     outDepth : str = '32'
     outCodec : str = 'ZIP'
+
+    invalidBoolObjects : list = None
 
 
 def getCurrentSettings(currentSet : RenderCheckData()):
@@ -62,6 +65,9 @@ def getCurrentSettings(currentSet : RenderCheckData()):
     currentSet.outColor = bpy.context.scene.render.image_settings.color_mode
     currentSet.outDepth = bpy.context.scene.render.image_settings.color_depth
     currentSet.outCodec = bpy.context.scene.render.image_settings.exr_codec
+
+    # Find objects with booleans set to Fast missing self intersection setting
+    currentSet.invalidBoolObjects = invalidBoolCheck()
 
     return currentSet
 

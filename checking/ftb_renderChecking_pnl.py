@@ -33,6 +33,14 @@ class FTB_PT_Render_Checking_Panel(Panel):
                 box = layout.box()
                 box.label(text="Resolution:")
                 box.label(text=resText)
+                box.separator()
+
+                # Objects with invalid Booleans
+                if currentSet.invalidBoolObjects:
+                    box.label(text= ("Found " + str(len(currentSet.invalidBoolObjects)) + " Bool Issues"), icon='ERROR')
+                    for obj in currentSet.invalidBoolObjects:
+                        if obj:
+                            box.label(text=obj.name)
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = renCheck.RenderCheckData()
