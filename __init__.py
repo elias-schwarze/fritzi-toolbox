@@ -13,7 +13,7 @@
 
 from . import ftb_prefs, addon_updater_ops
 from .previews import ftb_previews_pnl, ftb_previews_op
-from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op
+from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op, ftb_renderChecking_pnl, ftb_renderChecking_op
 from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op
 from .danger_zone import ftb_danger_zone_pnl, ftb_danger_zone_op
 from .batch_rotator import ftb_rotator_pnl, ftb_rotator_op
@@ -40,7 +40,7 @@ bl_info = {
 
 classes = (ftb_prefs,
            ftb_previews_op, ftb_previews_pnl,
-           ftb_objectChecking_op, ftb_objectChecking_pnl,
+           ftb_objectChecking_op, ftb_objectChecking_pnl, ftb_renderChecking_pnl, ftb_renderChecking_op,
            ftb_dataEditing_op, ftb_dataEditing_pnl,
            ftb_danger_zone_op, ftb_danger_zone_pnl,
            ftb_rotator_op, ftb_rotator_pnl,
