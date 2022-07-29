@@ -1,37 +1,7 @@
-from typing import Tuple
 import bpy
-from dataclasses import dataclass
+from .ftb_renderCheckData import RenderCheckData
 from bpy.app.handlers import persistent
 
-@dataclass
-class RenderCheckData:
-    """A class that can contain all relevant render settings to compare against defaults for render check."""
-    framerate : int = 50
-    resX : int = 3840
-    resY : int = 2160
-    resPercent : int = 100
-
-    casShadow : str = '4096'
-    cubeShadow : str = '4096'
-    highBitShadow : bool = True
-    softShadow : bool = True
-
-    useAo : bool = True
-    aoDist : float = 0.5
-    aoFactor : float = 1.0
-    aoQuality :float = 1.0
-    aoBentNormals : bool = True
-    aoBounce : bool = True
-
-    overscan : bool = True
-    oversize : float = 5.0
-
-    outFormat : str = 'OPEN_EXR_MULTILAYER'
-    outColor : str = 'RGBA'
-    outDepth : str = '32'
-    outCodec : str = 'ZIP'
-
-    invalidBoolObjects : list = None
 
 
 def getCurrentSettings(currentSet : RenderCheckData()):
@@ -66,46 +36,59 @@ def getCurrentSettings(currentSet : RenderCheckData()):
     currentSet.outDepth = bpy.context.scene.render.image_settings.color_depth
     currentSet.outCodec = bpy.context.scene.render.image_settings.exr_codec
 
-    # Find objects with booleans set to Fast missing self intersection setting
+    # Find objects with booleans set to Fast missing self intersection setting 
+    # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
     currentSet.invalidBoolObjects = invalidBoolCheck()
 
     return currentSet
 
-def setFinalSettings():
-    """Set render settings to final settings"""
+def setFinalSettings(resFps = False, shadows = False, ao = False, overscan = False, outparams = False):
+    """
+    Set render settings to final settings.
+        resFps: Set resolution and framerate
+        shadows: Set shadow resolution and shadow settings
+        ao: Set ambient occlusion settings
+        overscan: Set overscan
+        outparams: Set output file format
+    """
 
     # Generate new RenderCheckData instance with default settings
     defaultSet = RenderCheckData()
 
     # resolution, framerate
-    bpy.context.scene.render.resolution_x = defaultSet.resX
-    bpy.context.scene.render.resolution_y = defaultSet.resY
-    bpy.context.scene.render.resolution_percentage = defaultSet.resPercent
-    bpy.context.scene.render.fps = defaultSet.framerate
+    if resFps:    
+        bpy.context.scene.render.resolution_x = defaultSet.resX
+        bpy.context.scene.render.resolution_y = defaultSet.resY
+        bpy.context.scene.render.resolution_percentage = defaultSet.resPercent
+        bpy.context.scene.render.fps = defaultSet.framerate
 
     # shadows
-    bpy.context.scene.eevee.shadow_cascade_size = defaultSet.casShadow
-    bpy.context.scene.eevee.shadow_cube_size = defaultSet.cubeShadow
-    bpy.context.scene.eevee.use_shadow_high_bitdepth = defaultSet.highBitShadow
-    bpy.context.scene.eevee.use_soft_shadows = defaultSet.softShadow
+    if shadows:
+        bpy.context.scene.eevee.shadow_cascade_size = defaultSet.casShadow
+        bpy.context.scene.eevee.shadow_cube_size = defaultSet.cubeShadow
+        bpy.context.scene.eevee.use_shadow_high_bitdepth = defaultSet.highBitShadow
+        bpy.context.scene.eevee.use_soft_shadows = defaultSet.softShadow
 
     # ambient occlusion
-    bpy.context.scene.eevee.use_gtao = defaultSet.useAo
-    bpy.context.scene.eevee.gtao_distance = defaultSet.aoDist
-    bpy.context.scene.eevee.gtao_factor = defaultSet.aoFactor
-    bpy.context.scene.eevee.gtao_quality = defaultSet.aoQuality
-    bpy.context.scene.eevee.use_gtao_bent_normals = defaultSet.aoBentNormals
-    bpy.context.scene.eevee.use_gtao_bounce = defaultSet.aoBounce
+    if ao:
+        bpy.context.scene.eevee.use_gtao = defaultSet.useAo
+        bpy.context.scene.eevee.gtao_distance = defaultSet.aoDist
+        bpy.context.scene.eevee.gtao_factor = defaultSet.aoFactor
+        bpy.context.scene.eevee.gtao_quality = defaultSet.aoQuality
+        bpy.context.scene.eevee.use_gtao_bent_normals = defaultSet.aoBentNormals
+        bpy.context.scene.eevee.use_gtao_bounce = defaultSet.aoBounce
 
     # overscan
-    bpy.context.scene.eevee.use_overscan = defaultSet.overscan
-    bpy.context.scene.eevee.overscan_size = defaultSet.oversize
+    if overscan:
+        bpy.context.scene.eevee.use_overscan = defaultSet.overscan
+        bpy.context.scene.eevee.overscan_size = defaultSet.oversize
 
     # output settings
-    bpy.context.scene.render.image_settings.file_format = defaultSet.outFormat
-    bpy.context.scene.render.image_settings.color_mode = defaultSet.outColor
-    bpy.context.scene.render.image_settings.color_depth = defaultSet.outDepth
-    bpy.context.scene.render.image_settings.exr_codec = defaultSet.outCodec
+    if outparams:
+        bpy.context.scene.render.image_settings.file_format = defaultSet.outFormat
+        bpy.context.scene.render.image_settings.color_mode = defaultSet.outColor
+        bpy.context.scene.render.image_settings.color_depth = defaultSet.outDepth
+        bpy.context.scene.render.image_settings.exr_codec = defaultSet.outCodec
 
 def viewLayerCheck():
     """Check if more than one view layer exists, if not return False"""
@@ -116,8 +99,8 @@ def viewLayerCheck():
         return True
 
 def invalidBoolCheck():
-    """Report objects with bool modifiers that do not have Exact Solver and Self Intersection enabled. 
-    Returns list invalidBoolList which contains all objects with invalid Booleans"""
+    """Report object names with bool modifiers that do not have Exact Solver and Self Intersection enabled. 
+    Returns:  invalidBoolList which contains all objects with invalid Booleans"""
 
     invalidBoolList = list()
 
@@ -125,7 +108,7 @@ def invalidBoolCheck():
         for mod in obj.modifiers:
             if mod.type == 'BOOLEAN':
                 if not (mod.solver == 'EXACT' and mod.use_self):
-                    invalidBoolList.append(obj)
+                    invalidBoolList.append(obj.name)
 
     return invalidBoolList
 
@@ -162,37 +145,55 @@ class FTB_OT_RenderCheckRefresh_op(bpy.types.Operator):
         return False
 
     def execute(self, context):
-
-        # boolList = invalidBoolCheck()
-
-        # if boolList:
-        #     reportstring = "There are " + str(len(boolList)) + " objects with invalid booleans. Pls fix"
-        #     self.report({'WARNING'}, reportstring)
-
-        # else: self.report({'INFO'}, "chillin")
         self.__class__.ranOnce = True
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
 
-        
         return {'FINISHED'}
 
 
-class FTB_OT_RenderCheckSetResolution_op(bpy.types.Operator):
-    bl_idname = "utils.render_check_set_resolution"
-    bl_label = "Set Final Resolution"
-    bl_description = "Set resolution and framerate to final settings"
+class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
+    bl_idname = "utils.render_check_set_settings"
+    bl_label = "Set Final settings"
+    bl_description = "Set render settings to final settings"
     bl_options = {"REGISTER", "UNDO"}
 
-    def execute(self, context):
+    resFps: bpy.props.BoolProperty(
+        name = 'resFps',
+        default = False
+        )
 
+    shadows: bpy.props.BoolProperty(
+        name = 'shadows',
+        default = False
+        )
+    
+    ao: bpy.props.BoolProperty(
+        name = 'ao',
+        default = False
+        )
+    
+    overscan: bpy.props.BoolProperty(
+        name = 'overscan',
+        default = False
+        )
+    outparams: bpy.props.BoolProperty(
+        name = 'outparams',
+        default = False
+        )
+
+    def execute(self, context):
+        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams)
+        getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}
 
 def register():
     bpy.utils.register_class(FTB_OT_RenderCheckRefresh_op)
+    bpy.utils.register_class(FTB_OT_RenderCheckSetSettings_op)
     bpy.app.handlers.load_pre.append(renderCheck_preLoad_handler)
     
 
 def unregister():
     bpy.app.handlers.load_pre.remove(renderCheck_preLoad_handler)
+    bpy.utils.unregister_class(FTB_OT_RenderCheckSetSettings_op)
     bpy.utils.unregister_class(FTB_OT_RenderCheckRefresh_op)
     
