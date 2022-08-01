@@ -1,5 +1,5 @@
 import bpy
-from . import ftb_renderChecking_op
+from .ftb_renderChecking_op import FTB_OT_RenderCheckRefresh_op
 from .ftb_renderCheckData import RenderCheckData
 
 finalSettings = RenderCheckData()
@@ -24,7 +24,7 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
         col.operator("utils.render_check_refresh", icon='FILE_REFRESH')
         col.prop(context.window_manager, "ftbRenderOnlyShowErrors")
 
-        if ftb_renderChecking_op.FTB_OT_RenderCheckRefresh_op.ranOnce:
+        if FTB_OT_RenderCheckRefresh_op.ranOnce:
             if bpy.context.scene.ftbCurrentRenderSettings:
                 cs = bpy.context.scene.ftbCurrentRenderSettings
 
@@ -124,14 +124,14 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box.label(text="\"Render Single Layer active\"", icon='ERROR')
                     box.operator("utils.render_check_set_settings", text="Disable Render Single Layer").renderSingleLayer = True
 
-                # VIEW LAYER ACTIVE COUNT
+                # VIEW LAYER ACTIVE COUNT SMALLER THAN TOTAL COUNT
                 if cs.activeViewLayerCount < cs.totalViewLayerCount:
                     box = layout.box()
                     box.label(text="Not all view layers active", icon='ERROR')
 
 
 def register():
-    bpy.types.Scene.ftbCurrentRenderSettings = ftb_renderChecking_op.RenderCheckData()
+    bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()
     bpy.utils.register_class(FTB_PT_Render_Checking_Panel)
 
 
