@@ -48,7 +48,7 @@ class RenderCheckData:
         return (str(self.resX) + " x " + str(self.resY) + " x " + str(self.resPercent) + "% @ " + str(self.framerate) + "fps")
 
     def matchResFps(self, matchData):
-        """"Returns True if resolution and framerate of this instance matches with provided matchData"""
+        """Returns True if resolution and framerate of this instance matches with provided matchData"""
 
         matchResX = matchData.resX == self.resX
         matchResY = matchData.resY == self.resY
@@ -70,7 +70,7 @@ class RenderCheckData:
         return (ShadowResText, ShadowMiscTex,)
 
     def matchShadows(self, matchData):
-        """"Returns True if shadow settings of this instance matches with provided matchData instance."""
+        """Returns True if shadow settings of this instance matches with provided matchData instance."""
 
         matchCascade = matchData.casShadow == self.casShadow
         matchCube = matchData.cubeShadow == self.cubeShadow
