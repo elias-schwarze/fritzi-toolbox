@@ -103,8 +103,15 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 # BOOLEANS
                 if cs.invalidBoolObjects:
                     box = layout.box()
-                    box.label(text=("Found " + str(len(cs.invalidBoolObjects)) + " Boolean Issues"), icon='ERROR')
+                    box.label(text=(str(len(cs.invalidBoolObjects)) + " Boolean Issues"), icon='ERROR')
                     for name in cs.invalidBoolObjects:
+                        box.label(text=name)
+
+                # NLA + ACTIVE ACTION
+                if cs.invalidNlaObjects:
+                    box = layout.box()
+                    box.label(text=(str(len(cs.invalidNlaObjects)) + " NLA issues"), icon='ERROR')
+                    for name in cs.invalidNlaObjects:
                         box.label(text=name)
 
                 # BURN IN
@@ -122,6 +129,7 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 if cs.render_single_layer:
                     box = layout.box()
                     box.label(text="\"Render Single Layer active\"", icon='ERROR')
+                    # Display operator to change settings if they do not match final settings
                     box.operator("utils.render_check_set_settings", text="Disable Render Single Layer").renderSingleLayer = True
 
                 # VIEW LAYER ACTIVE COUNT SMALLER THAN TOTAL COUNT

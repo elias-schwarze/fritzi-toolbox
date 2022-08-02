@@ -51,6 +51,10 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     # Get "Render Single Layer" setting
     currentSet.render_single_layer = bpy.context.scene.render.use_single_layer
 
+    # Get objects that have nla strips and also an active action (this causes the nla strips to not work properly and breaks animation)
+    # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
+    currentSet.invalidNlaObjects = invalidNlaCheck()
+
     return currentSet
 
 
@@ -124,7 +128,6 @@ def countActiveViewLayers():
 def invalidBoolCheck():
     """Report object names with bool modifiers that do not have Exact Solver and Self Intersection enabled.
     Returns:  invalidBoolList which contains all objects with invalid Booleans"""
-
     invalidBoolList = list()
 
     for obj in bpy.context.scene.objects:
@@ -134,6 +137,19 @@ def invalidBoolCheck():
                     invalidBoolList.append(obj.name)
 
     return invalidBoolList
+
+
+def invalidNlaCheck():
+    """Report object names with NLA strips and active action. These objects will likely have broken animation.
+    Returns invalidNlaList[str] which contains object names with invalid NLA setup"""
+    invalidNlaList = list()
+    for obj in bpy.context.scene.objects:
+        if getattr(obj.animation_data, 'use_nla', False):
+            if getattr(obj.animation_data, 'nla_tracks', False):
+                if getattr(obj.animation_data, 'action', False):
+                    invalidNlaList.append(obj.name)
+
+    return invalidNlaList
 
 
 # preLoad handler to clear old info from old file when loading new project file

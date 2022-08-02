@@ -32,6 +32,8 @@ class RenderCheckData:
 
     invalidBoolObjects: list = None
 
+    invalidNlaObjects: list = None
+
     isBurnInActive: bool = False
 
     totalViewLayerCount: int = 0
