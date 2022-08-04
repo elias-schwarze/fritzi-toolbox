@@ -61,7 +61,7 @@ def getFritziPreferences():
     return bpy.context.preferences.addons[(__package__.split('.')[:-1])[0]].preferences
 
 
-def getAbsoluteFilePath(filepath: str):
+def getAbsoluteFilePath(filepath: str) -> str:
     """Gets absolute path of any given blender relative path.
     Works for every datablock that can have a relative source path, such as libraries and images.
     Returns: absolutePath: str"""
