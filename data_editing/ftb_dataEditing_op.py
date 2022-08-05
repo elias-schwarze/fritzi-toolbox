@@ -8,6 +8,7 @@ from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
+from .. utility_functions.ftb_path_utils import getAbsoluteFilePath
 
 
 @persistent
@@ -84,6 +85,7 @@ def drawLineArtMaskButton(self, context):
     row.operator("collection.propagatelineartmask", text=ButtonLabel)
     row.prop(wm, "bForAllChildren", text="", icon='OUTLINER_OB_GROUP_INSTANCE')
 
+
 class FTB_OT_SetToCenter_Op(Operator):
     bl_idname = "object.center_object"
     bl_label = "Center Object"
@@ -109,6 +111,7 @@ class FTB_OT_SetToCenter_Op(Operator):
         bpy.context.tool_settings.transform_pivot_point = offsetMode
         return {'FINISHED'}
 
+
 class FTB_OT_OriginToCursor_Op(Operator):
     bl_idname = "object.origin_to_cursor"
     bl_label = "Origin to cursor"
@@ -129,6 +132,7 @@ class FTB_OT_OriginToCursor_Op(Operator):
     def execute(self, context):
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
         return {'FINISHED'}
+
 
 class FTB_OT_CopyLocation_Op(Operator):
     bl_idname = "object.copy_location"
@@ -447,10 +451,10 @@ class FTB_OT_ClearMaterialSlots_Op(Operator):
         for obj in objects:
             if obj.override_library or len(obj.material_slots) <= 0:
                 continue
-            
+
             objCount += 1
             for slot in obj.material_slots:
-                if slot.material == None:
+                if slot.material is None:
                     continue
 
                 slot.material = None
@@ -466,6 +470,7 @@ class FTB_OT_ClearMaterialSlots_Op(Operator):
             self.report({'INFO'}, "Operation Finished. Successfully cleared " + str(slotCount) + " slots on " + str(objCount) + " objects.")
 
         return {'FINISHED'}
+
 
 class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
 
@@ -491,6 +496,7 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
             self.report({'INFO'}, "Mask settings applied to immediate children")
 
         return {'FINISHED'}
+
 
 class FTB_OT_LimitToThisViewLayer_Op(Operator):
     bl_idname = "collection.limit_to_view_layer"
@@ -527,12 +533,35 @@ class FTB_OT_LimitToThisViewLayer_Op(Operator):
         self.report({'INFO'}, excludeString)
         return {'FINISHED'}
 
+
+class FTB_OT_GetAbsoluteDataPath_Op(Operator):
+    bl_idname = "outliner.get_absolute_path"
+    bl_label = "Get Absolute Path"
+    bl_description = "Prints absolute Path of selected datablock"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    relpath: bpy.props.StringProperty(name="Relative Path", default="")
+    absolpath: bpy.props.StringProperty(name="Absolute Path", default="")
+
+    def execute(self, context):
+
+        self.absolpath = (getAbsoluteFilePath(self.relpath))
+        bpy.context.window_manager.clipboard = self.absolpath
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        self.absolpath = (getAbsoluteFilePath(self.relpath))
+        return bpy.context.window_manager.invoke_popup(self, width=500)
+
+
 classes = (
-FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
-FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
-FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
-FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op
+    FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
+    FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
+    FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
+    FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
+    FTB_OT_GetAbsoluteDataPath_Op
 )
+
 
 def register():
     for c in classes:

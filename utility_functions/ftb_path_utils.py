@@ -1,4 +1,5 @@
 import bpy
+import os
 from addon_utils import check, paths
 
 
@@ -58,3 +59,11 @@ def is_bvh_enabled():
 
 def getFritziPreferences():
     return bpy.context.preferences.addons[(__package__.split('.')[:-1])[0]].preferences
+
+
+def getAbsoluteFilePath(filepath: str) -> str:
+    """Gets absolute path of any given blender relative path.
+    Works for every datablock that can have a relative source path, such as libraries and images.
+    Returns: absolutePath: str"""
+
+    return (os.path.realpath(bpy.path.abspath(filepath)))

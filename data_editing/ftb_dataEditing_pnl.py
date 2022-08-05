@@ -20,6 +20,13 @@ def get_all_layer_collection_children(collection: bpy.types.LayerCollection):
     return view_layer_collections
 
 
+def draw_outliner_tools(self, context):
+    if getattr(context.selected_ids[0], "filepath", None):
+        layout = self.layout
+        layout.separator()
+        layout.operator("outliner.get_absolute_path").relpath = context.selected_ids[0].filepath
+
+
 class FTB_PT_DataEditing_Panel(Panel):
     bl_label = "Data Editing"
     bl_space_type = "VIEW_3D"
@@ -165,7 +172,7 @@ class FTB_PT_CollectionLineUsage_Panel(Panel):
                             layerNumberString = str(BinToDec(mod.use_intersection_mask))
 
                             # create warning string if "Exact Match" option is unchecked
-                            if mod.use_intersection_match == False:
+                            if not mod.use_intersection_match:
                                 layerNumberString = layerNumberString + ", Exact Match disabled!"
 
                             row = layout.row()
@@ -286,8 +293,10 @@ classes = (
 def register():
     for c in classes:
         bpy.utils.register_class(c)
+    bpy.types.OUTLINER_MT_context_menu.append(draw_outliner_tools)
 
 
 def unregister():
+    bpy.types.OUTLINER_MT_context_menu.remove(draw_outliner_tools)
     for c in reversed(classes):
         bpy.utils.unregister_class(c)

@@ -15,10 +15,11 @@ from . import ftb_prefs, addon_updater_ops
 from .previews import ftb_previews_pnl, ftb_previews_op
 from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op
 from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op, ftb_gnodesMaterialReplacer_op
+from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op, ftb_renderChecking_pnl, ftb_renderChecking_op
+from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op, ftb_gnodesMaterialReplacer_op
 from .danger_zone import ftb_danger_zone_pnl, ftb_danger_zone_op
 from .batch_rotator import ftb_rotator_pnl, ftb_rotator_op
 from .burn_in_render import ftb_burnInRender_pnl, ftb_burnInRender_op
-
 from .default_setup import ftb_default_lineart_op, ftb_default_render_settings_op, ftb_defaultDisplace_op, ftb_default_setup_pnl
 from .fbxToBvh_processor import ftb_fbxToBvh_op, ftb_fbxToBvh_pnl
 from .index_override_remover import ftb_index_override_remover_op
@@ -33,18 +34,18 @@ bl_info = {
     "author": "Elias Schwarze, Robert Lehmann",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (3, 0, 0),
-    "version": (0, 7, 0),
+    "version": (0, 8, 0),
     "location": "3D Viewport > Properties panel (N) > FTB Tab",
     "category": "Object"
 }
 
 classes = (ftb_prefs,
            ftb_previews_op, ftb_previews_pnl,
-           ftb_objectChecking_op, ftb_objectChecking_pnl,
+           ftb_objectChecking_op, ftb_objectChecking_pnl, ftb_renderChecking_pnl, ftb_renderChecking_op,
            ftb_dataEditing_op, ftb_dataEditing_pnl, ftb_gnodesMaterialReplacer_op,
            ftb_danger_zone_op, ftb_danger_zone_pnl,
            ftb_rotator_op, ftb_rotator_pnl,
-           ftb_burnInRender_op, ftb_burnInRender_pnl, 
+           ftb_burnInRender_op, ftb_burnInRender_pnl,
            ftb_defaultDisplace_op, ftb_default_lineart_op, ftb_default_render_settings_op, ftb_default_setup_pnl,
            ftb_fbxToBvh_op, ftb_fbxToBvh_pnl,
            ftb_index_override_remover_op,

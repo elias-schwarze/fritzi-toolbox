@@ -31,8 +31,14 @@ def is_name_duplicate(source: str, duplicate: str):
 def asset_path_is_absolute(path: str):
     """
     Returns True if the blender internal file path does not begin with "//"
+    Paths containing "copybuffer.blend" are an exception to this as they are internal utility files and should not be reported to the user even if their path is absolute.
     """
-    return len(path) > 1 and path[1] != "/"
+
+    if "copybuffer.blend" in path:
+        return False
+
+    else:
+        return len(path) > 1 and path[1] != "/"
 
 
 def file_is_in_workspace():
