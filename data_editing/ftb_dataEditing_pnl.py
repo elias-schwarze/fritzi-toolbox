@@ -27,6 +27,24 @@ def draw_outliner_tools(self, context):
         layout.operator("outliner.get_absolute_path").relpath = context.selected_ids[0].filepath
 
 
+def draw_mat_gnodes_menu(self, context):
+    if context.object.material_slots:
+        obj = context.object
+        if obj.material_slots[obj.active_material_index].material:
+            layout = self.layout
+            layout.separator()
+
+            gnodesMatName = obj.material_slots[obj.active_material_index].material.name
+            if len(obj.material_slots) > 1:
+                gnodesOp = layout.operator("object.set_gnodes_materials", text="GeoNodes Replace Material")
+                gnodesOp.replaceMats = True
+                gnodesOp.matName = gnodesMatName
+            else:
+                gnodesOp = layout.operator("object.set_gnodes_materials", text="GeoNodes Set Material")
+                gnodesOp.replaceMats = False
+                gnodesOp.matName = gnodesMatName
+
+
 class FTB_PT_DataEditing_Panel(Panel):
     bl_label = "Data Editing"
     bl_space_type = "VIEW_3D"
@@ -76,11 +94,6 @@ class FTB_PT_DataEditing_Panel(Panel):
 
     def draw(self, context):
         layout = self.layout
-
-        col = layout.column()
-        col.label(text="GNodes Mat Replacer:")
-        col.operator("object.set_gnodes_materials")
-
         col = layout.column()
 
         col.label(text="Active Object:")
@@ -294,9 +307,11 @@ def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.OUTLINER_MT_context_menu.append(draw_outliner_tools)
+    bpy.types.MATERIAL_MT_context_menu.append(draw_mat_gnodes_menu)
 
 
 def unregister():
+    bpy.types.MATERIAL_MT_context_menu.remove(draw_mat_gnodes_menu)
     bpy.types.OUTLINER_MT_context_menu.remove(draw_outliner_tools)
     for c in reversed(classes):
         bpy.utils.unregister_class(c)

@@ -1,8 +1,10 @@
 import bpy
+from ..utility_functions.ftb_string_utils import strip_End_Numbers
 
-def createSetMatNodes(replaceMat = False):
+
+def createSetMatNodes(replaceMat=False):
     """
-    Create a Geometry Node Setup to replace Materials on any Mesh 
+    Create a Geometry Node Setup to replace Materials on any Mesh
     param replaceMat: Set to True to create a setup to replace only specific Material slots, set to False to create setup that overrides all material slots of the given object
     """
 
@@ -28,7 +30,7 @@ def createSetMatNodes(replaceMat = False):
         setMatNodeGroup.inputs.new(name="With", type="NodeSocketMaterial")
         geoSetMat = setMatNodeGroup.nodes.new(type="GeometryNodeReplaceMaterial")
 
-    else: 
+    else:
         setMatNodeGroup.inputs.new(name="Material", type="NodeSocketMaterial")
         geoSetMat = setMatNodeGroup.nodes.new(type="GeometryNodeSetMaterial")
 
@@ -44,7 +46,7 @@ def createSetMatNodes(replaceMat = False):
 
     else:
         setMatNodeGroup.links.new(input=geoInput.outputs[1], output=geoSetMat.inputs[2])
-    
+
     setMatNodeGroup.links.new(input=geoSetMat.outputs[0], output=geoOutput.inputs[0])
 
 
@@ -53,6 +55,9 @@ class FTB_OT_GnodesSetMaterials_Op(bpy.types.Operator):
     bl_label = "Set Gnodes Material"
     bl_description = "Set Gnodes Material"
     bl_options = {"REGISTER", "UNDO"}
+
+    replaceMats: bpy.props.BoolProperty(name="replaceMats", default=False)
+    matName: bpy.props.StringProperty(name="matName", default="")
 
     # should only work in object mode
     @classmethod
@@ -70,8 +75,39 @@ class FTB_OT_GnodesSetMaterials_Op(bpy.types.Operator):
 
     def execute(self, context):
 
-        createSetMatNodes(replaceMat=True)
+        obj = bpy.context.active_object
+
+        if "FTB_setLocalMaterial" not in bpy.data.node_groups:
+            createSetMatNodes(replaceMat=False)
+
+        if "FTB_replaceLocalMaterial" not in bpy.data.node_groups:
+            createSetMatNodes(replaceMat=True)
+
+        mod = obj.modifiers.new(name="FTBGeoNodesMat", type='NODES')
+        oldMat = obj.material_slots[obj.active_material_index].material
+
+        newMat = oldMat.copy()
+        newMat.name = strip_End_Numbers(newMat.name) + "_local"
+
+        if self.replaceMats:
+            mod.node_group = bpy.data.node_groups["FTB_replaceLocalMaterial"]
+            mod["Input_1"] = oldMat
+            mod["Input_2"] = newMat
+
+        else:
+            mod.node_group = bpy.data.node_groups["FTB_setLocalMaterial"]
+            mod["Input_1"] = newMat
+
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        obj = bpy.context.active_object
+        oldMat = obj.material_slots[obj.active_material_index].material
+        if not oldMat.library:
+            return context.window_manager.invoke_confirm(self, event)
+        else:
+            return self.execute(context)
+
 
 def register():
     bpy.utils.register_class(FTB_OT_GnodesSetMaterials_Op)
@@ -79,4 +115,3 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(FTB_OT_GnodesSetMaterials_Op)
-
