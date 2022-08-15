@@ -55,10 +55,17 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
     currentSet.invalidNlaObjects = invalidNlaCheck()
 
+    # Get Color Management settings
+    currentSet.cmDisplayDevice = bpy.context.scene.display_settings.display_device
+    currentSet.cmViewTransform = bpy.context.scene.view_settings.view_transform
+    currentSet.cmLook = bpy.context.scene.view_settings.look
+    currentSet.cmExposure = bpy.context.scene.view_settings.exposure
+    currentSet.cmGamma = bpy.context.scene.view_settings.gamma
+
     return currentSet
 
 
-def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False, renderSingleLayer=False):
+def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False, renderSingleLayer=False, colorManagement=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -114,6 +121,14 @@ def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outp
     # render single layer
     if renderSingleLayer:
         bpy.context.scene.render.use_single_layer = defaultSet.render_single_layer
+
+    # color mangement
+    if colorManagement:
+        bpy.context.scene.display_settings.display_device = defaultSet.cmDisplayDevice
+        bpy.context.scene.view_settings.view_transform = defaultSet.cmViewTransform
+        bpy.context.scene.view_settings.look = defaultSet.cmLook
+        bpy.context.scene.view_settings.exposure = defaultSet.cmExposure
+        bpy.context.scene.view_settings.gamma = defaultSet.cmGamma
 
 
 def countActiveViewLayers():
@@ -229,8 +244,13 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
         )
 
+    colorMangement: bpy.props.BoolProperty(
+        name='colorMangement',
+        default=False
+        )
+
     def execute(self, context):
-        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer)
+        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer, colorManagement=self.colorMangement)
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}
 

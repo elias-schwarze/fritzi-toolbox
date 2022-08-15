@@ -30,6 +30,12 @@ class RenderCheckData:
     outDepth: str = '32'
     outCodec: str = 'ZIP'
 
+    cmDisplayDevice = 'sRGB'
+    cmViewTransform = 'Filmic'
+    cmLook = 'None'
+    cmExposure = 0.0
+    cmGamma = 1.0
+
     invalidBoolObjects: list = None
 
     invalidNlaObjects: list = None
@@ -122,6 +128,27 @@ class RenderCheckData:
         matchOutCodec = matchData.outCodec == self.outCodec
 
         if all([matchOutFormat, matchOutColor, matchOutDepth, matchOutCodec]):
+            return True
+        else:
+            return False
+
+    def getCmText(self):
+        """Build a string that can be displayed in UI, contains Color Management settings
+        Returns: string"""
+        outCmText = self.cmDisplayDevice + ", " + self.cmViewTransform + ", " + self.cmLook
+        outCmParams = "Exposure: " + str(self.cmExposure) + ", Gamma: " + str(self.cmGamma)
+
+        return (outCmText, outCmParams)
+
+    def matchColorMangement(self, matchData):
+        """Returns True if color management settings of this instance matches with provided matchData instance."""
+        matchCmDisplayDevice = matchData.cmDisplayDevice == self.cmDisplayDevice
+        matchCmViewTransform = matchData.cmViewTransform == self.cmViewTransform
+        matchCmLook = matchData.cmLook == self.cmLook
+        matchCmExposure = matchData.cmExposure == self.cmExposure
+        matchCmGamma = matchData.cmGamma == self.cmGamma
+
+        if all([matchCmDisplayDevice, matchCmViewTransform, matchCmLook, matchCmExposure, matchCmGamma]):
             return True
         else:
             return False

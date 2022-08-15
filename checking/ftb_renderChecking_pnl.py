@@ -137,6 +137,25 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box = layout.box()
                     box.label(text="Not all view layers active", icon='ERROR')
 
+                # COLOR MANAGEMENT SETTINGS
+                if (onlyErrors and not cs.matchColorMangement(matchData=fs)) or not onlyErrors:
+                    # build string to show resolution & framerate settings
+                    cmText = cs.getCmText()
+
+                    box = layout.box()
+
+                    if not cs.matchColorMangement(matchData=fs):
+                        box.label(text="Color Management:", icon='ERROR')
+                    else:
+                        box.label(text="Color Management:")
+
+                    box.label(text=cmText[0])
+                    box.label(text=cmText[1])
+
+                    # Display operator to change settings if they do not match final settings
+                    if not cs.matchColorMangement(matchData=fs):
+                        box.operator("utils.render_check_set_settings", text="Set Final Color Settings").colorMangement = True
+
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()
