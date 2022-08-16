@@ -37,15 +37,15 @@ def draw_mat_gnodes_menu(self, context):
             gnodesMatName = obj.material_slots[obj.active_material_index].material.name
             if obj.material_slots[obj.active_material_index].link == 'DATA':
                 if len(obj.material_slots) > 1:
-                    gnodesOp = layout.operator("object.set_gnodes_materials", text="GeoNodes Replace Material")
+                    gnodesOp = layout.operator("object.set_gnodes_materials", text="Replace By Material")
                     gnodesOp.replaceMode = 'REPLACE'
                     gnodesOp.matName = gnodesMatName
                 else:
-                    gnodesOp = layout.operator("object.set_gnodes_materials", text="GeoNodes Set Material")
+                    gnodesOp = layout.operator("object.set_gnodes_materials", text="Set By Material")
                     gnodesOp.replaceMode = 'SET'
                     gnodesOp.matName = gnodesMatName
 
-            gnodesIndexOp = layout.operator("object.set_gnodes_materials", text="GeoNodes Replace Index")
+            gnodesIndexOp = layout.operator("object.set_gnodes_materials", text="Replace By Index")
             gnodesIndexOp.replaceMode = 'INDEX'
             gnodesIndexOp.matIndex = obj.active_material_index
             gnodesIndexOp.matName = gnodesMatName
