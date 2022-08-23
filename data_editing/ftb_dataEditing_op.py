@@ -362,6 +362,9 @@ class FTB_OT_ResetLineartSettings_Op(Operator):
 
         return {'FINISHED'}
 
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
+
 
 class FTB_OT_SetMatLinks_Op(Operator):
     bl_idname = "object.set_material_links"
