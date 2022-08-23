@@ -51,6 +51,9 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     # Get "Render Single Layer" setting
     currentSet.render_single_layer = bpy.context.scene.render.use_single_layer
 
+    # Get "Film Transparent" setting
+    currentSet.film_transparent = bpy.context.scene.render.film_transparent
+
     # Get objects that have nla strips and also an active action (this causes the nla strips to not work properly and breaks animation)
     # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
     currentSet.invalidNlaObjects = invalidNlaCheck()
@@ -65,7 +68,7 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     return currentSet
 
 
-def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False, renderSingleLayer=False, colorManagement=False):
+def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False, renderSingleLayer=False, colorManagement=False, filmTransparent=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -129,6 +132,10 @@ def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outp
         bpy.context.scene.view_settings.look = defaultSet.cmLook
         bpy.context.scene.view_settings.exposure = defaultSet.cmExposure
         bpy.context.scene.view_settings.gamma = defaultSet.cmGamma
+
+    # transparent background
+    if filmTransparent:
+        bpy.context.scene.render.film_transparent = defaultSet.film_transparent
 
 
 def countActiveViewLayers():
@@ -249,8 +256,15 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
         )
 
+    filmTransparent: bpy.props.BoolProperty(
+        name="filmTransparent",
+        default=False
+    )
+
     def execute(self, context):
-        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer, colorManagement=self.colorMangement)
+        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
+                         colorManagement=self.colorMangement, filmTransparent=self.filmTransparent)
+
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}
 

@@ -156,6 +156,13 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     if not cs.matchColorMangement(matchData=fs):
                         box.operator("utils.render_check_set_settings", text="Set Final Color Settings").colorMangement = True
 
+                # RENDER SINGLE LAYER ACTIVE
+                if not cs.film_transparent:
+                    box = layout.box()
+                    box.label(text="Background not transparent", icon='ERROR')
+                    # Display operator to change settings if they do not match final settings
+                    box.operator("utils.render_check_set_settings", text="Enable Transparency").filmTransparent = True
+
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()

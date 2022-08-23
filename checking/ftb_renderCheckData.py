@@ -46,6 +46,7 @@ class RenderCheckData:
     activeViewLayerCount: int = 0
 
     render_single_layer: bool = False
+    film_transparent: bool = True
 
     def getResText(self):
         """Build a string that can be displayed in a Ui label, contains information about resolution and framerate
