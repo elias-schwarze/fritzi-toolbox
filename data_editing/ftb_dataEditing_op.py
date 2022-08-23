@@ -336,7 +336,7 @@ class FTB_OT_SetLineartSettings_Op(Operator):
 class FTB_OT_ResetLineartSettings_Op(Operator):
     bl_idname = "scene.reset_lineart_settings"
     bl_label = "Reset Lineart Usage"
-    bl_description = "Reset Lineart Usage for Objects and Collections"
+    bl_description = "Reset Lineart Usage for Objects and Collections for entire Scene. Objects will be set to Inherit, collections will be set to Include"
     bl_options = {"REGISTER", "UNDO"}
 
     # should only work in object mode
@@ -353,12 +353,13 @@ class FTB_OT_ResetLineartSettings_Op(Operator):
         return False
 
     def execute(self, context):
-
         for obj in bpy.data.objects:
-            obj.lineart.usage = "INHERIT"
+            if (obj.library is not None) or (obj.override_library is not None):
+                obj.lineart.usage = "INHERIT"
 
         for coll in bpy.data.collections:
-            coll.lineart_usage = "INCLUDE"
+            if (coll.library is not None) or (coll.override_library is not None):
+                coll.lineart_usage = "INCLUDE"
 
         return {'FINISHED'}
 
