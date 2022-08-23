@@ -333,6 +333,39 @@ class FTB_OT_SetLineartSettings_Op(Operator):
         return bpy.context.window_manager.invoke_confirm(self, event)
 
 
+class FTB_OT_ResetLineartSettings_Op(Operator):
+    bl_idname = "scene.reset_lineart_settings"
+    bl_label = "Reset Lineart Usage"
+    bl_description = "Reset Lineart Usage for Objects and Collections"
+    bl_options = {"REGISTER", "UNDO"}
+
+    # should only work in object mode
+    @classmethod
+    def poll(cls, context):
+        obj = context.object
+        if not obj:
+            return True
+
+        if obj:
+            if obj.mode == "OBJECT":
+                return True
+
+        return False
+
+    def execute(self, context):
+
+        for obj in bpy.data.objects:
+            obj.lineart.usage = "INHERIT"
+
+        for coll in bpy.data.collections:
+            coll.lineart_usage = "INCLUDE"
+
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
+
+
 class FTB_OT_SetMatLinks_Op(Operator):
     bl_idname = "object.set_material_links"
     bl_label = "Set Material Links"
@@ -559,7 +592,7 @@ classes = (
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
     FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
     FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
-    FTB_OT_GetAbsoluteDataPath_Op
+    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op
 )
 
 
