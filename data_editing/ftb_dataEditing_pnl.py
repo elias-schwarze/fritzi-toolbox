@@ -148,6 +148,9 @@ class FTB_PT_DataEditing_Panel(Panel):
         col = layout.column()
         col.operator("object.set_lineart_settings")
 
+        row = col.row(align=True)
+        row.operator("scene.reset_lineart_settings")
+
         col = layout.column()
         col.separator()
 
