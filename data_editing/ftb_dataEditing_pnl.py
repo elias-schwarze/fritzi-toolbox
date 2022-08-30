@@ -98,23 +98,48 @@ class FTB_PT_DataEditing_Panel(Panel):
         default='VIEW_LAYER'
     )
 
+    bpy.types.WindowManager.ftbSubdivEqualScope = bpy.props.EnumProperty(
+        name="Scope",
+        description="Limit operation to certain objects",
+        items=[
+            ('VIEW_LAYER', "View Layer",
+             "Limit to objects in current view layer."),
+            ('SELECTION', "Selection", "Limit to currently selected objects."),
+            ('ALL', "All",
+             "Apply to all objects in .blend File (unless object is linked without override)"),
+        ],
+        default='VIEW_LAYER'
+    )
+
+    bpy.types.WindowManager.ftbSubdivEqualTarget = bpy.props.EnumProperty(
+        name="Target Level",
+        description="How subidv levels should be equalized",
+        items=[
+            ('RENDER', "Render",
+             "All viewport levels will be set to their respective render levels"),
+            ('VIEWPORT', "Viewport",
+             "All render levels will be set to their respective viewport levels")
+        ],
+        default='RENDER'
+    )
+
     def draw(self, context):
         layout = self.layout
-        col = layout.column()
+        # col = layout.column()
 
-        col.label(text="Active Object:")
-        col.operator("object.center_object")
-        col.operator("object.origin_to_cursor")
+        # col.label(text="Active Object:")
+        # col.operator("object.center_object")
+        # col.operator("object.origin_to_cursor")
 
-        col.label(text="Copy Attributes:")
+        # col.label(text="Copy Attributes:")
 
-        col = layout.column(align=True)
-        col.operator("object.copy_location")
-        col.operator("object.copy_rotation")
-        col.operator("object.copy_scale")
+        # col = layout.column(align=True)
+        # col.operator("object.copy_location")
+        # col.operator("object.copy_rotation")
+        # col.operator("object.copy_scale")
 
-        col = layout.column()
-        col.separator()
+        # col = layout.column()
+        # col.separator()
 
         col = layout.column()
         col.label(text="Material Operations:")
@@ -135,6 +160,23 @@ class FTB_PT_DataEditing_Panel(Panel):
         row.prop(context.window_manager, "matSlotLink", icon_only=True, icon=iconEnum)
 
         col.operator("object.clear_material_slots", text="Clear Slots")
+
+        col = layout.column()
+        col.separator()
+
+        col = layout.column()
+        col.label(text="Subdivision:")
+
+        col = layout.column()
+        col.label(text="Target Level:")
+
+        row = layout.row()
+        row.prop(bpy.context.window_manager, "ftbSubdivEqualTarget", expand=True)
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "ftbSubdivEqualScope")
+
+        col.operator("object.equalize_subdiv")
 
         col = layout.column()
         col.separator()

@@ -588,12 +588,58 @@ class FTB_OT_GetAbsoluteDataPath_Op(Operator):
         return bpy.context.window_manager.invoke_popup(self, width=500)
 
 
+def equalizeSubdiv(obj, useViewportLevel=False):
+    # ignore linked objects with no override
+    if (obj.library is None):
+        for mod in obj.modifiers:
+            if mod.type == 'SUBSURF':
+                if useViewportLevel:
+                    mod.render_levels = mod.levels
+                else:
+                    mod.levels = mod.render_levels
+
+
+class FTB_OT_EqualizeSubdivision_Op(Operator):
+    bl_idname = "object.equalize_subdiv"
+    bl_label = "Equalize Subdiv"
+    bl_description = "Equalizes between viewport and render subdiv levels"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        wm = bpy.context.window_manager
+
+        # Case limit = All
+        if (wm.ftbSubdivEqualScope == 'ALL'):
+            for obj in bpy.data.objects:
+                if (wm.ftbSubdivEqualTarget == 'RENDER'):
+                    equalizeSubdiv(obj, False)
+                else:
+                    equalizeSubdiv(obj, True)
+
+        # Case limit = View Layer
+        if (wm.ftbSubdivEqualScope == 'VIEW_LAYER'):
+            for obj in bpy.context.view_layer.objects:
+                if (wm.ftbSubdivEqualTarget == 'RENDER'):
+                    equalizeSubdiv(obj, False)
+                else:
+                    equalizeSubdiv(obj, True)
+
+        if (wm.ftbSubdivEqualScope == 'SELECTION'):
+            for obj in bpy.context.selected_objects:
+                if (wm.ftbSubdivEqualTarget == 'RENDER'):
+                    equalizeSubdiv(obj, False)
+                else:
+                    equalizeSubdiv(obj, True)
+
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
     FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
     FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
-    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op
+    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op
 )
 
 
