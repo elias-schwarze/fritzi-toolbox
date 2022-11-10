@@ -633,13 +633,125 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
 
         return {'FINISHED'}
 
+def get_objects():
+    # Returns all the objects depending on the user selection
+    wm = bpy.context.window_manager
+
+    if wm.ftbBoolScope == 'ALL':
+        return bpy.context.scene.objects
+    
+    if wm.ftbBoolScope == 'COLLECTION':
+        return wm.ftbBoolCollection.all_objects
+
+    if wm.ftbBoolScope == 'SELECTION':
+        return bpy.context.selected_objects
+
+
+class FTB_OT_SetExactBooleans_OP(Operator):
+    bl_idname = "object.set_exact_booleans"
+    bl_label = "Exact"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to Exact with Self Intersection"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    
+                    mod.solver = 'EXACT'
+                    mod.use_self = True
+
+        return {'FINISHED'}
+
+class FTB_OT_SetFastBooleans_OP(Operator):
+    bl_idname = "object.set_fast_booleans"
+    bl_label = "Fast"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to Fast"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    mod.solver = 'FAST'
+
+
+        return {'FINISHED'}
+
+class FTB_OT_HideBooleansViewport_OP(Operator):
+    bl_idname = "object.hide_booleans_viewport"
+    bl_label = "Hide Viewport"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to Hidden in the Viewport"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    mod.show_viewport = False
+
+
+        return {'FINISHED'}
+
+class FTB_OT_UnhideBooleansViewport_OP(Operator):
+    bl_idname = "object.unhide_booleans_viewport"
+    bl_label = "Visible Viewport"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to visible in the Viewport"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    mod.show_viewport = True
+
+        return {'FINISHED'}
+
+class FTB_OT_HideBooleansRender_OP(Operator):
+    bl_idname = "object.hide_booleans_render"
+    bl_label = "Hide Render"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to Hidden in the Render"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    #if obj.override_library:
+                    #    override = obj.override_library.properties.add('bpy.data.objects["' + obj.name + '"].modifiers["' + mod.name + '"].show_render')
+                    #    override.operations.add('REPLACE')
+                    
+                    mod.show_render = False
+
+        return {'FINISHED'}
+
+class FTB_OT_UnhideBooleansRender_OP(Operator):
+    bl_idname = "object.unhide_booleans_render"
+    bl_label = "Visible Render"
+    bl_description = "Sets all Booleans on all objects in the File or given Collection to Visible in the Render"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in get_objects():
+            for mod in obj.modifiers:
+                if mod.type == 'BOOLEAN':
+                    #if obj.override_library:
+                    #    override = obj.override_library.properties.add('bpy.data.objects["' + obj.name + '"].modifiers["' + mod.name + '"].show_render')
+                    #    override.operations.add('REPLACE')
+                    
+                    mod.show_render = True
+
+        return {'FINISHED'}
 
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
     FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
     FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
-    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op
+    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
+    FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
+    FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP
 )
 
 

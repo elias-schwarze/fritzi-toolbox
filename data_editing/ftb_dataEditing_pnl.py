@@ -123,6 +123,22 @@ class FTB_PT_DataEditing_Panel(Panel):
         default='RENDER'
     )
 
+    bpy.types.WindowManager.ftbBoolScope = bpy.props.EnumProperty(
+        name="Scope",
+        description="Limit operation to whole scene or certain collections",
+        items=[
+            ('ALL', "All", "All Objects in the .blend file"),
+            ('COLLECTION', "Collection", "Limit to a colelction and it's children."),
+            ('SELECTION', "Selection", "Limit to currently selected objects.")
+        ],
+        default='ALL'
+    )
+
+    bpy.types.WindowManager.ftbBoolCollection = bpy.props.PointerProperty(
+        name = "Collection",
+        type=bpy.types.Collection
+    )
+
     def draw(self, context):
         layout = self.layout
         # col = layout.column()
@@ -211,6 +227,33 @@ class FTB_PT_DataEditing_Panel(Panel):
         col = layout.column()
         col.operator("object.collection_name_to_material")
 
+        col = layout.column()
+        col.separator()
+
+        col = layout.column()
+        col.label(text="Booleans:")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "ftbBoolScope")
+
+        if bpy.context.window_manager.ftbBoolScope == 'COLLECTION':
+            col = layout.column()
+            col.prop_search(bpy.context.window_manager, "ftbBoolCollection", bpy.data, "collections")
+
+        col = layout.column()
+        row = col.row(align=True)
+        row.operator("object.set_exact_booleans")
+        row.operator("object.set_fast_booleans")
+
+        col = layout.column()
+        row = col.row(align=True)
+        row.operator("object.hide_booleans_viewport")
+        row.operator("object.unhide_booleans_viewport")
+
+        col = layout.column()
+        row = col.row(align=True)
+        row.operator("object.hide_booleans_render")
+        row.operator("object.unhide_booleans_render")
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):
     bl_label = "Line Art Layer Usage"
