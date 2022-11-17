@@ -634,7 +634,7 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
         return {'FINISHED'}
 
 def get_objects():
-    # Returns all the objects depending on the user selection
+    """ Returns all the objects in the scene, or a given collection, or in a selection, depending on the user selection """
     wm = bpy.context.window_manager
 
     if wm.ftbBoolScope == 'ALL':
@@ -645,6 +645,13 @@ def get_objects():
 
     if wm.ftbBoolScope == 'SELECTION':
         return bpy.context.selected_objects
+
+def refresh_ui():
+    """Redraw the ui once an async thread has completed"""
+    for windowManager in bpy.data.window_managers:
+        for window in windowManager.windows:
+            for area in window.screen.areas:
+                area.tag_redraw()
 
 
 class FTB_OT_SetExactBooleans_OP(Operator):
@@ -657,10 +664,19 @@ class FTB_OT_SetExactBooleans_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].solver')
+                        override.operations.add('REPLACE')
                     
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].use_self')
+                        override.operations.add('REPLACE')
                     mod.solver = 'EXACT'
                     mod.use_self = True
 
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 class FTB_OT_SetFastBooleans_OP(Operator):
@@ -674,9 +690,15 @@ class FTB_OT_SetFastBooleans_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].solver')
+                        override.operations.add('REPLACE')
                     mod.solver = 'FAST'
 
-
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 class FTB_OT_HideBooleansViewport_OP(Operator):
@@ -689,9 +711,15 @@ class FTB_OT_HideBooleansViewport_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_viewport')
+                        override.operations.add('REPLACE')
                     mod.show_viewport = False
 
-
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 class FTB_OT_UnhideBooleansViewport_OP(Operator):
@@ -704,8 +732,15 @@ class FTB_OT_UnhideBooleansViewport_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_viewport')
+                        override.operations.add('REPLACE')
                     mod.show_viewport = True
 
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 class FTB_OT_HideBooleansRender_OP(Operator):
@@ -718,12 +753,16 @@ class FTB_OT_HideBooleansRender_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
-                    #if obj.override_library:
-                    #    override = obj.override_library.properties.add('bpy.data.objects["' + obj.name + '"].modifiers["' + mod.name + '"].show_render')
-                    #    override.operations.add('REPLACE')
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_render')
+                        override.operations.add('REPLACE')
                     
                     mod.show_render = False
 
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 class FTB_OT_UnhideBooleansRender_OP(Operator):
@@ -736,12 +775,16 @@ class FTB_OT_UnhideBooleansRender_OP(Operator):
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
-                    #if obj.override_library:
-                    #    override = obj.override_library.properties.add('bpy.data.objects["' + obj.name + '"].modifiers["' + mod.name + '"].show_render')
-                    #    override.operations.add('REPLACE')
+                    if obj.override_library:
+                        # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_render')
+                        override.operations.add('REPLACE')
                     
                     mod.show_render = True
 
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
         return {'FINISHED'}
 
 classes = (
