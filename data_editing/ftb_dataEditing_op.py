@@ -562,7 +562,7 @@ class FTB_OT_LimitToThisViewLayer_Op(Operator):
                     childcol.exclude = True
                     excludeCount += 1
 
-        excludeString = "Excluded active collection in " + str(excludeCount) + " other view layers except active layer." 
+        excludeString = "Excluded active collection in " + str(excludeCount) + " other view layers except active layer."
 
         self.report({'INFO'}, excludeString)
         return {'FINISHED'}
@@ -633,18 +633,20 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
 
         return {'FINISHED'}
 
+
 def get_objects():
     """ Returns all the objects in the scene, or a given collection, or in a selection, depending on the user selection """
     wm = bpy.context.window_manager
 
     if wm.ftbBoolScope == 'ALL':
         return bpy.context.scene.objects
-    
+
     if wm.ftbBoolScope == 'COLLECTION':
         return wm.ftbBoolCollection.all_objects
 
     if wm.ftbBoolScope == 'SELECTION':
         return bpy.context.selected_objects
+
 
 def refresh_ui():
     """Redraw the ui once an async thread has completed"""
@@ -669,7 +671,7 @@ class FTB_OT_SetExactBooleans_OP(Operator):
                         # This fixes the inconsistent overrides that happen, when the property gets set.
                         override = obj.override_library.properties.add('modifiers["' + mod.name + '"].solver')
                         override.operations.add('REPLACE')
-                    
+
                         override = obj.override_library.properties.add('modifiers["' + mod.name + '"].use_self')
                         override.operations.add('REPLACE')
                     mod.solver = 'EXACT'
@@ -679,6 +681,7 @@ class FTB_OT_SetExactBooleans_OP(Operator):
         refresh_ui()
         return {'FINISHED'}
 
+
 class FTB_OT_SetFastBooleans_OP(Operator):
     bl_idname = "object.set_fast_booleans"
     bl_label = "Fast"
@@ -686,7 +689,7 @@ class FTB_OT_SetFastBooleans_OP(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        
+
         for obj in get_objects():
             for mod in obj.modifiers:
                 if mod.type == 'BOOLEAN':
@@ -700,6 +703,7 @@ class FTB_OT_SetFastBooleans_OP(Operator):
         # New overrides are only visible after refreshing the UI
         refresh_ui()
         return {'FINISHED'}
+
 
 class FTB_OT_HideBooleansViewport_OP(Operator):
     bl_idname = "object.hide_booleans_viewport"
@@ -722,6 +726,7 @@ class FTB_OT_HideBooleansViewport_OP(Operator):
         refresh_ui()
         return {'FINISHED'}
 
+
 class FTB_OT_UnhideBooleansViewport_OP(Operator):
     bl_idname = "object.unhide_booleans_viewport"
     bl_label = "Visible Viewport"
@@ -743,6 +748,7 @@ class FTB_OT_UnhideBooleansViewport_OP(Operator):
         refresh_ui()
         return {'FINISHED'}
 
+
 class FTB_OT_HideBooleansRender_OP(Operator):
     bl_idname = "object.hide_booleans_render"
     bl_label = "Hide Render"
@@ -758,12 +764,13 @@ class FTB_OT_HideBooleansRender_OP(Operator):
                         # This fixes the inconsistent overrides that happen, when the property gets set.
                         override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_render')
                         override.operations.add('REPLACE')
-                    
+
                     mod.show_render = False
 
         # New overrides are only visible after refreshing the UI
         refresh_ui()
         return {'FINISHED'}
+
 
 class FTB_OT_UnhideBooleansRender_OP(Operator):
     bl_idname = "object.unhide_booleans_render"
@@ -780,12 +787,13 @@ class FTB_OT_UnhideBooleansRender_OP(Operator):
                         # This fixes the inconsistent overrides that happen, when the property gets set.
                         override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_render')
                         override.operations.add('REPLACE')
-                    
+
                     mod.show_render = True
 
         # New overrides are only visible after refreshing the UI
         refresh_ui()
         return {'FINISHED'}
+
 
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,

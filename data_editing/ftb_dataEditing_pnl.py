@@ -135,7 +135,7 @@ class FTB_PT_DataEditing_Panel(Panel):
     )
 
     bpy.types.WindowManager.ftbBoolCollection = bpy.props.PointerProperty(
-        name = "Collection",
+        name="Collection",
         type=bpy.types.Collection
     )
 
@@ -254,6 +254,7 @@ class FTB_PT_DataEditing_Panel(Panel):
         row = col.row(align=True)
         row.operator("object.hide_booleans_render")
         row.operator("object.unhide_booleans_render")
+
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):
     bl_label = "Line Art Layer Usage"
@@ -391,7 +392,9 @@ class FTB_PT_ViewLayerManagementCollections_Panel(Panel):
 
 
 classes = (
-    FTB_PT_DataEditing_Panel, FTB_PT_CollectionLineUsage_Panel, FTB_UL_ViewLayer_List,
+    FTB_PT_DataEditing_Panel,
+    FTB_PT_CollectionLineUsage_Panel,
+    FTB_UL_ViewLayer_List,
     FTB_UL_ViewLayerCollections_List, FTB_PT_ViewLayerManagement_Panel,
     FTB_PT_ViewLayerManagementCollections_Panel
 )
