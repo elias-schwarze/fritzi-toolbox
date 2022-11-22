@@ -811,11 +811,11 @@ def register():
         bpy.utils.register_class(c)
 
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
-    bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
+    # bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
 
 
 def unregister():
-    bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
+    # bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
 
     for c in reversed(classes):
