@@ -91,12 +91,11 @@ class FTB_OT_ExportRenderSettings(Operator, ImportHelper):
         filename, extension = os.path.splitext(self.filepath)
 
         _ext = ("", ".frs")[extension != ".frs"]
-        pickle.dump(RenderSettings(), open(self.filepath + _ext, "wb"))
-        # try:
-        #     pickle.dump(RenderSettings(), open(self.filepath + _ext, "wb"))
-        # except:
-        #     Log.report(self, Log.Severity.ERROR, "File export error. Operation cancelled!")
-        #     return {'CANCELLED'}
+        try:
+            pickle.dump(RenderSettings(), open(self.filepath + _ext, "wb"))
+        except:
+            Log.report(self, Log.Severity.ERROR, "File export error. Operation cancelled!")
+            return {'CANCELLED'}
 
         Log.report(self, Log.Severity.INFO, f"Current render settings exported to \"{filename + extension}\"")
         return {'FINISHED'}
