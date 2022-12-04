@@ -67,9 +67,9 @@ class FTB_PT_Defaults_Panel(Panel):
         col.prop(context.window_manager,
                  "bsetEngine", text="Render Engine")
 
-        col = layout.column()
-        col.operator("scene.export_render_settings")
-        col.operator("scene.import_render_settings")
+        col.separator()
+        col.operator("scene.ftb_export_render_settings")
+        col.operator("scene.ftb_import_render_settings")
 
 
 def register():
