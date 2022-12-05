@@ -42,7 +42,7 @@ def report(self, severity: Severity, message: str) -> None:
     if not issubclass(self.__class__, bpy.types.Operator):
         _class_name = __name__.split('.')[-1]
         _error_msg = (f"The {_class_name}.report() method should only be called from inside an operator "
-                      f"class. The current class calling is of type: \"{self.__class__.__name__}\". "
+                      f"class. The current class calling is of type: \"{self.__class__.__base__}\". "
                       f"Use the {_class_name}.console() method instead")
         console(self, Severity.ERROR, _error_msg)
         return
