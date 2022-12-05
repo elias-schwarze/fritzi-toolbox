@@ -70,6 +70,7 @@ class FTB_PT_Defaults_Panel(Panel):
         col.separator()
         col.operator("scene.ftb_export_render_settings")
         col.operator("scene.ftb_import_render_settings")
+        col.operator("scene.ftb_restore_render_settings")
 
 
 def register():

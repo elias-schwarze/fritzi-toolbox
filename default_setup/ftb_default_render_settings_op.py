@@ -2,10 +2,16 @@ import bpy
 import os
 import pickle
 
+from bpy.app.handlers import persistent
 from bpy_extras.io_utils import ImportHelper
 from bpy.types import Operator
 from ..utility_functions import ftb_logging as Log
 from ..utility_functions.ftb_rendersettings import RenderSettings, RENDERSETTINGS_VERSION
+
+
+@persistent
+def clear_saved_render_settings(self, context) -> None:
+    FTB_OT_RestoreRenderSettings.saved_render_settings = None
 
 
 class FTB_OT_DefaultRenderSettings_Op(Operator):
@@ -113,49 +119,31 @@ class FTB_OT_ImportRenderSettings(Operator, ImportHelper):
     )
     import_sampling: bpy.props.BoolProperty(
         name="Import Sampling",
-        description="",
-        default=True
-    )
+        default=True)
     import_AO: bpy.props.BoolProperty(
         name="Import Ambient Occlusion",
-        description="",
-        default=True
-    )
+        default=True)
     import_SSR: bpy.props.BoolProperty(
         name="Import Screen Space Reflections",
-        description="",
-        default=True
-    )
+        default=True)
     import_volumetrics: bpy.props.BoolProperty(
         name="Import Volumetrics",
-        description="",
-        default=True
-    )
+        default=True)
     import_shadows: bpy.props.BoolProperty(
         name="Import Shadows",
-        description="",
-        default=True
-    )
+        default=True)
     import_indirect_lightning: bpy.props.BoolProperty(
         name="Import Indirect Lightning",
-        description="",
-        default=True
-    )
+        default=True)
     import_film_settings: bpy.props.BoolProperty(
         name="Import Film Settings",
-        description="",
-        default=True
-    )
+        default=True)
     import_simplify_settings: bpy.props.BoolProperty(
         name="Import Simplify Settings",
-        description="",
-        default=True
-    )
+        default=True)
     import_color_management_settings: bpy.props.BoolProperty(
         name="Import Color Management Settings",
-        description="",
-        default=True
-    )
+        default=True)
 
     def execute(self, context):
         filename, extension = os.path.splitext(self.filepath)
@@ -170,6 +158,8 @@ class FTB_OT_ImportRenderSettings(Operator, ImportHelper):
             Log.report(self, Log.Severity.WARNING,
                        "The imported file was saved with an older version of FTB. Operation cancelled!")
             return {'CANCELLED'}
+
+        FTB_OT_RestoreRenderSettings.saved_render_settings = RenderSettings()
 
         Log.console(self, Log.Severity.INFO, f"Loading settings from \"{self.filepath}\":")
         if self.import_sampling:
@@ -196,18 +186,88 @@ class FTB_OT_ImportRenderSettings(Operator, ImportHelper):
         return {'FINISHED'}
 
 
-class FTB_OT_RestoreRenderSettings(Operator, ImportHelper):
+class FTB_OT_RestoreRenderSettings(Operator):
     bl_idname = "scene.ftb_restore_render_settings"
     bl_label = "Restore Render Settings"
-    bl_description = "Restore previous render settings before the last import"
-    bl_options = {'INTERNAL'}
+    bl_description = "Restores previous render settings before the last import"
+    bl_options = {'UNDO'}
+
+    saved_render_settings: RenderSettings = None
+
+    restore_sampling: bpy.props.BoolProperty(
+        name="Restore Sampling",
+        default=True)
+    restore_AO: bpy.props.BoolProperty(
+        name="Restore Ambient Occlusion",
+        default=True)
+    restore_SSR: bpy.props.BoolProperty(
+        name="Restore Screen Space Reflections",
+        default=True)
+    restore_volumetrics: bpy.props.BoolProperty(
+        name="Restore Volumetrics",
+        default=True)
+    restore_shadows: bpy.props.BoolProperty(
+        name="Restore Shadows",
+        default=True)
+    restore_indirect_lightning: bpy.props.BoolProperty(
+        name="Restore Indirect Lightning",
+        default=True)
+    restore_film_settings: bpy.props.BoolProperty(
+        name="Restore Film Settings",
+        default=True)
+    restore_simplify_settings: bpy.props.BoolProperty(
+        name="Restore Simplify Settings",
+        default=True)
+    restore_color_management_settings: bpy.props.BoolProperty(
+        name="Restore Color Management Settings",
+        default=True)
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=350)
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+
+        col.prop(self, "restore_sampling")
+        col.prop(self, "restore_AO")
+        col.prop(self, "restore_SSR")
+        col.prop(self, "restore_volumetrics")
+        col.prop(self, "restore_shadows")
+        col.prop(self, "restore_indirect_lightning")
+        col.prop(self, "restore_film_settings")
+        col.prop(self, "restore_simplify_settings")
+        col.prop(self, "restore_color_management_settings")
 
     @classmethod
     def poll(cls, context):
-        return False
+        return cls.saved_render_settings != None
 
     def execute(self, context):
-        pass
+
+        Log.console(self, Log.Severity.INFO, "Restoring stored settings:")
+        if self.restore_sampling:
+            self.saved_render_settings.eevee_sampling.load()
+        if self.restore_AO:
+            self.saved_render_settings.eevee_AO.load()
+        if self.restore_SSR:
+            self.saved_render_settings.eevee_SSR.load()
+        if self.restore_volumetrics:
+            self.saved_render_settings.eevee_volumetrics.load()
+        if self.restore_shadows:
+            self.saved_render_settings.eevee_shadows.load()
+        if self.restore_indirect_lightning:
+            self.saved_render_settings.eevee_indirect_lightning.load()
+        if self.restore_film_settings:
+            self.saved_render_settings.film.load()
+        if self.restore_simplify_settings:
+            self.saved_render_settings.simplify.load()
+        if self.restore_color_management_settings:
+            self.saved_render_settings.color_management.load()
+
+        Log.console(self, Log.Severity.INFO, "Finished restoring settings")
+        Log.report(self, Log.Severity.INFO, "Render settings restored")
+        return {'FINISHED'}
 
 
 classes = (FTB_OT_DefaultRenderSettings_Op, FTB_OT_ExportRenderSettings, FTB_OT_ImportRenderSettings,
@@ -217,8 +277,10 @@ classes = (FTB_OT_DefaultRenderSettings_Op, FTB_OT_ExportRenderSettings, FTB_OT_
 def register():
     for c in classes:
         bpy.utils.register_class(c)
+    bpy.app.handlers.load_pre.append(clear_saved_render_settings)
 
 
 def unregister():
+    bpy.app.handlers.load_pre.remove(clear_saved_render_settings)
     for c in reversed(classes):
         bpy.utils.unregister_class(c)
