@@ -15,7 +15,7 @@ class Severity(Enum):
     ERROR = "\033[91m"          # red
 
 
-def console(self, severity: Severity, message: str) -> None:
+def console(self, severity: Severity, message: str, end: str = "\n") -> None:
     """
     Prints the specified message with specific color-coded severity to the console using current time
     and bl_idname as identifier.
@@ -26,7 +26,7 @@ def console(self, severity: Severity, message: str) -> None:
     """
     _time_str = time.strftime("%H:%M:%S", time.localtime())
     _severity_str = (f"[{severity.name}]", "")[severity == Severity.NONE]
-    print(f"[{_time_str}]{severity.value}{_severity_str}{ENDC} {self.bl_idname}: {message}")
+    print(f"[{_time_str}]{severity.value}{_severity_str}{ENDC} {self.bl_idname}: {message}", end=end)
 
 
 def report(self, severity: Severity, message: str) -> None:
