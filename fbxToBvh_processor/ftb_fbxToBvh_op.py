@@ -4,6 +4,8 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.types import OperatorFileListElement
 from bpy.props import BoolProperty, CollectionProperty, StringProperty
 
+from ..utility_functions import ftb_logging as log
+
 
 class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
     bl_idname = "object.batch_fbx_bvh"
@@ -17,6 +19,12 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
 
     # String Property accessed by ImportHelper to store directory path of selected files
     directory: StringProperty(subtype='DIR_PATH')
+
+    # show only fbx files by default
+    filter_glob: bpy.props.StringProperty(
+        default='*.fbx',
+        options={'HIDDEN'}
+    )
 
     # list of properties to be displayed in the ImportHelper sidebar
     # sOutputPath: StringProperty(
@@ -50,18 +58,18 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
         wm = bpy.context.window_manager
 
         if (not wm.bvhOutputPath):
-            self.report({'WARNING'}, 'Output path is not set')
+            log.report(self, log.Severity.WARNING, 'Output path is not set')
             return {'CANCELLED'}
 
         if (not self.files):
-            self.report({'WARNING'}, "No files selected")
-            return{'CANCELLED'}
+            log.report(self, log.Severity.WARNING, "No files selected")
+            return {'CANCELLED'}
 
         else:
             for file in self.files:
                 if file.name == "":
-                    self.report({'WARNING'}, "No files selected")
-                    return{'CANCELLED'}
+                    log.report(self, log.Severity.WARNING, "No files selected")
+                    return {'CANCELLED'}
 
         objectList = list()
 
@@ -87,33 +95,38 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
 
         for file in self.files:
 
-            self.report({'INFO'}, "Importing " + file.name + " ...")
-            print("Importing " + file.name + " ...")
+            log.console(self, log.Severity.INFO, f"Importing {file.name} - ", end="")
 
             # import fbx file using the filepath from ImportHelper, set automatic bone orientation to true)
-            bpy.ops.import_scene.fbx(filepath=(self.directory + file.name), global_scale=100,
-                                     use_image_search=False, automatic_bone_orientation=True)
+            try:
+                bpy.ops.import_scene.fbx(filepath=(self.directory + file.name), global_scale=100,
+                                         use_image_search=False, automatic_bone_orientation=True)
+            except RuntimeError as err:
+                log.report(self, log.Severity.ERROR, f"{err} - Operation cancelled!")
+                return {'CANCELLED'}
 
-            self.report({'INFO'}, file.name + " Import successful.")
-            print(file.name + " Import successful.")
+            log.console(self, log.Severity.INFO, f"{file.name} - Import successful.")
 
             for obj in bpy.context.collection.all_objects:
                 if (not obj in tempObjList) and (obj.type == 'ARMATURE'):
                     obj.name = file.name[:-4]
-                    endFrame = obj.animation_data.action.frame_range[1]
+                    endFrame = int(obj.animation_data.action.frame_range[1])
 
                     tempObjList.append(obj)
                     tempRigList.append(obj)
 
                     bpy.context.view_layer.objects.active = obj
 
-                    self.report({'INFO'}, "Exporting " + file.name + " ...")
-                    print("Exporting " + file.name + " ...")
+                    log.console(self, log.Severity.INFO, f"Exporting {file.name} - ", end="")
 
-                    bpy.ops.export_anim.bvh(
-                        filepath=(wm.bvhOutputPath + obj.name + ".bvh"), frame_start=1, frame_end=endFrame)
+                    try:
+                        bpy.ops.export_anim.bvh(
+                            filepath=(wm.bvhOutputPath + obj.name + ".bvh"), frame_start=1, frame_end=endFrame)
+                    except RuntimeError as err:
+                        log.report(self, log.Severity.ERROR, f"{err} - Operation cancelled!")
+                        return {'CANCELLED'}
 
-                    self.report({'INFO'}, file.name + " to BVH successful")
+        log.report(self, log.Severity.INFO, "Export to BVH successful")
         return {'FINISHED'}
 
 
