@@ -26,7 +26,10 @@ def console(self, severity: Severity, message: str, end: str = "\n") -> None:
     """
     _time_str = time.strftime("%H:%M:%S", time.localtime())
     _severity_str = (f"[{severity.name}]", "")[severity == Severity.NONE]
-    print(f"[{_time_str}]{severity.value}{_severity_str}{ENDC} {self.bl_idname}: {message}", end=end)
+    _identifier = self.__class__.__name__
+    if isinstance(self, bpy.types.Operator):
+        _identifier = self.bl_idname
+    print(f"[{_time_str}]{severity.value}{_severity_str}{ENDC} {_identifier}: {message}", end=end)
 
 
 def report(self, severity: Severity, message: str) -> None:
