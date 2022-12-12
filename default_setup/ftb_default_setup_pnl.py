@@ -1,6 +1,7 @@
 import bpy
 
 from bpy.types import Panel
+from ..utility_functions.ftb_path_utils import getFritziPreferences
 
 
 class FTB_PT_Defaults_Panel(Panel):
@@ -80,6 +81,9 @@ class FTB_PT_RenderPresets_Panel(Panel):
     bl_options = {'HIDE_HEADER'}
 
     def draw(self, context):
+        if getFritziPreferences().hide_render_preset_manager:
+            return
+
         layout = self.layout
         layout.use_property_decorate = False
 

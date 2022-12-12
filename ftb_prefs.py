@@ -25,16 +25,21 @@ class FTBPreferences(bpy.types.AddonPreferences):
         description="If enabled, a popup dialog is shown every time a blend file with enabled auto keying is loaded",
         default=False)
 
-    always_disable_autokey : bpy.props.BoolProperty(
-        name= "Always turn off Auto Keying when loading a blend file",
+    always_disable_autokey: bpy.props.BoolProperty(
+        name="Always turn off Auto Keying when loading a blend file",
         description="If enabled, auto keying will always be disabled upon loading a blend file",
         default=False)
 
     alert_absolute_paths: bpy.props.BoolProperty(
         name="Absolute path alert for assets",
-        description="If enabled, a popup dialog is shown while saving when the file contains assets with an absolute path." + 
+        description="If enabled, a popup dialog is shown while saving when the file contains assets with an absolute path." +
                     " Only alerts on files saved within Fritzi Workspace",
         default=True)
+
+    hide_render_preset_manager: bpy.props.BoolProperty(
+        name="Hide Render Preset Manager",
+        description="Hides the render preset manager inside the render properties tab",
+        default=False)
 
     # Addon updater preferences.
 
@@ -92,6 +97,7 @@ class FTBPreferences(bpy.types.AddonPreferences):
             row.enabled = False
 
         col.prop(getFritziPreferences(), "alert_absolute_paths")
+        col.prop(getFritziPreferences(), "hide_render_preset_manager")
 
         # Updater draw function, could also pass in col as third arg.
         addon_updater_ops.update_settings_ui(self, context)
