@@ -35,6 +35,13 @@ class RenderSettings:
             _str += f"\t}}\n"
             return _str
 
+    class Performance(Settings):
+        full_data_paths = ["bpy.context.scene.render.use_high_quality_normals"]
+
+    class Curves(Settings):
+        full_data_paths = ["bpy.context.scene.render.hair_type",
+                           "bpy.context.scene.render.hair_subdiv"]
+
     class Film(Settings):
         full_data_paths = ["bpy.context.scene.render.filter_size",
                            "bpy.context.scene.render.film_transparent",
@@ -55,6 +62,14 @@ class RenderSettings:
                            "bpy.context.scene.render.simplify_gpencil_shader_fx",
                            "bpy.context.scene.render.simplify_gpencil_tint",
                            "bpy.context.scene.render.simplify_gpencil_antialiasing"]
+
+    class GreasePencil(Settings):
+        full_data_paths = ["bpy.context.scene.grease_pencil_settings.antialias_threshold"]
+
+    class Freestyle(Settings):
+        full_data_paths = ["bpy.context.scene.render.use_freestyle",
+                           "bpy.context.scene.render.line_thickness_mode",
+                           "bpy.context.scene.render.line_thickness"]
 
     class ColorManagement(Settings):
         full_data_paths = ["bpy.context.scene.display_settings.display_device",
@@ -96,6 +111,10 @@ class RenderSettings:
                            "bpy.context.scene.eevee.use_gtao_bent_normals",
                            "bpy.context.scene.eevee.use_gtao_bounce"]
 
+    class EeveeSSS(Settings):
+        full_data_paths = ["bpy.context.scene.eevee.sss_samples",
+                           "bpy.context.scene.eevee.sss_jitter_threshold"]
+
     class EeveeSSR(Settings):
         full_data_paths = ["bpy.context.scene.eevee.use_ssr",
                            "bpy.context.scene.eevee.use_ssr_refraction",
@@ -105,6 +124,14 @@ class RenderSettings:
                            "bpy.context.scene.eevee.ssr_thickness",
                            "bpy.context.scene.eevee.ssr_border_fade",
                            "bpy.context.scene.eevee.ssr_firefly_fac"]
+
+    class EeveeMotionBlur(Settings):
+        full_data_paths = ["bpy.context.scene.eevee.use_motion_blur",
+                           "bpy.context.scene.eevee.motion_blur_position",
+                           "bpy.context.scene.eevee.motion_blur_shutter",
+                           "bpy.context.scene.eevee.motion_blur_depth_scale",
+                           "bpy.context.scene.eevee.motion_blur_max",
+                           "bpy.context.scene.eevee.motion_blur_steps"]
 
     class EeveeVolumetrics(Settings):
         full_data_paths = ["bpy.context.scene.eevee.volumetric_start",
@@ -138,43 +165,63 @@ class RenderSettings:
                            "bpy.context.scene.eevee.gi_show_irradiance"]
 
     data_id: str
+    name: str
     version: tuple
 
     eevee_sampling: EeveeSampling
     eevee_bloom: EeveeBloom
     eevee_DOF: EeveeDOF
     eevee_AO: EeveeAO
+    eevee_SSS: EeveeSSS
     eevee_SSR: EeveeSSR
+    eevee_motion_blur: EeveeMotionBlur
     eevee_volumetrics: EeveeVolumetrics
     eevee_shadows: EeveeShadows
     eevee_indirect_lightning: EeveeIndirectLightning
 
+    performance: Performance
+    curves: Curves
     film: Film
-
     simplify: Simplify
-
+    grease_pencil: GreasePencil
+    freestyle: Freestyle
     color_management: ColorManagement
 
-    def __init__(self) -> None:
+    eevee_settings: list[Settings]
+
+    def __init__(self, name="") -> None:
         self.version = RENDERSETTINGS_VERSION
         self.data_id = "FTB Render Settings"
+        self.name = name
         self.eevee_sampling = self.EeveeSampling()
         self.eevee_AO = self.EeveeAO()
+        self.eevee_SSS = self.EeveeSSS()
         self.eevee_bloom = self.EeveeBloom()
         self.eevee_DOF = self.EeveeDOF()
         self.eevee_SSR = self.EeveeSSR()
+        self.eevee_motion_blur = self.EeveeMotionBlur()
         self.eevee_volumetrics = self.EeveeVolumetrics()
         self.eevee_shadows = self.EeveeShadows()
         self.eevee_indirect_lightning = self.EeveeIndirectLightning()
+        self.performance = self.Performance()
+        self.curves = self.Curves()
+        self.grease_pencil = self.GreasePencil()
+        self.freestyle = self.Freestyle()
         self.film = self.Film()
         self.simplify = self.Simplify()
         self.color_management = self.ColorManagement()
 
+        self.eevee_settings = [self.eevee_sampling, self.eevee_AO, self.eevee_SSS, self.eevee_bloom, self.eevee_DOF,
+                               self.eevee_SSR, self.eevee_motion_blur, self.eevee_volumetrics, self.eevee_shadows,
+                               self.eevee_indirect_lightning, self.performance, self.curves, self.film, self.simplify,
+                               self.grease_pencil, self.freestyle, self.color_management]
+
+    def load_eevee_settings(self) -> None:
+        for category in self.eevee_settings:
+            category.load()
+
     def __str__(self) -> str:
-        categories = [self.eevee_sampling, self.eevee_AO, self.eevee_bloom, self.eevee_DOF, self.eevee_SSR,
-                      self.eevee_volumetrics, self.eevee_shadows, self.eevee_indirect_lightning, self.film,
-                      self.simplify, self.color_management]
-        categories_str: str = [category.__str__() for category in categories]
+        categories_str: str = [category.__str__() for category in self.eevee_settings]
         return (f"Render Settings\n"
                 f"{{\n"
                 f"{''.join(categories_str)}\n"
