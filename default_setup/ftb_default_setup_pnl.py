@@ -68,9 +68,6 @@ class FTB_PT_Defaults_Panel(Panel):
         col.prop(context.window_manager,
                  "bsetEngine", text="Render Engine")
 
-        col.separator()
-        col.operator("scene.ftb_import_render_settings")
-
 
 class FTB_PT_RenderPresets_Panel(Panel):
     bl_space_type = 'PROPERTIES'
@@ -93,14 +90,28 @@ class FTB_PT_RenderPresets_Panel(Panel):
         row.operator("scene.ftb_add_render_preset", text="", icon='ADD')
         row.operator("scene.ftb_edit_render_preset", text="", icon='CURRENT_FILE')
         row.operator("scene.ftb_remove_render_preset", text="", icon='REMOVE')
-        row.operator("scene.ftb_export_render_settings", text="", icon='EXPORT')
+        row.popover(panel="FTB_PT_RenderPresets_Options", text="", icon="DOWNARROW_HLT")
+
+
+class FTB_PT_RenderPresets_Options(Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'HEADER'
+    bl_label = "Render Preset Operators"
+    bl_category = "FTB"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("scene.ftb_import_render_settings", emboss=False)
+        layout.operator("scene.ftb_export_render_settings", emboss=False)
 
 
 def register():
     bpy.utils.register_class(FTB_PT_Defaults_Panel)
     bpy.utils.register_class(FTB_PT_RenderPresets_Panel)
+    bpy.utils.register_class(FTB_PT_RenderPresets_Options)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_PT_RenderPresets_Options)
     bpy.utils.unregister_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.unregister_class(FTB_PT_Defaults_Panel)

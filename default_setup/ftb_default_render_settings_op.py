@@ -160,7 +160,7 @@ class FTB_OT_ExportRenderSettings(Operator, ImportHelper):
             Log.report(self, Log.Severity.ERROR, "File export error. Operation cancelled!")
             return {'CANCELLED'}
 
-        Log.report(self, Log.Severity.INFO, f"Current render settings preset exported to \"{filename + extension}\"")
+        Log.report(self, Log.Severity.INFO, f"Current render preset exported to \"{filename + extension}\"")
         return {'FINISHED'}
 
 
@@ -185,7 +185,7 @@ class FTB_OT_ImportRenderSettings(Operator, ImportHelper):
             return {'CANCELLED'}
 
         if render_settings.version != RENDERSETTINGS_VERSION:
-            Log.report(self, Log.Severity.WARNING, "This file was saved with an older version of FTB. Operation cancelled!")
+            Log.report(self, Log.Severity.WARNING, "File was saved with an older version of FTB. Operation cancelled!")
             return {'CANCELLED'}
 
         FTB_OT_RestoreRenderSettings.saved_render_settings = RenderSettings()
@@ -293,6 +293,19 @@ class FTB_OT_AddRenderPreset(Operator):
         name="Name",
         default=""
     )
+    invalid_name: bpy.props.BoolProperty(
+        default=False
+    )
+    name_duplicate: bpy.props.BoolProperty(
+        default=False
+    )
+
+    def is_valid_preset_name(self, name: str) -> bool:
+        _valid_chars = string.ascii_letters + string.digits + "-_"
+        for c in name:
+            if c not in _valid_chars:
+                return False
+        return name != ""
 
     def invoke(self, context, event):
         self.preset_name = ""
@@ -301,9 +314,16 @@ class FTB_OT_AddRenderPreset(Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col.alert = True
-        col.label(text="Only letters, digits, - and _ are allowed in names!")
-        col.alert = False
+        if self.invalid_name:
+            col.alert = True
+            col.label(text="Only letters, digits, - and _ are allowed in names!")
+            col.label(text="No whitespaces and Name may not be empty!")
+            col.alert = False
+        elif self.name_duplicate:
+            col.alert = True
+            col.label(text="Preset with that name already exists.")
+            col.label(text="Pick another name")
+            col.alert = False
         col.prop(self, "preset_name")
 
     def execute(self, context):
@@ -315,15 +335,15 @@ class FTB_OT_AddRenderPreset(Operator):
                 Log.report(self, Log.Severity.ERROR, f"{err} - Could not create presets directory")
                 return {'CANCELLED'}
 
-        if self.preset_name in RenderPresets.presets:
-            Log.report(self, Log.Severity.ERROR, f"Preset with name \"{self.preset_name}\" already exists!")
-            return {'CANCELLED'}
+        self.invalid_name = not self.is_valid_preset_name(self.preset_name)
+        if self.invalid_name:
+            Log.console(self, Log.Severity.ERROR, f"Invalid name for preset")
+            return context.window_manager.invoke_props_dialog(self, width=350)
 
-        _valid_chars = string.ascii_letters + string.digits + "-_"
-        for c in self.preset_name:
-            if c not in _valid_chars:
-                Log.report(self, Log.Severity.ERROR, f"Invalid name for preset. Operation cancelled!")
-                return {'CANCELLED'}
+        self.name_duplicate = self.preset_name in RenderPresets.presets
+        if self.name_duplicate:
+            Log.console(self, Log.Severity.ERROR, f"Preset with name \"{self.preset_name}\" already exists!")
+            return context.window_manager.invoke_props_dialog(self, width=350)
 
         _rs = RenderSettings(self.preset_name)
         try:
