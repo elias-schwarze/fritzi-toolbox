@@ -244,6 +244,9 @@ class FTB_PT_DataEditing_Panel(Panel):
         row = col.row(align=True)
         row.operator("object.set_exact_booleans")
         row.operator("object.set_fast_booleans")
+        row = col.row(align=True)
+        row.operator("object.self_intersection_booleans")
+        row.operator("object.hole_tolerant_booleans")
 
         col = layout.column()
         row = col.row(align=True)

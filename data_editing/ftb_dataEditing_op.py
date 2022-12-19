@@ -9,6 +9,7 @@ from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 from .. utility_functions.ftb_path_utils import getAbsoluteFilePath
+from .. utility_functions import ftb_logging as log
 
 
 @persistent
@@ -501,7 +502,9 @@ class FTB_OT_ClearMaterialSlots_Op(Operator):
             self.report({'INFO'}, "Operation Finished. All slots in selection are already cleared.")
             return {'CANCELLED'}
         else:
-            self.report({'INFO'}, "Operation Finished. Successfully cleared " + str(slotCount) + " slots on " + str(objCount) + " objects.")
+            self.report(
+                {'INFO'},
+                "Operation Finished. Successfully cleared " + str(slotCount) + " slots on " + str(objCount) + " objects.")
 
         return {'FINISHED'}
 
@@ -795,6 +798,142 @@ class FTB_OT_UnhideBooleansRender_OP(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_SelfIntersetcionBoolean_OP(Operator):
+    bl_idname = "object.self_intersection_booleans"
+    bl_label = "Self Intersection"
+    bl_description = "Enables self intersection on all boolean modifers for the entire scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def description(cls, context, properties):
+        wm = context.window_manager
+        if wm.ftbBoolScope == 'COLLECTION':
+            _desc = "the active collection"
+        elif wm.ftbBoolScope == 'SELECTION':
+            _desc = "your current selection"
+        else:
+            _desc = "the entire scene"
+        return f"Enables self intersection on all boolean modifers for {_desc}"
+
+    def execute(self, context):
+        _mod_count = 0
+        _anim_count = 0
+        _data_path = 'modifiers["Boolean"].use_self'
+        for obj in get_objects():
+            if obj.type != 'MESH':
+                continue
+
+            for mod in obj.modifiers:
+                if mod.type != 'BOOLEAN':
+                    continue
+
+                if mod.use_self:
+                    continue
+
+                if obj.override_library:
+                    # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                    # This fixes the inconsistent overrides that happen, when the property gets set.
+                    override = obj.override_library.properties.add(_data_path)
+                    override.operations.add('REPLACE')
+
+                mod.use_self = True
+                log.console(self, log.Severity.INFO,
+                            f"Object: {obj.name_full} Boolean modifier - Self Intersection enabled!")
+                _mod_count += 1
+
+            if not obj.visible_get() or not obj.animation_data or not obj.animation_data.action:
+                continue
+
+            for fcurve in obj.animation_data.action.fcurves:
+                if fcurve.data_path == _data_path:
+                    log.console(self, log.Severity.WARNING,
+                                f"Object: {obj.name_full} - Self Intersection property is animated!")
+                    _anim_count += 1
+                    continue
+
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
+        if _mod_count < 1:
+            _report = f"No changes. Either all modifiers are all set or no modifiers found"
+        else:
+            _report = f"Self Intersection enabled for {_mod_count} {('modifier','modifiers' )[_mod_count > 1]}"
+
+        if _anim_count > 0:
+            _report += f". {_anim_count} {('modifier','modifiers' )[_anim_count > 1]} keyframed!"
+
+        _logtype = (log.Severity.INFO, log.Severity.WARNING)[_anim_count > 0]
+        log.report(self, _logtype, _report)
+        return {'FINISHED'}
+
+
+class FTB_OT_UseHoleTolerantBoolean_OP(Operator):
+    bl_idname = "object.hole_tolerant_booleans"
+    bl_label = "Hole Tolerant"
+    bl_description = "Enables Hole Tolerant on all boolean modifers for the entire scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def description(cls, context, properties):
+        wm = context.window_manager
+        if wm.ftbBoolScope == 'COLLECTION':
+            _desc = "the active collection"
+        elif wm.ftbBoolScope == 'SELECTION':
+            _desc = "your current selection"
+        else:
+            _desc = "the entire scene"
+        return f"Enables Hole Tolerant on all boolean modifers for {_desc}"
+
+    def execute(self, context):
+        _mod_count = 0
+        _anim_count = 0
+        _data_path = 'modifiers["Boolean"].use_hole_tolerant'
+        for obj in get_objects():
+            if obj.type != 'MESH':
+                continue
+
+            for mod in obj.modifiers:
+                if mod.type != 'BOOLEAN':
+                    continue
+
+                if mod.use_hole_tolerant:
+                    continue
+
+                if obj.override_library:
+                    # Add the Boolean modifier property to the overriden properties in the override_library of the object
+                    # This fixes the inconsistent overrides that happen, when the property gets set.
+                    override = obj.override_library.properties.add(_data_path)
+                    override.operations.add('REPLACE')
+
+                mod.use_hole_tolerant = True
+                log.console(self, log.Severity.INFO,
+                            f"Object: {obj.name_full} Boolean modifier - Hole Tolerant enabled!")
+                _mod_count += 1
+
+            if not obj.visible_get() or not obj.animation_data or not obj.animation_data.action:
+                continue
+
+            for fcurve in obj.animation_data.action.fcurves:
+                if fcurve.data_path == _data_path:
+                    log.console(self, log.Severity.WARNING,
+                                f"Object: {obj.name_full} - Hole Tolerant property is animated!")
+                    _anim_count += 1
+                    continue
+
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
+        if _mod_count < 1:
+            _report = f"No changes. Either all modifiers are all set or no modifiers found"
+        else:
+            _report = f"Hole Tolerant enabled for {_mod_count} {('modifier','modifiers' )[_mod_count > 1]}"
+
+        if _anim_count > 0:
+            _report += f". {_anim_count} {('modifier','modifiers' )[_anim_count > 1]} keyframed!"
+
+        _logtype = (log.Severity.INFO, log.Severity.WARNING)[_anim_count > 0]
+        log.report(self, _logtype, _report)
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
@@ -802,7 +941,8 @@ classes = (
     FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
     FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
-    FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP
+    FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
+    FTB_OT_SelfIntersetcionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP
 )
 
 
