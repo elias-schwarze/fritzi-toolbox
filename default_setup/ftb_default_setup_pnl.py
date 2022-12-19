@@ -1,6 +1,6 @@
 import bpy
 
-from bpy.types import Panel
+from bpy.types import Panel, Menu
 from ..utility_functions.ftb_path_utils import getFritziPreferences
 
 
@@ -90,12 +90,10 @@ class FTB_PT_RenderPresets_Panel(Panel):
         row.operator("scene.ftb_add_render_preset", text="", icon='ADD')
         row.operator("scene.ftb_edit_render_preset", text="", icon='CURRENT_FILE')
         row.operator("scene.ftb_remove_render_preset", text="", icon='REMOVE')
-        row.popover(panel="FTB_PT_RenderPresets_Options", text="", icon="DOWNARROW_HLT")
+        row.menu(menu="FTB_MT_RenderPresets_Options", text="", icon="DOWNARROW_HLT")
 
 
-class FTB_PT_RenderPresets_Options(Panel):
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'HEADER'
+class FTB_MT_RenderPresets_Options(Menu):
     bl_label = "Render Preset Operators"
     bl_category = "FTB"
 
@@ -108,10 +106,10 @@ class FTB_PT_RenderPresets_Options(Panel):
 def register():
     bpy.utils.register_class(FTB_PT_Defaults_Panel)
     bpy.utils.register_class(FTB_PT_RenderPresets_Panel)
-    bpy.utils.register_class(FTB_PT_RenderPresets_Options)
+    bpy.utils.register_class(FTB_MT_RenderPresets_Options)
 
 
 def unregister():
-    bpy.utils.unregister_class(FTB_PT_RenderPresets_Options)
+    bpy.utils.unregister_class(FTB_MT_RenderPresets_Options)
     bpy.utils.unregister_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.unregister_class(FTB_PT_Defaults_Panel)
