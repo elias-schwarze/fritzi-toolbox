@@ -22,7 +22,7 @@ See documentation for usage
 https://github.com/CGCookie/blender-addon-updater
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 import errno
 import traceback
@@ -54,7 +54,6 @@ class SingletonUpdater:
     needed throughout the addon. It implements all the interfaces for running
     updates.
     """
-
     def __init__(self):
 
         self._engine = GithubEngine()
@@ -662,8 +661,7 @@ class SingletonUpdater:
             else:
                 # Don't return branch if in list.
                 n = len(self._include_branch_list)
-                # guaranteed at least len()=n+1
-                self._tag_latest = self._tags[n]
+                self._tag_latest = self._tags[n]  # guaranteed at least len()=n+1
                 self.print_verbose(
                     "Most recent tag found:" + str(self._tags[n]['name']))
 
@@ -912,42 +910,42 @@ class SingletonUpdater:
 
         self.print_verbose(
             "Begin extracting source from zip:" + str(self._source_zip))
-        zfile = zipfile.ZipFile(self._source_zip, "r")
+        with zipfile.ZipFile(self._source_zip, "r") as zfile:
 
-        if not zfile:
-            self._error = "Install failed"
-            self._error_msg = "Resulting file is not a zip, cannot extract"
-            self.print_verbose(self._error_msg)
-            return -1
+            if not zfile:
+                self._error = "Install failed"
+                self._error_msg = "Resulting file is not a zip, cannot extract"
+                self.print_verbose(self._error_msg)
+                return -1
 
-        # Now extract directly from the first subfolder (not root)
-        # this avoids adding the first subfolder to the path length,
-        # which can be too long if the download has the SHA in the name.
-        zsep = '/'  # Not using os.sep, always the / value even on windows.
-        for name in zfile.namelist():
-            if zsep not in name:
-                continue
-            top_folder = name[:name.index(zsep) + 1]
-            if name == top_folder + zsep:
-                continue  # skip top level folder
-            sub_path = name[name.index(zsep) + 1:]
-            if name.endswith(zsep):
-                try:
-                    os.mkdir(os.path.join(outdir, sub_path))
-                    self.print_verbose(
-                        "Extract - mkdir: " + os.path.join(outdir, sub_path))
-                except OSError as exc:
-                    if exc.errno != errno.EEXIST:
-                        self._error = "Install failed"
-                        self._error_msg = "Could not create folder from zip"
-                        self.print_trace()
-                        return -1
-            else:
-                with open(os.path.join(outdir, sub_path), "wb") as outfile:
-                    data = zfile.read(name)
-                    outfile.write(data)
-                    self.print_verbose(
-                        "Extract - create: " + os.path.join(outdir, sub_path))
+            # Now extract directly from the first subfolder (not root)
+            # this avoids adding the first subfolder to the path length,
+            # which can be too long if the download has the SHA in the name.
+            zsep = '/'  # Not using os.sep, always the / value even on windows.
+            for name in zfile.namelist():
+                if zsep not in name:
+                    continue
+                top_folder = name[:name.index(zsep) + 1]
+                if name == top_folder + zsep:
+                    continue  # skip top level folder
+                sub_path = name[name.index(zsep) + 1:]
+                if name.endswith(zsep):
+                    try:
+                        os.mkdir(os.path.join(outdir, sub_path))
+                        self.print_verbose(
+                            "Extract - mkdir: " + os.path.join(outdir, sub_path))
+                    except OSError as exc:
+                        if exc.errno != errno.EEXIST:
+                            self._error = "Install failed"
+                            self._error_msg = "Could not create folder from zip"
+                            self.print_trace()
+                            return -1
+                else:
+                    with open(os.path.join(outdir, sub_path), "wb") as outfile:
+                        data = zfile.read(name)
+                        outfile.write(data)
+                        self.print_verbose(
+                            "Extract - create: " + os.path.join(outdir, sub_path))
 
         self.print_verbose("Extracted source")
 
