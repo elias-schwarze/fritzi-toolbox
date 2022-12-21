@@ -6,8 +6,10 @@ import bpy.utils
 from contextlib import redirect_stdout
 from bpy.types import Operator
 
+
 def IsLaubbaumNodeGroup(Modifier):
     return Modifier.node_group.inputs[0].name == "Geometry" and Modifier.node_group.inputs[1].name == "Particle Objects" and Modifier.node_group.inputs[2].name == "Particles | Distance Min"
+
 
 def RecalculateNormals(Object):
     if not Object.type == 'MESH':
@@ -29,30 +31,33 @@ def RecalculateNormals(Object):
     mesh.update()
     bm.free()
 
+
 def ApplyShapeKeys(Object):
-    if not Object.type in ['MESH', 'CURVE'] or Object.data.shape_keys is None:
+    if Object.type not in ['MESH', 'CURVE'] or Object.data.shape_keys is None:
         return
-    
+
     Object.shape_key_add(name='CombinedKeys', from_mix=True)
     if Object.data.shape_keys:
         for shapeKey in Object.data.shape_keys.key_blocks:
             Object.shape_key_remove(shapeKey)
-            
+
+
 def RemoveSpecialChars(Object):
     name = Object.name_full
     specialchars = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
-    replacechars = ["ae", "AE", "ue", "UE", "oe", "OE", "ss" , "", "", ""]
+    replacechars = ["ae", "AE", "ue", "UE", "oe", "OE", "ss", "", "", ""]
 
     umlaut = 0
     for char in specialchars:
         umlaut += name.find(char)
-    
+
     # break out if no special char found
     if umlaut == (len(specialchars) * -1):
         return
-    
+
     for i in range(len(specialchars)):
         Object.name = Object.name_full.replace(specialchars[i], replacechars[i])
+
 
 def ApplyModifiers(Object):
     bSuccessful = True
@@ -72,15 +77,17 @@ def ApplyModifiers(Object):
 
     return bSuccessful
 
+
 def ConvertCurvesToMesh(Object):
     if Object.type == 'CURVE':
         # check for mesh curves and convert them otherwise skip conversion
         curve = Object.data
-        bMeshCurve = curve.extrude > 0 or curve.bevel_depth > 0 or curve.bevel_object != None
+        bMeshCurve = curve.extrude > 0 or curve.bevel_depth > 0 or curve.bevel_object is not None
         if bMeshCurve:
             bpy.ops.object.convert(target='MESH')
     elif Object.type in ['FONT', 'META', 'SURFACE']:
         bpy.ops.object.convert(target='MESH')
+
 
 class FTB_OT_UEExport_Op(Operator):
     bl_idname = "utils.basicprep"
@@ -90,7 +97,7 @@ class FTB_OT_UEExport_Op(Operator):
 
     def execute(self, context):
         bModsApplied = True
-        objBlacklist =  ['CAMERA', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'LATTICE', 'EMPTY', 'SPEAKER', 'ARMATURE']
+        objBlacklist = ['CAMERA', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'LATTICE', 'EMPTY', 'SPEAKER', 'ARMATURE']
 
         # dissolve linked assets and make them local
         bpy.ops.object.make_local(type='ALL')
@@ -101,12 +108,12 @@ class FTB_OT_UEExport_Op(Operator):
             if not object.visible_get() or object.type in objBlacklist:
                 continue
 
-            # unhide objects to select and set them active 
+            # unhide objects to select and set them active
             object.hide_set(False)
-            object.hide_viewport = False   
+            object.hide_viewport = False
             object.select_set(True)
             bpy.context.view_layer.objects.active = object
-            
+
             # try and run basic export steps on currently active object. The order here is relevant and should not be changed
             bpy.ops.object.make_single_user(object=True, obdata=True, material=True, animation=False, obdata_animation=False)
             ApplyShapeKeys(object)
@@ -127,6 +134,7 @@ class FTB_OT_UEExport_Op(Operator):
 
         return {'FINISHED'}
 
+
 class FTB_OT_MaterialPrep_Op(Operator):
     bl_idname = "utils.materialprep"
     bl_label = "Material Preparation"
@@ -137,21 +145,22 @@ class FTB_OT_MaterialPrep_Op(Operator):
         scene = bpy.context.scene
 
         for o in scene.objects:
-            if not o.type in ['MESH', 'CURVE', 'FONT', 'META', 'SURFACE']:
+            if o.type not in ['MESH', 'CURVE', 'FONT', 'META', 'SURFACE']:
                 continue
-            
+
             o.data.materials.clear()
             o.data.materials.append(None)
             o.active_material_index = 0
 
         return {'FINISHED'}
 
+
 class FTB_OT_DissolveCollections_Op(Operator):
     bl_idname = "utils.dissolvecollections"
     bl_label = "Dissolve Collections"
     bl_description = "Dissolves all collections inside the Scene Collection while keeping all objects"
     bl_options = {"REGISTER", "UNDO"}
-                
+
     def execute(self, context):
         collections = bpy.data.collections
 
@@ -166,15 +175,16 @@ class FTB_OT_DissolveCollections_Op(Operator):
                 for uc in o.users_collection:
                     if uc == bpy.context.scene.collection:
                         bInSceneCollection = True
-                
+
                 if not bInSceneCollection:
                     bpy.context.scene.collection.objects.link(o)
-            
+
             bpy.data.collections.remove(c)
             count += 1
 
         self.report({'INFO'}, "Successfully removed " + str(count) + " collections.")
         return {'FINISHED'}
+
 
 class FTB_OT_DeleteModifiers_Op(Operator):
     bl_idname = "utils.deletemods"
@@ -198,12 +208,13 @@ class FTB_OT_DeleteModifiers_Op(Operator):
 
         return {'FINISHED'}
 
+
 class FTB_OT_FlipNormals_Op(Operator):
     bl_idname = "object.flipnormals"
     bl_label = "Flip Normals - Selected"
     bl_description = "Flip Normals on your active selection"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     @classmethod
     def poll(cls, context):
         if len(bpy.context.selected_objects) == 0:
@@ -226,7 +237,7 @@ class FTB_OT_FlipNormals_Op(Operator):
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.flip_normals()
             bpy.ops.object.editmode_toggle()
-            
+
             obj.select_set(False)
 
             bTaskDone = True
@@ -239,6 +250,7 @@ class FTB_OT_FlipNormals_Op(Operator):
 
         return {'FINISHED'}
 
+
 def register():
     bpy.utils.register_class(FTB_OT_UEExport_Op)
     bpy.utils.register_class(FTB_OT_MaterialPrep_Op)
@@ -246,9 +258,11 @@ def register():
     bpy.utils.register_class(FTB_OT_DeleteModifiers_Op)
     bpy.utils.register_class(FTB_OT_FlipNormals_Op)
 
+
 def unregister():
     bpy.utils.unregister_class(FTB_OT_FlipNormals_Op)
     bpy.utils.unregister_class(FTB_OT_DeleteModifiers_Op)
     bpy.utils.unregister_class(FTB_OT_DissolveCollections_Op)
     bpy.utils.unregister_class(FTB_OT_MaterialPrep_Op)
     bpy.utils.unregister_class(FTB_OT_UEExport_Op)
+    

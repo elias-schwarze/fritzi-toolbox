@@ -43,7 +43,7 @@ class FTB_OT_UE_Char_WeightParent_Op(Operator):
 
         return {'FINISHED'}
 
-    
+
 class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
     bl_idname = "utils.ue_char_add_rig"
     bl_label = "Add Unreal Rig"
@@ -66,14 +66,13 @@ class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
 
     def execute(self, context):
 
-        # add rigify human metarig 
+        # add rigify human metarig
         bpy.ops.object.armature_human_metarig_add()
         rig = bpy.context.active_object.data
-        
+
         # switch to edit mode to modify edit_bones
         bpy.ops.object.mode_set(mode='EDIT', toggle=False)
         rig.use_mirror_x = True
-
 
         for bone in rig.edit_bones:
             # delete layer 0 bones (face)
@@ -84,12 +83,13 @@ class FTB_OT_UE_Char_AddUnrealRig_Op(Operator):
         for bone in rig.edit_bones:
             # delete heel pivot bones
             if bone.name in ["heel.02.L", "heel.02.R"]:
-               rig.edit_bones.remove(bone) 
+                rig.edit_bones.remove(bone)
 
         # switch to object mode to finalize changes to edit_bones
         bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
 
         return {'FINISHED'}
+
 
 class FTB_OT_UE_Char_DataTransferFromActive_Op(Operator):
     bl_idname = "utils.ue_char_data_transfer_from_active"
@@ -129,9 +129,7 @@ class FTB_OT_UE_Char_DataTransferFromActive_Op(Operator):
                 bpy.ops.object.vertex_group_smooth(group_select_mode='ALL', repeat=3)
                 bpy.ops.paint.weight_paint_toggle()
 
-        
         return {'FINISHED'}
-
 
 
 def register():
@@ -139,6 +137,7 @@ def register():
     bpy.utils.register_class(FTB_OT_UE_Char_Cleanup_Op)
     bpy.utils.register_class(FTB_OT_UE_Char_WeightParent_Op)
     bpy.utils.register_class(FTB_OT_UE_Char_DataTransferFromActive_Op)
+
 
 def unregister():
     bpy.utils.unregister_class(FTB_OT_UE_Char_DataTransferFromActive_Op)

@@ -91,7 +91,7 @@ class FTBPreferences(bpy.types.AddonPreferences):
         row = col.row()
         row.prop(getFritziPreferences(), "alert_autokey")
 
-        if (getFritziPreferences().always_disable_autokey == False):
+        if (getFritziPreferences().always_disable_autokey is False):
             row.enabled = True
         else:
             row.enabled = False

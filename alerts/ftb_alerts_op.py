@@ -62,7 +62,7 @@ def auto_key_postLoad_handler(dummy):
     if (getFritziPreferences().always_disable_autokey):
         disableAutoKey()
 
-    if (getFritziPreferences().alert_autokey and getFritziPreferences().always_disable_autokey == False):
+    if (getFritziPreferences().alert_autokey and getFritziPreferences().always_disable_autokey is False):
         alertUserAutoKey()
 
     return {'FINISHED'}
@@ -78,7 +78,7 @@ def custom_pre_save_handler(dummy):
         abs_path_errors: str = list()
         for img in bpy.data.images:
             # ignore linked + packed images
-            if img.library != None or img.packed_file != None:
+            if img.library is not None or img.packed_file is not None:
                 continue
 
             if asset_path_is_absolute(img.filepath):

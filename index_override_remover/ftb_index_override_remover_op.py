@@ -21,9 +21,10 @@ def RemoveMaterialIndexOverride():
             if (element.rna_path == "active_material_index"):
                 object.override_library.properties.remove(element)
 
+
 @persistent
 def preSave_handler(dummy):
-    if (getFritziPreferences().skip_override_cleanup == False):
+    if (getFritziPreferences().skip_override_cleanup is False):
         RemoveMaterialIndexOverride()
 
     return {'FINISHED'}

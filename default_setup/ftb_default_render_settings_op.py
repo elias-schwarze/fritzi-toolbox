@@ -35,7 +35,7 @@ class RenderPresets(bpy.types.PropertyGroup):
 
             try:
                 _rs: RenderSettings = pickle.load(open(f"{self.directory_path}{os.sep}{file}", "rb"))
-            except:
+            except RuntimeError:
                 Log.console(self, Log.Severity.ERROR, f"Could not import render preset \"{file}\"")
                 continue
 
@@ -156,7 +156,7 @@ class FTB_OT_ExportRenderSettings(Operator, ImportHelper):
         try:
             _key = context.scene.ftb_render_settings.presets_dropdown
             pickle.dump(RenderPresets.presets[_key], open(self.filepath + _ext, "wb"))
-        except:
+        except RuntimeError:
             Log.report(self, Log.Severity.ERROR, "File export error. Operation cancelled!")
             return {'CANCELLED'}
 
@@ -180,7 +180,7 @@ class FTB_OT_ImportRenderSettings(Operator, ImportHelper):
 
         try:
             render_settings: RenderSettings = pickle.load(open(self.filepath, "rb"))
-        except:
+        except RuntimeError:
             Log.report(self, Log.Severity.ERROR, "File Import Error. Operation cancelled!")
             return {'CANCELLED'}
 
@@ -348,7 +348,7 @@ class FTB_OT_AddRenderPreset(Operator):
         _rs = RenderSettings(self.preset_name)
         try:
             pickle.dump(_rs, open(RenderPresets.get_file_path(self.preset_name), "wb"))
-        except:
+        except RuntimeError:
             Log.console(self, Log.Severity.ERROR, f"Failed creating preset \"{self.preset_name}\".Operation cancelled!")
             return {'CANCELLED'}
 
@@ -382,7 +382,7 @@ class FTB_OT_EditRenderPreset(Operator):
         _rs = RenderSettings(_key)
         try:
             pickle.dump(_rs, open(RenderPresets.get_file_path(_key), "wb"))
-        except:
+        except RuntimeError:
             Log.console(self, Log.Severity.ERROR, f"Failed editing preset \"{_key}\".Operation cancelled!")
             return {'CANCELLED'}
 
@@ -414,7 +414,7 @@ class FTB_OT_RemoveRenderPreset(Operator):
         _key = context.scene.ftb_render_settings.presets_dropdown
         try:
             os.remove(RenderPresets.get_file_path(_key))
-        except:
+        except RuntimeError:
             Log.report(self, Log.Severity.ERROR, f"Could not remove preset \"{_key}\"! Operation cancelled!")
             return {'CANCELLED'}
 

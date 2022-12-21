@@ -133,7 +133,7 @@ class FTB_PT_DangerZone_Panel(Panel):
         col.operator("data.remove_image_duplicates")
         col.operator("data.remove_material_duplicates")
 
-        col.separator(factor = 2.0)
+        col.separator(factor=2.0)
 
         col.label(text="Batch Shader Editor: ")
 
@@ -148,12 +148,12 @@ class FTB_PT_DangerZone_Panel(Panel):
         col.prop_search(data=wm, property="ftbShaderType",
                         search_data=bpy.data, search_property="node_groups")
 
-        if (wm.ftbShaderType != None):
+        if (wm.ftbShaderType is not None):
 
             col = layout.column()
             col.prop(wm, "ftbShaderInput")
 
-            if (wm.ftbShaderInput != None):
+            if (wm.ftbShaderInput is not None):
                 self.updateShaderInputValues()
 
                 col.label(text=wm.ftbShaderInputDataType)

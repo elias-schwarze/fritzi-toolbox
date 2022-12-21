@@ -108,7 +108,7 @@ class FTB_OT_BatchFbxBvh_Op(Operator, ImportHelper):
             log.console(self, log.Severity.INFO, f"{file.name} - Import successful.")
 
             for obj in bpy.context.collection.all_objects:
-                if (not obj in tempObjList) and (obj.type == 'ARMATURE'):
+                if (obj not in tempObjList) and (obj.type == 'ARMATURE'):
                     obj.name = file.name[:-4]
                     endFrame = int(obj.animation_data.action.frame_range[1])
 

@@ -11,7 +11,8 @@ class FTB_OT_SetupBurnins_Op(Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def sanitizeInput(self, context):
-        """Sanitizes Input by removing letters and special characters, also adjusts amounts of digits to two, adds left padding with zeros if input is only one digit"""
+        """Sanitizes Input by removing letters and special characters,
+        also adjusts amounts of digits to two, adds left padding with zeros if input is only one digit"""
 
         # First, handle case sVersionNumber is None or empty string
         if (not context.window_manager.sVersionNumber or context.window_manager.sVersionNumber == ""):

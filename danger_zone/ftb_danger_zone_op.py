@@ -7,7 +7,7 @@ from ..utility_functions.ftb_string_utils import is_name_duplicate, strip_End_Nu
 
 
 def is_image_duplicate(source: Image, duplicate: Image):
-    # perform naive image comparision to avoid unnecessary pixel by pixel comparisions
+    # perform naive image comparison to avoid unnecessary pixel by pixel comparisons
     equal_size = source.size[0] == duplicate.size[0] and \
         source.size[1] == duplicate.size[1]
     equal_depth = source.depth == duplicate.depth
@@ -15,7 +15,7 @@ def is_image_duplicate(source: Image, duplicate: Image):
     if not (equal_size and equal_depth):
         return False
 
-    # if naive comparision is passed perform in depth pixel by pixel check on thumbnails to save on iterations
+    # if naive comparison is passed perform in depth pixel by pixel check on thumbnails to save on iterations
     if source.preview and duplicate.preview:
         source_pixels = np.array(source.preview.icon_pixels)
         duplicate_pixels = np.array(duplicate.preview.icon_pixels)
@@ -61,7 +61,7 @@ def is_material_duplicate(source: Material, duplicate: Material) -> bool:
     source_pixels = np.array(list())
     duplicate_pixels = np.array(list())
     if source.preview and duplicate.preview:
-        # using material thumbnail comparision to further validate a duplicate match
+        # using material thumbnail comparison to further validate a duplicate match
         # not ideal but better than looping over every input, on every node in the node_tree for all materials...
         # recently changed materials won't update their thumbnail immediately. This obviously affects the
         # outcome of the script
@@ -72,7 +72,7 @@ def is_material_duplicate(source: Material, duplicate: Material) -> bool:
 
 
 def is_linked(object) -> bool:
-    return object.library != None  # or object.override_library != None
+    return object.library is not None  # or object.override_library != None
 
 
 def get_duplicates_of_image(source_image: Image):
@@ -180,9 +180,9 @@ class FTB_OT_EditShaderProperty_Op(Operator):
             if matSlot.material is not None:
                 if matSlot.material not in editedMatList:
                     editedMatList.append(matSlot.material)
-                    if (matSlot.material.node_tree != None):
+                    if (matSlot.material.node_tree is not None):
                         for node in matSlot.material.node_tree.nodes:
-                            if (type(node) == bpy.types.ShaderNodeGroup and node.node_tree != None):
+                            if (type(node) == bpy.types.ShaderNodeGroup and node.node_tree is not None):
                                 if (node.node_tree.name == wm.ftbShaderType.name):
                                     for dinput in node.inputs:
                                         if (dinput.identifier == wm.ftbShaderInput):

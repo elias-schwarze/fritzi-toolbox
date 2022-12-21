@@ -17,7 +17,6 @@ class FTB_PT_UEExport_Panel(Panel):
 
     bpy.types.WindowManager.ftbExportRecalcNormals = bpy.props.BoolProperty(default=True, description="Recalculate normals when running this step. Disable if normals are already correct or recalculation causes errors")
 
-
     def draw(self, context):
 
         layout = self.layout

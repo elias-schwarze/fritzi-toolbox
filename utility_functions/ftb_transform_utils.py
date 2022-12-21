@@ -7,7 +7,7 @@ def ftb_random_rotation(minRot=0.0, maxRot=0.0, randomizeDirection=True):
     randomRot = random.uniform(minRot, maxRot)
 
     if (randomizeDirection):
-        if(random.getrandbits(1) == True):
+        if(random.getrandbits(1) is True):
             randomRot *= -1
 
     return radians(randomRot)

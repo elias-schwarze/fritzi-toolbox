@@ -29,8 +29,8 @@ class FTB_PT_PropRigging_Panel(Panel):
         default='CUBE'
     )
     bpy.types.WindowManager.ftbBoneRotationMode = bpy.props.EnumProperty(
-        name= "Mode",
-        description= "Set the rotation mode of all bones",
+        name="Mode",
+        description="Set the rotation mode of all bones",
         items=[
             ('QUATERNION', "Quaternion", ""),
             ('XYZ', "XYZ Euler", "")

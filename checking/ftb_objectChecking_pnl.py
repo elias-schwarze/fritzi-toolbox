@@ -4,13 +4,16 @@ import bpy.utils
 from bpy.types import Panel
 from . import Asset
 
+
 def PluralizeString(ObjectCount: int):
     return (("", "s")[ObjectCount > 1])
+
 
 def InitializeCheck():
     Asset.bChecked = False
     bpy.context.window_manager.bNormalsButtonClicked = False
     bpy.context.window_manager.bNormalsChecked = False
+
 
 def UpdatePropEmptyReference(self, context):
     empty = context.window_manager.PropEmptyReference
@@ -19,12 +22,14 @@ def UpdatePropEmptyReference(self, context):
             context.window_manager.PropEmptyReference = None
     InitializeCheck()
 
+
 def UpdatePropCollectionReference(self, context):
     collection = context.window_manager.PropCollectionReference
     if collection:
         if collection.library or collection.override_library:
             context.window_manager.PropCollectionReference = None
     InitializeCheck()
+
 
 class FTB_PT_Checking_Panel(Panel):
     bl_space_type = "VIEW_3D"
@@ -33,43 +38,43 @@ class FTB_PT_Checking_Panel(Panel):
     bl_category = "FTB"
 
     bpy.types.WindowManager.bNormalsButtonClicked = bpy.props.BoolProperty(
-        default = False
+        default=False
         )
 
     bpy.types.WindowManager.bNormalsChecked = bpy.props.BoolProperty(
-        default = False
+        default=False
         )
 
     bpy.types.WindowManager.PropCollectionReference = bpy.props.PointerProperty(
-        type = bpy.types.Collection,
-        name = "",
-        description = "Prop Collection in this file. This will be used to scan for Prop errors",
-        update = UpdatePropCollectionReference
+        type=bpy.types.Collection,
+        name="",
+        description="Prop Collection in this file. This will be used to scan for Prop errors",
+        update=UpdatePropCollectionReference
         )
 
     bpy.types.WindowManager.PropEmptyReference = bpy.props.PointerProperty(
-        type = bpy.types.Object,
-        name = "",
-        description = "Prop Empty in this file. This will be used to scan for Prop errors",
-        update = UpdatePropEmptyReference
+        type=bpy.types.Object,
+        name="",
+        description="Prop Empty in this file. This will be used to scan for Prop errors",
+        update=UpdatePropEmptyReference
         )
 
     def draw(self, context):
-        
+
         def DrawErrorButton(ErrorList: list, OperatorString: str, Label: str):
             if ErrorList:
                 ErrorCount = len(ErrorList)
-                col.operator(OperatorString, text = str(ErrorCount) + " - " + Label + PluralizeString(ErrorCount))
+                col.operator(OperatorString, text=str(ErrorCount) + " - " + Label + PluralizeString(ErrorCount))
 
         def DrawErrorHeader(ErrorCount: int, Label: str, Icon: str):
-            col.separator(factor = 2)
-            col.label(text = str(ErrorCount) + " - " + Label + PluralizeString(ErrorCount), icon = Icon)
+            col.separator(factor=2)
+            col.label(text=str(ErrorCount) + " - " + Label + PluralizeString(ErrorCount), icon=Icon)
 
         wm = context.window_manager
 
         layout = self.layout
         col = layout.column()
-        
+
         col.operator("utils.detect_prop_empty_collection")
         col.prop(wm, "PropCollectionReference")
         col.prop(wm, "PropEmptyReference")
@@ -80,12 +85,12 @@ class FTB_PT_Checking_Panel(Panel):
 
             # cancel if file has not been saved
             if not Asset.IsSaved():
-                col.label(text = "Please save .blend file!", icon = 'ERROR')
+                col.label(text="Please save .blend file!", icon='ERROR')
                 return
 
             # cancel if recognized Empty Object is not an EMPTY
             if wm.PropEmptyReference.type != 'EMPTY':
-                col.label(text = "Empty Object Type not 'EMPTY'")
+                col.label(text="Empty Object Type not 'EMPTY'")
                 return
 
             if Asset.HasFileErrors():
@@ -96,12 +101,12 @@ class FTB_PT_Checking_Panel(Panel):
 
                 if not Asset.bPropIDFileName:
                     col.operator("wm.save_file", text="Filename - Invalid Prop ID!")
-                
+
                 if not Asset.bProperFileName:
                     col.operator("wm.save_file", text="Filename - Invalid letters!")
-                
+
                 if not Asset.bFileIsClean:
-                    col.operator("utils.clean_file", text = "File unclean!")
+                    col.operator("utils.clean_file", text="File unclean!")
 
             if Asset.HasCollectionErrors():
                 DrawErrorHeader(Asset.GetCollectionErrorCount(), "Collection Error", 'OUTLINER_COLLECTION')
@@ -132,7 +137,7 @@ class FTB_PT_Checking_Panel(Panel):
 
                 if Asset.HasObjectErrors():
                     DrawErrorHeader(Asset.GetObjectErrorCount(), "Object Error", 'OUTLINER_OB_MESH')
-                    
+
                     DrawErrorButton(Asset.RogueObjectErrors, "object.show_rogues", "Invalid Object")
                     DrawErrorButton(Asset.InvalidNameErrors, "object.show_name_error", "Invalid Name")
                     DrawErrorButton(Asset.NGonErrors, "object.show_ngon_error", "NGon Error")
@@ -143,15 +148,15 @@ class FTB_PT_Checking_Panel(Panel):
                     DrawErrorButton(Asset.SlotLinkErrors, "object.show_slot_link_error", "Material Link Error")
                     DrawErrorButton(Asset.UnusedSlotErrors, "object.show_unused_slot_error", "Unusued Material Slot")
                     DrawErrorButton(Asset.ParentingErrors, "object.show_parenting_error", "Parenting Error")
-               
+
                 errorsTotal = Asset.GetTotalErrorCount()
-                col.separator(factor = 2)
+                col.separator(factor=2)
                 if errorsTotal > 0:
                     col.alert = True
-                    col.label(text = str(errorsTotal) + " Error" + PluralizeString(errorsTotal) + " found", icon = 'ERROR')
+                    col.label(text=str(errorsTotal) + " Error" + PluralizeString(errorsTotal) + " found", icon='ERROR')
                     col.alert = False
                 else:
-                    col.label(text = "No Errors found. Good Job!", icon = 'CHECKMARK')
+                    col.label(text="No Errors found. Good Job!", icon='CHECKMARK')
 
                 if Asset.HasNotifications():
                     DrawErrorHeader(Asset.GetTotalNotificationCount(), "Notification", 'INFO')
@@ -160,26 +165,27 @@ class FTB_PT_Checking_Panel(Panel):
                     DrawErrorButton(Asset.MissingDisplacementNotification, "object.show_displace_notify", "Missing Displacement")
                     DrawErrorButton(Asset.MissingShapeKeysNotification, "object.show_shape_key_notification", "Missing Shape Key")
 
-            col.separator(factor = 2)
+            col.separator(factor=2)
             col.operator("view.toggle_face_orient", text="Toggle Normals Display")
             if wm.bNormalsButtonClicked:
-                col.prop(wm, "bNormalsChecked", text = "Normals OK?")
+                col.prop(wm, "bNormalsChecked", text="Normals OK?")
 
             if wm.bNormalsChecked and errorsTotal <= 0:
-                col.label(text = "All checks passed!", icon = 'CHECKMARK')
+                col.label(text="All checks passed!", icon='CHECKMARK')
             elif not wm.bNormalsChecked:
-                col.label(text = "Normals not checked!", icon = 'ERROR')
+                col.label(text="Normals not checked!", icon='ERROR')
             elif errorsTotal > 0:
                 col.alert = True
-                col.label(text = "Asset still has errors!", icon = 'ERROR')
+                col.label(text="Asset still has errors!", icon='ERROR')
                 col.alert = False
 
         else:
             InitializeCheck()
 
+
 def register():
     bpy.utils.register_class(FTB_PT_Checking_Panel)
 
+
 def unregister():
     bpy.utils.unregister_class(FTB_PT_Checking_Panel)
-

@@ -16,7 +16,7 @@ class FTB_PT_MaterialHelper_Panel(Panel):
     bl_options = {'HIDE_HEADER'}
 
     def draw(self, context):
-        if (getFritziPreferences().hide_fritzi_shader_warning == False):
+        if (getFritziPreferences().hide_fritzi_shader_warning is False):
             layout = self.layout
 
             col = layout.column()

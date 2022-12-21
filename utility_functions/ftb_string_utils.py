@@ -21,7 +21,7 @@ def strip_End_Numbers(inputString: str):
 
 def is_name_duplicate(source: str, duplicate: str):
     """
-    Returns True if the Duplicate and Source strings are identical except for the trailing numbering scheme added by blender. 
+    Returns True if the Duplicate and Source strings are identical except for the trailing numbering scheme added by blender.
     e.g. name == name.001 == name.002
     but name.001 != name001
     """

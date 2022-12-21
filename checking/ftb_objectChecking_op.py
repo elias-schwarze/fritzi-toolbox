@@ -9,14 +9,17 @@ from . import Asset
 TRESHOLD = 0.001
 ROGUE_OBJECTS = ['CAMERA', 'LIGHT', 'GPENCIL', 'LIGHT', 'LIGHT_PROBE', 'SPEAKER', 'VOLUME', 'LIGHT_PROBE']
 
+
 @persistent
 def CustomLoadHandler(dummy):
     bpy.context.window_manager.PropCollectionReference = None
     bpy.context.window_manager.PropEmptyReference = None
 
+
 @persistent
 def DepsgraphCustomUpdate(self, context):
     pass
+
 
 def IsFileClean():
     for o in bpy.data.objects:
@@ -30,26 +33,30 @@ def IsFileClean():
             return False
     return True
 
+
 def IsOnWorldOrigin(Object: bpy.types.Object):
-    return  math.isclose(Object.location[0], 0, abs_tol = TRESHOLD) and \
-            math.isclose(Object.location[1], 0, abs_tol = TRESHOLD) and \
-            math.isclose(Object.location[2], 0, abs_tol = TRESHOLD)
+    return math.isclose(Object.location[0], 0, abs_tol=TRESHOLD) and \
+           math.isclose(Object.location[1], 0, abs_tol=TRESHOLD) and \
+           math.isclose(Object.location[2], 0, abs_tol=TRESHOLD)
+
 
 def IsScaleApplied(Object: bpy.types.Object):
-    return  math.isclose(Object.scale[0], 1, abs_tol = TRESHOLD) and \
-            math.isclose(Object.scale[1], 1, abs_tol = TRESHOLD) and \
-            math.isclose(Object.scale[2], 1, abs_tol = TRESHOLD)
+    return math.isclose(Object.scale[0], 1, abs_tol=TRESHOLD) and \
+           math.isclose(Object.scale[1], 1, abs_tol=TRESHOLD) and \
+           math.isclose(Object.scale[2], 1, abs_tol=TRESHOLD)
+
 
 def IsRotationApplied(Object: bpy.types.Object):
-    return  math.isclose(Object.rotation_euler[0], 0, abs_tol = TRESHOLD) and \
-            math.isclose(Object.rotation_euler[1], 0, abs_tol = TRESHOLD) and \
-            math.isclose(Object.rotation_euler[2], 0, abs_tol = TRESHOLD)
+    return math.isclose(Object.rotation_euler[0], 0, abs_tol=TRESHOLD) and \
+           math.isclose(Object.rotation_euler[1], 0, abs_tol=TRESHOLD) and \
+           math.isclose(Object.rotation_euler[2], 0, abs_tol=TRESHOLD)
+
 
 def FindPropCollection():
     # collect valid finds
     result = []
     for c in bpy.data.collections:
-        if c.library or c.override_library: #skip linked collections
+        if c.library or c.override_library:  # skip linked collections
             continue
 
         value = 0
@@ -59,12 +66,14 @@ def FindPropCollection():
             value += 2
         if value > 0:
             result.append([value, c])
-    #determine best find
+
+    # determine best find
     if result:
-        result.sort(reverse = True, key = lambda row: (row[0]))
+        result.sort(reverse=True, key=lambda row: (row[0]))
         return result[0][1]
 
     return None
+
 
 def FindPropEmpty():
     if not bpy.context.window_manager.PropCollectionReference:
@@ -73,7 +82,7 @@ def FindPropEmpty():
     # collect valid finds
     result = []
     for o in bpy.context.window_manager.PropCollectionReference.objects:
-        if not Asset.IsPropEmpty(o): #skip linked empties and instanced objects, fields, etc
+        if not Asset.IsPropEmpty(o):  # skip linked empties and instanced objects, fields, etc
             continue
 
         if o.type == 'EMPTY' and o.parent is None and o.children:
@@ -84,12 +93,14 @@ def FindPropEmpty():
                 value += 2
 
             result.append([value, o])
-    #determine best find
+
+    # determine best find
     if result:
-        result.sort(reverse = True, key = lambda row: (row[0]))
+        result.sort(reverse=True, key=lambda row: (row[0]))
         return result[0][1]
-    
+
     return None
+
 
 def IsParentedToRoot(Object: bpy.types.Object, Root: bpy.types.Object):
     if Object.parent:
@@ -100,12 +111,13 @@ def IsParentedToRoot(Object: bpy.types.Object, Root: bpy.types.Object):
     else:
         return False
 
+
 def SelectErrors(ErrorList: list):
     if not ErrorList:
         return
 
     if bpy.context.mode != 'OBJECT':
-        bpy.ops.object.mode_set(mode = 'OBJECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     bpy.ops.object.select_all(action='DESELECT')
 
@@ -120,13 +132,15 @@ def SelectErrors(ErrorList: list):
     bpy.context.view_layer.objects.active = ErrorList[0]
     bpy.ops.view3d.view_selected(use_all_regions=True)
 
+
 def SelectPropertiesPanel(PanelEnum: str):
     for area in bpy.context.screen.areas:
         if(area.type == 'PROPERTIES'):
             try:
-                area.spaces[0].context = PanelEnum 
-            except:
-                pass
+                area.spaces[0].context = PanelEnum
+            except RuntimeError:
+                print("Could not find properties panel")
+
 
 def SuggestValidName():
     wm = bpy.context.window_manager
@@ -150,10 +164,12 @@ def SuggestValidName():
     else:
         return "fs_pr00000_"
 
+
 class FTB_OT_PerformAssetCheck_Op(Operator):
     bl_idname = "utils.perform_asset_check"
     bl_label = "Run Asset Check"
-    bl_description = "Runs various checks based on the prop empty, prop collection and its containing objects selected above"
+    bl_description = "Runs various checks based on the prop empty, \
+                      prop collection and its containing objects selected above"
 
     @classmethod
     def poll(cls, context):
@@ -176,7 +192,8 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
 
         def ObjectCheckingRoutine(Collection: bpy.types.Collection):
             """
-            FTB_OT_PerformAssetCheck_Op - Internal method that loops over all objects inside the collection to check for errors. Nessesary to call it recursivly
+            FTB_OT_PerformAssetCheck_Op - Internal method that loops over all objects inside the collection
+            to check for errors. Nessesary to call it recursivly
             param Collection: Checks all objects found inside the passed collection argument
             """
             for c in Collection.children:
@@ -208,9 +225,9 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                     _bDisplaceError = False
                     _bDisplaceNotify = True
                     for m in o.modifiers:
-                        if not m.type in ['SUBSURF', 'DISPLACE']:
+                        if m.type not in ['SUBSURF', 'DISPLACE']:
                             continue
-                        
+
                         if m.type == 'SUBSURF':
                             if m.render_levels != m.levels:
                                 _bSubDError = True
@@ -224,20 +241,20 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                     if _bDisplaceError and o.type == 'MESH':
                         Asset.DisplacementErrors.append(o)
                     if _bDisplaceNotify and o.type == 'MESH':
-                        Asset.MissingDisplacementNotification.append(o)    
+                        Asset.MissingDisplacementNotification.append(o)
 
                     _usedmatslots = []
                     if o.type == 'MESH':
                         for p in o.data.polygons:
-                            _usedmatslots.append(p.material_index) # not part of ngon check                     
+                            _usedmatslots.append(p.material_index)  # not part of ngon check
                             # collects polies mat index since we are looping over all polies anyways
                             # used later to check for unused material slots
-                            
+
                             # ngon check
                             if len(p.vertices) > 4:
                                 Asset.NGonErrors.append(o)
-                                break 
-                    
+                                break
+
                     if o.type != 'LATTICE':
                         if not o.material_slots:
                             Asset.MissingSlotErrors.append(o)
@@ -250,7 +267,7 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
 
                 if not IsParentedToRoot(o, propEmpty) and o != propEmpty:
                     Asset.ParentingErrors.append(o)
-                    
+
         if not Asset.bChecked:
             Asset.bChecked = True
 
@@ -263,7 +280,7 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
         context.space_data.overlay.show_face_orientation = False
 
         if bpy.context.mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+            bpy.ops.object.mode_set(mode='OBJECT')
 
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -291,19 +308,20 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                 Asset.bProperEmptyName = not UsesInvalidChars(propEmpty.name_full)
 
             ObjectCheckingRoutine(propCollection)
-        
+
         return {'FINISHED'}
+
 
 class FTB_OT_DetectPropEmptyCollection_Op(Operator):
     bl_idname = "utils.detect_prop_empty_collection"
     bl_label = "Find Prop Empty & Collection"
-    bl_description = "Tries to find the blend files prop empty and prop collection. If it can't find both or one of them," + \
-                    "there is a high chance that something is not right with your prop empty and/or collection"
+    bl_description = "Tries to find the blend files prop empty and prop collection. If it can't find both or one of them, there is a high chance that something is not right with your prop empty and/or collection"
 
     def execute(self, context):
         context.window_manager.PropCollectionReference = FindPropCollection()
         context.window_manager.PropEmptyReference = FindPropEmpty()
         return {'FINISHED'}
+
 
 class FTB_OT_ShowNameError_Op(Operator):
     bl_idname = "object.show_name_error"
@@ -315,7 +333,7 @@ class FTB_OT_ShowNameError_Op(Operator):
         for c in "'[]":
             charStr = charStr.replace(c, "")
         return "Selects all objects with names containing unwanted characters. Please rename objects containing the following unwanted characters:\n" + \
-                charStr
+            charStr
 
     @classmethod
     def poll(cls, context):
@@ -325,8 +343,9 @@ class FTB_OT_ShowNameError_Op(Operator):
 
     def execute(self, context):
         SelectErrors(Asset.InvalidNameErrors)
-        SelectPropertiesPanel('OBJECT') 
+        SelectPropertiesPanel('OBJECT')
         return {'FINISHED'}
+
 
 class FTB_OT_ShowRoguesError_Op(Operator):
     bl_idname = "object.show_rogues"
@@ -335,7 +354,7 @@ class FTB_OT_ShowRoguesError_Op(Operator):
     @classmethod
     def description(cls, context, properties):
         objList = ROGUE_OBJECTS
-        objList.insert(0,'LINKED OBJECTS')
+        objList.insert(0, 'LINKED OBJECTS')
         objStr = str(list(objList))
         for c in "'[]":
             objStr = objStr.replace(c, "")
@@ -350,7 +369,8 @@ class FTB_OT_ShowRoguesError_Op(Operator):
     def execute(self, context):
         SelectErrors(Asset.RogueObjectErrors)
         return {'FINISHED'}
-        
+
+
 class FTB_OT_ShowSubDErrors_Op(Operator):
     bl_idname = "object.show_subd_error"
     bl_label = "Select SubD Errors"
@@ -367,6 +387,7 @@ class FTB_OT_ShowSubDErrors_Op(Operator):
         SelectPropertiesPanel('MODIFIER')
         return {'FINISHED'}
 
+
 class FTB_OT_ShowDisplaceErrors_Op(Operator):
     bl_idname = "object.show_displace_error"
     bl_label = "Displacement Error"
@@ -380,8 +401,9 @@ class FTB_OT_ShowDisplaceErrors_Op(Operator):
 
     def execute(self, context):
         SelectErrors(Asset.DisplacementErrors)
-        SelectPropertiesPanel('MODIFIER') 
+        SelectPropertiesPanel('MODIFIER')
         return {'FINISHED'}
+
 
 class FTB_OT_ShowScaleErrors_Op(Operator):
     bl_idname = "object.show_scale_error"
@@ -396,8 +418,9 @@ class FTB_OT_ShowScaleErrors_Op(Operator):
 
     def execute(self, context):
         SelectErrors(Asset.ApplyScaleErrors)
-        SelectPropertiesPanel('OBJECT') 
+        SelectPropertiesPanel('OBJECT')
         return {'FINISHED'}
+
 
 class FTB_OT_ShowNGonErrors_Op(Operator):
     bl_idname = "object.show_ngon_error"
@@ -416,6 +439,7 @@ class FTB_OT_ShowNGonErrors_Op(Operator):
         bpy.ops.mesh.select_face_by_sides(number=4, type='GREATER', extend=False)
         return {'FINISHED'}
 
+
 class FTB_OT_ShowMissingSlotErrors_Op(Operator):
     bl_idname = "object.show_missing_slot_error"
     bl_label = "Missing Material Slot"
@@ -431,6 +455,7 @@ class FTB_OT_ShowMissingSlotErrors_Op(Operator):
         SelectErrors(Asset.MissingSlotErrors)
         SelectPropertiesPanel('MATERIAL')
         return {'FINISHED'}
+
 
 class FTB_OT_ShowSlotLinkErrors_Op(Operator):
     bl_idname = "object.show_slot_link_error"
@@ -448,6 +473,7 @@ class FTB_OT_ShowSlotLinkErrors_Op(Operator):
         SelectPropertiesPanel('MATERIAL')
         return {'FINISHED'}
 
+
 class FTB_OT_ShowUnusedSlotErrors_Op(Operator):
     bl_idname = "object.show_unused_slot_error"
     bl_label = "Unusued Material Slot"
@@ -464,6 +490,7 @@ class FTB_OT_ShowUnusedSlotErrors_Op(Operator):
         SelectPropertiesPanel('MATERIAL')
         return {'FINISHED'}
 
+
 class FTB_OT_ShowParentingErrors_Op(Operator):
     bl_idname = "object.show_parenting_error"
     bl_label = "Parenting Error"
@@ -478,6 +505,7 @@ class FTB_OT_ShowParentingErrors_Op(Operator):
     def execute(self, context):
         SelectErrors(Asset.ParentingErrors)
         return {'FINISHED'}
+
 
 class FTB_OT_ShowApplyRotNotification_Op(Operator):
     bl_idname = "object.show_apply_rot_notification"
@@ -495,6 +523,7 @@ class FTB_OT_ShowApplyRotNotification_Op(Operator):
         SelectPropertiesPanel('OBJECT')
         return {'FINISHED'}
 
+
 class FTB_OT_ShowDisplaceNotification_Op(Operator):
     bl_idname = "object.show_displace_notify"
     bl_label = "Select SubD Errors"
@@ -508,8 +537,9 @@ class FTB_OT_ShowDisplaceNotification_Op(Operator):
 
     def execute(self, context):
         SelectErrors(Asset.MissingDisplacementNotification)
-        SelectPropertiesPanel('MODIFIER') 
+        SelectPropertiesPanel('MODIFIER')
         return {'FINISHED'}
+
 
 class FTB_OT_ShowShapeKeyNotification_Op(Operator):
     bl_idname = "object.show_shape_key_notification"
@@ -527,6 +557,7 @@ class FTB_OT_ShowShapeKeyNotification_Op(Operator):
         SelectPropertiesPanel('DATA')
         return {'FINISHED'}
 
+
 class FTB_OT_ResolveFilenameError_Op(Operator):
     bl_idname = "wm.save_file"
     bl_label = "Save File"
@@ -536,28 +567,29 @@ class FTB_OT_ResolveFilenameError_Op(Operator):
         bpy.ops.wm.save_as_mainfile('INVOKE_AREA')
         return {'FINISHED'}
 
+
 class FTB_OT_ResolveCollectionNameError_Op(Operator):
     bl_idname = "utils.change_collection_name"
     bl_label = "Enter valid Prop Collection Name"
     bl_description = "Opens dialog to rename the prop collection"
 
-    NewName: bpy.props.StringProperty(name="New Name", default = "")
+    NewName: bpy.props.StringProperty(name="New Name", default="")
 
     def invoke(self, context, event):
         self.NewName = SuggestValidName()
-        return context.window_manager.invoke_props_dialog(self, width = 500)
+        return context.window_manager.invoke_props_dialog(self, width=500)
 
     def draw(self, context):
         layout = self.layout
         col = layout.column()
         col.alert = True
-        col.label(text = "WARNING!")
-        col.label(text = "Renaming an the prop collection of an already linked prop will destroy its link in all sets.")
-        col.label(text = "If prop is already in production, please make sure to fix all broken links after this operation")
-        col.label(text = "Alternativly, don't rename it and ignore the error")
+        col.label(text="WARNING!")
+        col.label(text="Renaming an the prop collection of an already linked prop will destroy its link in all sets.")
+        col.label(text="If prop is already in production, please make sure to fix all broken links after this operation")
+        col.label(text="Alternativly, don't rename it and ignore the error")
         col.alert = False
-        #TODO: validate user input
-        # Validation works inside draw() but there is no update callback while typing into the text box, 
+        # TODO: validate user input
+        # Validation works inside draw() but there is no update callback while typing into the text box,
         # thus no reliable user feedback
         ######
         # if self.NewName.find("fs_") != 0:
@@ -566,43 +598,44 @@ class FTB_OT_ResolveCollectionNameError_Op(Operator):
         #     col.alert = False
         row = col.row()
         row.alignment = 'LEFT'
-        split = row.split(factor = 0.31)
-        split.label(text = "Old Name: ")
-        split.label(text = context.window_manager.PropCollectionReference.name_full)
-        col.prop(self, "NewName", expand = True)
+        split = row.split(factor=0.31)
+        split.label(text="Old Name: ")
+        split.label(text=context.window_manager.PropCollectionReference.name_full)
+        col.prop(self, "NewName", expand=True)
 
     @classmethod
     def poll(cls, context):
         if context.window_manager.PropCollectionReference:
-             return True
+            return True
         return False
 
     def execute(self, context):
         context.window_manager.PropCollectionReference.name = self.NewName
         return {'FINISHED'}
 
+
 class FTB_OT_ResolveEmptyNameError_Op(Operator):
     bl_idname = "utils.changeemptyname"
     bl_label = "Enter valid Prop Empty Name"
     bl_description = "Opens dialog to rename the prop empty"
 
-    NewName: bpy.props.StringProperty(name="New Name", default = "")
+    NewName: bpy.props.StringProperty(name="New Name", default="")
 
     def invoke(self, context, event):
         self.NewName = SuggestValidName()
-        return context.window_manager.invoke_props_dialog(self, width = 500)
+        return context.window_manager.invoke_props_dialog(self, width=500)
 
     def draw(self, context):
         layout = self.layout
         col = layout.column()
         col.alert = True
-        col.label(text = "WARNING!")
-        col.label(text = "Renaming an the empty of an already linked prop will destroy its link in all sets.")
-        col.label(text = "If prop is already in production, please make sure to fix all broken links after this operation")
-        col.label(text = "Alternativly, don't rename it and ignore the error")
+        col.label(text="WARNING!")
+        col.label(text="Renaming an the empty of an already linked prop will destroy its link in all sets.")
+        col.label(text="If prop is already in production, please make sure to fix all broken links after this operation")
+        col.label(text="Alternativly, don't rename it and ignore the error")
         col.alert = False
-        #TODO: validate user input
-        # Validation works inside draw() but there is no update callback while typing into text box, 
+        # TODO: validate user input
+        # Validation works inside draw() but there is no update callback while typing into text box,
         # thus no reliable user feedback
         ######
         # if self.NewName.find("fs_") != 0:
@@ -611,20 +644,21 @@ class FTB_OT_ResolveEmptyNameError_Op(Operator):
         #     col.alert = False
         row = col.row()
         row.alignment = 'LEFT'
-        split = row.split(factor = 0.31)
-        split.label(text = "Old Name: ")
-        split.label(text = context.window_manager.PropEmptyReference.name_full)
-        col.prop(self, "NewName", expand = True)
+        split = row.split(factor=0.31)
+        split.label(text="Old Name: ")
+        split.label(text=context.window_manager.PropEmptyReference.name_full)
+        col.prop(self, "NewName", expand=True)
 
     @classmethod
     def poll(cls, context):
         if context.window_manager.PropEmptyReference:
-             return True
+            return True
         return False
 
     def execute(self, context):
         context.window_manager.PropEmptyReference.name = self.NewName
         return {'FINISHED'}
+
 
 class FTB_OT_CleanFile_Op(Operator):
     bl_idname = "utils.clean_file"
@@ -635,6 +669,7 @@ class FTB_OT_CleanFile_Op(Operator):
         bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
         self.report({'INFO'}, "Removed orphan data")
         return {'FINISHED'}
+
 
 class FTB_OT_MoveEmptyToOrigin_Op(Operator):
     bl_idname = "object.move_empty_to_origin"
@@ -651,8 +686,9 @@ class FTB_OT_MoveEmptyToOrigin_Op(Operator):
 
     def execute(self, context):
         empty = context.window_manager.PropEmptyReference
-        empty.location =(0,0,0)
+        empty.location = (0, 0, 0)
         return {'FINISHED'}
+
 
 class FTB_OT_Toggle_Face_Orient_Op(Operator):
     bl_idname = "view.toggle_face_orient"
@@ -664,22 +700,25 @@ class FTB_OT_Toggle_Face_Orient_Op(Operator):
         context.space_data.overlay.show_face_orientation = not(context.space_data.overlay.show_face_orientation)
         return {'FINISHED'}
 
-classes =   (
-                FTB_OT_Toggle_Face_Orient_Op,
-                FTB_OT_PerformAssetCheck_Op, FTB_OT_ShowSubDErrors_Op, FTB_OT_ShowRoguesError_Op, 
-                FTB_OT_ResolveFilenameError_Op, FTB_OT_ShowDisplaceErrors_Op, FTB_OT_ShowScaleErrors_Op, 
-                FTB_OT_ShowNGonErrors_Op, FTB_OT_ShowMissingSlotErrors_Op, FTB_OT_ShowSlotLinkErrors_Op, 
-                FTB_OT_ShowUnusedSlotErrors_Op, FTB_OT_ShowParentingErrors_Op, FTB_OT_ResolveCollectionNameError_Op, 
-                FTB_OT_DetectPropEmptyCollection_Op, FTB_OT_ShowApplyRotNotification_Op, FTB_OT_ShowShapeKeyNotification_Op, 
-                FTB_OT_ResolveEmptyNameError_Op, FTB_OT_ShowNameError_Op, FTB_OT_CleanFile_Op, FTB_OT_ShowDisplaceNotification_Op,
-                FTB_OT_MoveEmptyToOrigin_Op
+
+classes = (
+            FTB_OT_Toggle_Face_Orient_Op,
+            FTB_OT_PerformAssetCheck_Op, FTB_OT_ShowSubDErrors_Op, FTB_OT_ShowRoguesError_Op,
+            FTB_OT_ResolveFilenameError_Op, FTB_OT_ShowDisplaceErrors_Op, FTB_OT_ShowScaleErrors_Op,
+            FTB_OT_ShowNGonErrors_Op, FTB_OT_ShowMissingSlotErrors_Op, FTB_OT_ShowSlotLinkErrors_Op,
+            FTB_OT_ShowUnusedSlotErrors_Op, FTB_OT_ShowParentingErrors_Op, FTB_OT_ResolveCollectionNameError_Op,
+            FTB_OT_DetectPropEmptyCollection_Op, FTB_OT_ShowApplyRotNotification_Op, FTB_OT_ShowShapeKeyNotification_Op,
+            FTB_OT_ResolveEmptyNameError_Op, FTB_OT_ShowNameError_Op, FTB_OT_CleanFile_Op, FTB_OT_ShowDisplaceNotification_Op,
+            FTB_OT_MoveEmptyToOrigin_Op
             )
+
 
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.app.handlers.load_pre.append(CustomLoadHandler)
     bpy.app.handlers.depsgraph_update_post.append(DepsgraphCustomUpdate)
+
 
 def unregister():
     bpy.app.handlers.depsgraph_update_post.remove(DepsgraphCustomUpdate)
