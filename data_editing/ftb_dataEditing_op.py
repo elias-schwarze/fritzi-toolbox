@@ -798,7 +798,7 @@ class FTB_OT_UnhideBooleansRender_OP(Operator):
         return {'FINISHED'}
 
 
-class FTB_OT_SelfIntersetcionBoolean_OP(Operator):
+class FTB_OT_SelfIntersectionBoolean_OP(Operator):
     bl_idname = "object.self_intersection_booleans"
     bl_label = "Self Intersection"
     bl_description = "Enables self intersection on all boolean modifers for the entire scene"
@@ -942,7 +942,7 @@ classes = (
     FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
-    FTB_OT_SelfIntersetcionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP
+    FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP
 )
 
 
