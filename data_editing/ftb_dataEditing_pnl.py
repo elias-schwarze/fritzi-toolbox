@@ -139,6 +139,16 @@ class FTB_PT_DataEditing_Panel(Panel):
         type=bpy.types.Collection
     )
 
+    bpy.types.WindowManager.ftbLatticeScope = bpy.props.EnumProperty(
+        name="Scope",
+        description="Limit operation to whole scene or selection",
+        items=[
+            ('ALL', "All", "All Objects in the .blend file"),
+            ('SELECTION', "Selection", "Limit to currently selected objects.")
+        ],
+        default='ALL'
+    )
+
     def draw(self, context):
         layout = self.layout
         # col = layout.column()
@@ -250,13 +260,27 @@ class FTB_PT_DataEditing_Panel(Panel):
 
         col = layout.column()
         row = col.row(align=True)
-        row.operator("object.hide_booleans_viewport")
-        row.operator("object.unhide_booleans_viewport")
+        row.operator("object.hide_booleans_viewport", text="Hide", icon='RESTRICT_VIEW_ON')
+        row.operator("object.unhide_booleans_viewport", text="Show", icon='RESTRICT_VIEW_OFF')
 
         col = layout.column()
         row = col.row(align=True)
-        row.operator("object.hide_booleans_render")
-        row.operator("object.unhide_booleans_render")
+        row.operator("object.hide_booleans_render", text="Hide", icon='RESTRICT_RENDER_ON')
+        row.operator("object.unhide_booleans_render", text="Show", icon='RESTRICT_RENDER_OFF')
+
+        col = layout.column()
+        col.separator()
+
+        col = layout.column()
+        col.label(text="Lattice:")
+
+        col = layout.column()
+        col.prop(bpy.context.window_manager, "ftbLatticeScope")
+
+        col = layout.column()
+        row = col.row(align=True)
+        row.operator("object.hide_lattice_modifiers", text="Hide", icon='RESTRICT_VIEW_ON').showViewport = False
+        row.operator("object.hide_lattice_modifiers", text="Show", icon='RESTRICT_VIEW_OFF').showViewport = True
 
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):

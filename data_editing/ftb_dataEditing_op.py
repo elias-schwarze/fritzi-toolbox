@@ -934,6 +934,50 @@ class FTB_OT_UseHoleTolerantBoolean_OP(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_HideLatticeModifiers_Op(Operator):
+    bl_idname = "object.hide_lattice_modifiers"
+    bl_label = "Set Lattice Modifiers"
+    bl_description = "Hides/Shows Lattice Modifiers in Viewport"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    showViewport: bpy.props.BoolProperty(
+        name="disable",
+        default=False
+    )
+
+    def execute(self, context):
+
+        objList = list()
+        wm = bpy.context.window_manager
+
+        if wm.ftbLatticeScope == 'ALL':
+            objList = bpy.context.scene.objects
+
+        if wm.ftbLatticeScope == 'SELECTION':
+            if not bpy.context.selected_objects:
+                self.report({'ERROR'}, "No objects selected")
+                return {'CANCELLED'}
+            else:
+                objList = bpy.context.selected_objects
+
+        for obj in objList:
+            for mod in obj.modifiers:
+                if mod.type == 'LATTICE':
+                    if obj.override_library:
+                        # Add the lattice modifier property to the overriden properties in the override_library of the object
+                        # This fixes the inconsistent overrides that happen, when the property gets set.
+                        override = obj.override_library.properties.add('modifiers["' + mod.name + '"].show_viewport')
+                        override.operations.add('REPLACE')
+                    if self.showViewport:
+                        mod.show_viewport = True
+                    else:
+                        mod.show_viewport = False
+
+        # New overrides are only visible after refreshing the UI
+        refresh_ui()
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
@@ -942,7 +986,8 @@ classes = (
     FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
-    FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP
+    FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
+    FTB_OT_HideLatticeModifiers_Op
 )
 
 
