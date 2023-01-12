@@ -638,7 +638,7 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
 
 
 def get_objects():
-    """ Returns all the objects in the scene, or a given collection, or in a selection, depending on the user selection """
+    """ Returns all the objects in the scene, or a given collection, or in a selection, depending on wm.ftbBoolScope """
     wm = bpy.context.window_manager
 
     if wm.ftbBoolScope == 'ALL':
