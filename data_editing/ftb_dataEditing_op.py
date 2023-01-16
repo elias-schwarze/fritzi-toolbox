@@ -87,6 +87,19 @@ def drawLineArtMaskButton(self, context):
     row.prop(wm, "bForAllChildren", text="", icon='OUTLINER_OB_GROUP_INSTANCE')
 
 
+def drawLineUsageButton(self, context):
+    layout = self.layout
+    col = layout.column()
+    col.operator("collection.propagate_line_usage")
+
+
+def PropagateCollectionLineUsage(Collection, Usage):
+    if Collection.children:
+        for c in Collection.children:
+            c.lineart_usage = Usage
+            PropagateCollectionLineUsage(c, Usage)
+
+
 class FTB_OT_SetToCenter_Op(Operator):
     bl_idname = "object.center_object"
     bl_label = "Center Object"
@@ -532,6 +545,21 @@ class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
         else:
             self.report({'INFO'}, "Mask settings applied to immediate children")
 
+        return {'FINISHED'}
+
+
+class FTB_OT_PropagateLineUsage_Op(Operator):
+
+    bl_idname = "collection.propagate_line_usage"
+    bl_label = "Propagate to child collections"
+    bl_description = "Copies the Line Art Usage from this collection to all its children recursively"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        collection = context.collection
+        usage = collection.lineart_usage
+        PropagateCollectionLineUsage(collection, usage)
+        self.report({'INFO'}, "Mask settings applied to all children")
         return {'FINISHED'}
 
 
@@ -981,7 +1009,7 @@ class FTB_OT_HideLatticeModifiers_Op(Operator):
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
-    FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineArtMaskSettings_Op,
+    FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineUsage_Op,
     FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
     FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
@@ -996,11 +1024,11 @@ def register():
         bpy.utils.register_class(c)
 
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
-    # bpy.types.COLLECTION_PT_lineart_collection.append(drawLineArtMaskButton)
+    bpy.types.COLLECTION_PT_lineart_collection.append(drawLineUsageButton)
 
 
 def unregister():
-    # bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineArtMaskButton)
+    bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineUsageButton)
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
 
     for c in reversed(classes):
