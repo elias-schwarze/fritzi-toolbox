@@ -93,6 +93,14 @@ class FTB_PT_RenderPresets_Panel(Panel):
         row.menu(menu="FTB_MT_RenderPresets_Options", text="", icon="DOWNARROW_HLT")
 
 
+def draw_lineart_copy(self, context):
+    if context.selected_ids:
+        if getattr(context.selected_ids[0], "type", None) == 'GPENCIL':
+            layout = self.layout
+            layout.separator()
+            layout.operator("outliner.copy_optimize_lines")
+
+
 class FTB_MT_RenderPresets_Options(Menu):
     bl_label = "Render Preset Operators"
     bl_category = "FTB"
@@ -107,9 +115,11 @@ def register():
     bpy.utils.register_class(FTB_PT_Defaults_Panel)
     bpy.utils.register_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.register_class(FTB_MT_RenderPresets_Options)
+    bpy.types.OUTLINER_MT_object.append(draw_lineart_copy)
 
 
 def unregister():
+    bpy.types.OUTLINER_MT_object.remove(draw_lineart_copy)
     bpy.utils.unregister_class(FTB_MT_RenderPresets_Options)
     bpy.utils.unregister_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.unregister_class(FTB_PT_Defaults_Panel)

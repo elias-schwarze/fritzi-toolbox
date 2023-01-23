@@ -84,9 +84,35 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_Copy_Optimize_Lines_Op(Operator):
+    bl_idname = "outliner.copy_optimize_lines"
+    bl_label = "Copy and Delete Lineart Modifier"
+    bl_description = "Makes a copy of this GP object and removes lineart modifiers from it. If lines are baked, line layers will render much faster without these modifiers."
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        newName = bpy.context.object.name
+        bpy.ops.object.duplicate(linked=False, mode='DUMMY')
+        dupliLines = bpy.context.object
+        lineMods = list()
+        for mod in dupliLines.grease_pencil_modifiers:
+            if mod.type == 'GP_LINEART':
+                lineMods.append(mod)
+
+        if lineMods:
+            for item in lineMods:
+                dupliLines.grease_pencil_modifiers.remove(item)
+
+        newName += "_baked"
+        dupliLines.name = newName
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_DefaultAddLineart_Op)
+    bpy.utils.register_class(FTB_OT_Copy_Optimize_Lines_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_Copy_Optimize_Lines_Op)
     bpy.utils.unregister_class(FTB_OT_DefaultAddLineart_Op)
