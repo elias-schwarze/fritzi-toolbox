@@ -21,10 +21,11 @@ def get_all_layer_collection_children(collection: bpy.types.LayerCollection):
 
 
 def draw_outliner_tools(self, context):
-    if getattr(context.selected_ids[0], "filepath", None):
-        layout = self.layout
-        layout.separator()
-        layout.operator("outliner.get_absolute_path").relpath = context.selected_ids[0].filepath
+    if context.selected_ids:
+        if getattr(context.selected_ids[0], "filepath", None):
+            layout = self.layout
+            layout.separator()
+            layout.operator("outliner.get_absolute_path").relpath = context.selected_ids[0].filepath
 
 
 def draw_mat_gnodes_menu(self, context):
