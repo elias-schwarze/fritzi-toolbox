@@ -27,6 +27,7 @@ from .ue_export import ftb_ueexport_op, ftb_ueexport_pnl, ftb_unreal_char_op
 from .material_helper import ftb_materialhelper_op, ftb_materialhelper_pnl
 from .prop_rigid_rig import ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl
 from .alerts import ftb_alerts_op
+from .animation_editing import ftb_animation_editing_op, ftb_animation_editing_pnl
 
 
 bl_info = {
@@ -52,7 +53,8 @@ classes = (ftb_prefs,
            ftb_ueexport_op, ftb_unreal_char_op, ftb_ueexport_pnl,
            ftb_materialhelper_op, ftb_materialhelper_pnl,
            ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl,
-           ftb_alerts_op)
+           ftb_alerts_op,
+           ftb_animation_editing_op, ftb_animation_editing_pnl)
 
 
 def register():
