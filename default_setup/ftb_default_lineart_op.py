@@ -53,7 +53,7 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
 
         # assign Material to object
         previewLineObj.data.materials.append(previewLineMaterial)
-
+ 
         previewLineObj.show_in_front = True
 
         # add line art modifier to gp object
@@ -92,6 +92,7 @@ class FTB_OT_Copy_Optimize_Lines_Op(Operator):
 
     def execute(self, context):
         newName = bpy.context.object.name
+        originalLines = bpy.context.object
         bpy.ops.object.duplicate(linked=False, mode='DUMMY')
         dupliLines = bpy.context.object
         lineMods = list()
@@ -105,6 +106,22 @@ class FTB_OT_Copy_Optimize_Lines_Op(Operator):
 
         newName += "_baked"
         dupliLines.name = newName
+
+        if originalLines.hide_render is False:
+            originalLines.hide_render = True
+
+        if dupliLines.hide_render:
+            dupliLines.hide_render = False
+
+        if originalLines.hide_viewport is False:
+            originalLines.hide_viewport = True
+
+        if dupliLines.hide_viewport:
+            dupliLines.hide_viewport = False
+
+        bpy.context.view_layer.objects.active = originalLines
+        bpy.ops.object.lineart_clear()
+        bpy.context.view_layer.objects.active = dupliLines
         return {'FINISHED'}
 
 
