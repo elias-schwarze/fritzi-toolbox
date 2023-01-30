@@ -5,8 +5,11 @@ from bpy.types import Panel
 
 def draw_op(self, context):
     layout = self.layout
-    layout.operator("nla.ftb_prepare_strip")
-    # layout.operator("nla.ftb_batch_prepare_strips")
+    if len(bpy.context.selected_nla_strips) <= 1:
+        layout.operator("nla.ftb_prepare_strip")
+    else:
+        layout.operator_context = 'INVOKE_DEFAULT'
+        layout.operator("nla.ftb_batch_prepare_strips")
 
 
 class FTB_PT_ViewLayerManagement_Panel(Panel):
