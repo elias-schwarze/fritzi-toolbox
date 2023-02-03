@@ -22,7 +22,21 @@ class FTB_PT_DangerZone_Panel(Panel):
                                                                       type=bpy.types.NodeTree)
 
     bpy.types.WindowManager.editShaderScope = bpy.props.EnumProperty(
-        name="Limit To",
+        name="Limit",
+        description="Limit operation to certain objects",
+        items=[
+            ('VIEW_LAYER', "View Layer",
+             "Limit to objects in current view layer."),
+            ('COLLECTION', "Active Collection",
+             "Limit to objects in active collection."),
+            ('SELECTION', "Selection",
+             "Limit to currently selected objects.")
+        ],
+        default='VIEW_LAYER'
+    )
+
+    bpy.types.WindowManager.ftbEdgeSplitScope = bpy.props.EnumProperty(
+        name="Limit",
         description="Limit operation to certain objects",
         items=[
             ('VIEW_LAYER', "View Layer",
@@ -132,6 +146,10 @@ class FTB_PT_DangerZone_Panel(Panel):
                      text="Remove All Materials")
         col.operator("data.remove_image_duplicates")
         col.operator("data.remove_material_duplicates")
+
+        col.separator()
+        col.prop(wm, "ftbEdgeSplitScope")
+        col.operator("object.remove_edge_splits")
 
         col.separator(factor=2.0)
 

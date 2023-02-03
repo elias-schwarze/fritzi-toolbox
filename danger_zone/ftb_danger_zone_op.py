@@ -343,9 +343,67 @@ class FTB_OT_RemoveMaterialDuplicates_Op(Operator):
         return{'FINISHED'}
 
 
+class FTB_OT_Remove_Edge_Splits_Op(Operator):
+    bl_idname = "object.remove_edge_splits"
+    bl_label = "Remove Edge Splits"
+    bl_description = "Removes all Edge Split modifiers in all objects in either selection or active collection"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def removeEdgeSplit(self, obj):
+        edgeSplits = list()
+        for mod in obj.modifiers:
+            if mod.type == 'EDGE_SPLIT':
+                edgeSplits.append(mod)
+
+        if edgeSplits:
+            for item in edgeSplits:
+                obj.modifiers.remove(item)
+
+    def execute(self, context):
+        wm = bpy.context.window_manager
+
+        # Case limit = View Layer
+        if (wm.ftbEdgeSplitScope == 'VIEW_LAYER'):
+            if (not bpy.context.view_layer.objects):
+                self.report(
+                    {'ERROR'}, "No valid objects found in current view layer")
+                return {'CANCELLED'}
+            else:
+                for obj in bpy.context.view_layer.objects:
+                    self.removeEdgeSplit(obj)
+
+                self.report(
+                    {'INFO'}, "Edge splits removed for all objects in view layer.")
+
+        # Case limit = Active Collection
+        if (wm.ftbEdgeSplitScope == 'COLLECTION'):
+            if (not bpy.context.collection):
+                self.report({'ERROR'}, "No active collection")
+                return {'CANCELLED'}
+
+            else:
+                for obj in bpy.context.collection.all_objects:
+                    self.removeEdgeSplit(obj)
+
+                self.report(
+                    {'INFO'}, "Edge splits removed for all objects in active collection.")
+
+        # Case limit = Current Selection
+        if (wm.ftbEdgeSplitScope == 'SELECTION'):
+            if (not bpy.context.selected_objects):
+                self.report({'ERROR'}, "No objects selected")
+
+            else:
+                for obj in bpy.context.selected_objects:
+                    self.removeEdgeSplit(obj)
+                self.report(
+                    {'INFO'}, "Edge splits removed for all objects in selection.")
+        return{'FINISHED'}
+
+
 classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
-    FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op
+    FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op
 )
 
 
