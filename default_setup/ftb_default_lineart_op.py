@@ -1,5 +1,6 @@
 import bpy
-
+import math
+import time
 from bpy.types import Operator
 
 
@@ -53,7 +54,6 @@ class FTB_OT_DefaultAddLineart_Op(Operator):
 
         # assign Material to object
         previewLineObj.data.materials.append(previewLineMaterial)
- 
         previewLineObj.show_in_front = True
 
         # add line art modifier to gp object
@@ -125,11 +125,66 @@ class FTB_OT_Copy_Optimize_Lines_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_Bake_Interval_Op(Operator):
+    bl_idname = "object.bake_interval"
+    bl_label = "Bake Interval"
+    bl_description = "Bakes lineart of active object but in intervals to reduce crashes in large scenes"
+    bl_options = {"REGISTER", "UNDO"}
+
+    intervalSize: bpy.props.IntProperty(name="Interval Size", description="Number of frames baked in a single interval", default=30, min=1)
+    sleepTime: bpy.props.FloatProperty(name="Pause Time", description="Pause between intervals in seconds. Needed to prevent crashes from starting next interval too early", default=3.0, min=0.0001)
+    saveIntervals: bpy.props.BoolProperty(name="Save after Interval", description="Save blend file after each interval is completed", default=True)
+    saveAfterBake: bpy.props.BoolProperty(name="Save after Bake", description="Save blend file after bake is completed", default=True)
+
+    @classmethod
+    def poll(cls, context):
+        if bpy.context.active_object.type == 'GPENCIL':
+            return True
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+
+        scene = bpy.context.scene
+        initial_frame_start = scene.frame_start
+        initial_frame_end = scene.frame_end
+        bake_range = scene.frame_end - scene.frame_start
+
+        print("")
+        iterations = math.ceil(bake_range/self.intervalSize)
+
+        for i in range(0, iterations):
+            if i != 0:
+                scene.frame_start += self.intervalSize
+
+            if i == (iterations - 1):
+                scene.frame_end = initial_frame_end
+            else:
+                scene.frame_end = scene.frame_start + self.intervalSize - 1
+            print(f"Iteration {i}: {scene.frame_start} - {scene.frame_end}")
+            bpy.ops.object.lineart_bake_strokes()
+            time.sleep(self.sleepTime)
+            if self.saveIntervals:
+                bpy.ops.wm.save_mainfile()
+                print("File was saved")
+                time.sleep(self.sleepTime)
+
+        # reset start frame to original start frame from before starting increment loop
+        scene.frame_start = initial_frame_start
+        print("Bake completed")
+        if self.saveAfterBake:
+            bpy.ops.wm.save_mainfile()
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(FTB_OT_DefaultAddLineart_Op)
     bpy.utils.register_class(FTB_OT_Copy_Optimize_Lines_Op)
+    bpy.utils.register_class(FTB_OT_Bake_Interval_Op)
 
 
 def unregister():
+    bpy.utils.unregister_class(FTB_OT_Bake_Interval_Op)
     bpy.utils.unregister_class(FTB_OT_Copy_Optimize_Lines_Op)
     bpy.utils.unregister_class(FTB_OT_DefaultAddLineart_Op)

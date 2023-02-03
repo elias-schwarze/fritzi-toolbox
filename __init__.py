@@ -29,7 +29,6 @@ from .prop_rigid_rig import ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl
 from .alerts import ftb_alerts_op
 from .animation_editing import ftb_animation_editing_op, ftb_animation_editing_pnl
 
-
 bl_info = {
     "name": "fritziToolbox",
     "author": "Elias Schwarze, Robert Lehmann",
@@ -54,7 +53,8 @@ classes = (ftb_prefs,
            ftb_materialhelper_op, ftb_materialhelper_pnl,
            ftb_prop_rigid_rig_op, ftb_prop_rigid_rig_pnl,
            ftb_alerts_op,
-           ftb_animation_editing_op, ftb_animation_editing_pnl)
+           ftb_animation_editing_op, ftb_animation_editing_pnl
+           )
 
 
 def register():

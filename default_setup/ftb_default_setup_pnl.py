@@ -111,15 +111,31 @@ class FTB_MT_RenderPresets_Options(Menu):
         layout.operator("scene.ftb_export_render_settings", emboss=False)
 
 
+class FTB_PT_Interval_Baking_Panel(Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_label = "Material Helper"
+    bl_category = "FTB"
+    bl_context = 'modifier'
+    bl_options = {'HIDE_HEADER'}
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.operator("object.bake_interval")
+
+
 def register():
     bpy.utils.register_class(FTB_PT_Defaults_Panel)
     bpy.utils.register_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.register_class(FTB_MT_RenderPresets_Options)
+    bpy.utils.register_class(FTB_PT_Interval_Baking_Panel)
     bpy.types.OUTLINER_MT_object.append(draw_lineart_copy)
 
 
 def unregister():
     bpy.types.OUTLINER_MT_object.remove(draw_lineart_copy)
+    bpy.utils.unregister_class(FTB_PT_Interval_Baking_Panel)
     bpy.utils.unregister_class(FTB_MT_RenderPresets_Options)
     bpy.utils.unregister_class(FTB_PT_RenderPresets_Panel)
     bpy.utils.unregister_class(FTB_PT_Defaults_Panel)
