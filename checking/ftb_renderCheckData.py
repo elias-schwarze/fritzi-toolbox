@@ -27,7 +27,7 @@ class RenderCheckData:
 
     outFormat: str = 'OPEN_EXR_MULTILAYER'
     outColor: str = 'RGBA'
-    outDepth: str = '32'
+    outDepth: str = '16'
     outCodec: str = 'ZIP'
 
     cmDisplayDevice = 'sRGB'
