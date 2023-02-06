@@ -164,6 +164,8 @@ class FTB_OT_Bake_Interval_Op(Operator):
                 scene.frame_end = scene.frame_start + self.intervalSize - 1
             print(f"Iteration {i}: {scene.frame_start} - {scene.frame_end}")
             bpy.ops.object.lineart_bake_strokes()
+            print("Interval finished")
+            print("Waiting for " + str(self.sleepTime) + " seconds...")
             time.sleep(self.sleepTime)
             if self.saveIntervals:
                 bpy.ops.wm.save_mainfile()
