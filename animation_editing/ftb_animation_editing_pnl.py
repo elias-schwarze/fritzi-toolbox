@@ -1,7 +1,5 @@
 import bpy
 
-from bpy.types import Panel
-
 
 def draw_op(self, context):
     layout = self.layout
@@ -10,18 +8,8 @@ def draw_op(self, context):
     else:
         layout.operator_context = 'INVOKE_DEFAULT'
         layout.operator("nla.ftb_batch_prepare_strips")
-
-
-class FTB_PT_ViewLayerManagement_Panel(Panel):
-    bl_label = "View Layer Management"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'scene'
-    bl_category = "FTB"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        pass
+    layout.operator_context = 'INVOKE_DEFAULT'
+    layout.operator("nla.ftb_clean_bake_strips")
 
 
 def register():
