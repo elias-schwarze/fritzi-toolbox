@@ -28,7 +28,7 @@ class FTB_OT_Preview_Render_Op(Operator):
         pass
 
     def invoke(self, context, event):
-        if(bpy.context.scene.render.image_settings.file_format in ['AVI_JPEG', 'AVI_RAW', 'FFMPEG']):
+        if (bpy.context.scene.render.image_settings.file_format in ['AVI_JPEG', 'AVI_RAW', 'FFMPEG']):
             self.report(
                 {'WARNING'}, "Please select a non-animation output format")
             return {'CANCELLED'}
@@ -311,7 +311,7 @@ class FTB_OT_Preview_Import_Op(Operator, ImportHelper):
         for file in self.files:
             if file.name == "":
                 self.report({'WARNING'}, "No files selected")
-                return{'CANCELLED'}
+                return {'CANCELLED'}
 
         previewCollection = bpy.data.collections.new(name="fs_refs")
         bpy.context.collection.children.link(previewCollection)
@@ -319,28 +319,45 @@ class FTB_OT_Preview_Import_Op(Operator, ImportHelper):
         for file in self.files:
 
             if (re.search('_left', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(radians(90), 0, radians(-90)), refOffset=(-0.5, 0))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(radians(90), 0, radians(-90)),
+                                   refOffset=(-0.5, 0))
 
             elif (re.search('_right', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(radians(90), 0, radians(90)), refOffset=(-0.5, 0))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(radians(90), 0, radians(90)), refOffset=(-0.5, 0))
 
             elif (re.search('_front', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(radians(90), 0, 0), refOffset=(-0.5, 0))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(radians(90), 0, 0),
+                                   refOffset=(-0.5, 0))
 
             elif (re.search('_back', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(radians(90), 0, radians(180)), refOffset=(-0.5, 0))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(radians(90), 0, radians(180)),
+                                   refOffset=(-0.5, 0))
 
             elif (re.search('_top', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(0, 0, 0), refOffset=(-0.5, -0.5))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(0, 0, 0),
+                                   refOffset=(-0.5, -0.5))
 
             elif (re.search('_bottom', file.name, flags=re.I)):
-                self.loadReference(
-                    refCollection=previewCollection, refFile=file, refDirectory=self.directory, refRotation=(radians(180), 0, 0), refOffset=(-0.5, -0.5))
+                self.loadReference(refCollection=previewCollection,
+                                   refFile=file,
+                                   refDirectory=self.directory,
+                                   refRotation=(radians(180), 0, 0),
+                                   refOffset=(-0.5, -0.5))
 
         return {'FINISHED'}
 
@@ -360,17 +377,51 @@ class FTB_OT_Preview_Reload_Op(Operator):
         return {'FINISHED'}
 
 
-def register():
+class FTB_OT_Preview_Reload_Op(Operator):
+    bl_idname = "render.ftb_preview"
+    bl_label = "FTB: Viewport Animation"
+    bl_description = "Uses the active viewport to render a preview animation with specific render settings"
+    bl_options = {"REGISTER", "UNDO"}
 
-    bpy.utils.register_class(FTB_OT_Preview_Render_Op)
-    bpy.utils.register_class(FTB_OT_Set_JPG_Output_Op)
-    bpy.utils.register_class(FTB_OT_Preview_Import_Op)
-    bpy.utils.register_class(FTB_OT_Preview_Reload_Op)
+    def execute(self, context):
+        scene = context.scene
+
+        initial_res_percent = scene.render.resolution_percentage
+        initial_fps = scene.render.fps
+        initial_frame_step = scene.frame_step
+        initial_samples = scene.eevee.taa_samples
+        initial_file_format = scene.render.image_settings.file_format
+
+        scene.render.resolution_percentage = 25
+        scene.render.fps = 25
+        scene.frame_step = 2
+        scene.eevee.taa_samples = 64
+        scene.render.image_settings.file_format = 'AVI_JPEG'
+
+        try:
+            context.space_data.overlay.show_overlays = False
+            bpy.ops.render.opengl(animation=True)
+        except:
+            self.report({'ERROR'}, "Error rendering preview")
+        finally:
+            scene.render.resolution_percentage = initial_res_percent
+            scene.render.fps = initial_fps
+            scene.frame_step = initial_frame_step
+            scene.eevee.taa_samples = initial_samples
+            scene.render.image_settings.file_format = initial_file_format
+            context.space_data.overlay.show_overlays = True
+        self.report({'INFO'}, "Preview rendered!")
+        return {'FINISHED'}
+
+
+classes = (FTB_OT_Preview_Render_Op, FTB_OT_Set_JPG_Output_Op, FTB_OT_Preview_Import_Op, FTB_OT_Preview_Reload_Op)
+
+
+def register():
+    for c in classes:
+        bpy.utils.register_class(c)
 
 
 def unregister():
-
-    bpy.utils.unregister_class(FTB_OT_Preview_Reload_Op)
-    bpy.utils.unregister_class(FTB_OT_Preview_Import_Op)
-    bpy.utils.unregister_class(FTB_OT_Set_JPG_Output_Op)
-    bpy.utils.unregister_class(FTB_OT_Preview_Render_Op)
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)
