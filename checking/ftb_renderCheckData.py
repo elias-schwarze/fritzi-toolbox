@@ -40,6 +40,8 @@ class RenderCheckData:
 
     invalidNlaObjects: list = None
 
+    invalid_data_transfer_objects: list = None
+
     isBurnInActive: bool = False
 
     totalViewLayerCount: int = 0

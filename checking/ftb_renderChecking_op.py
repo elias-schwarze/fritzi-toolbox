@@ -1,9 +1,11 @@
 import bpy
+
+from bpy.types import Object
 from .ftb_renderCheckData import RenderCheckData
 from bpy.app.handlers import persistent
 
 
-def getCurrentSettings(currentSet: RenderCheckData()):
+def getCurrentSettings(currentSet: RenderCheckData):
     """Takes in a RenderCheckData() instance and populates each field with the current values from the current project file"""
     # resolution and framerate
     currentSet.framerate = bpy.context.scene.render.fps
@@ -57,6 +59,7 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     # Get objects that have nla strips and also an active action (this causes the nla strips to not work properly and breaks animation)
     # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
     currentSet.invalidNlaObjects = invalidNlaCheck()
+    currentSet.invalid_data_transfer_objects = get_invalid_data_transfer_objects()
 
     # Get Color Management settings
     currentSet.cmDisplayDevice = bpy.context.scene.display_settings.display_device
@@ -68,7 +71,8 @@ def getCurrentSettings(currentSet: RenderCheckData()):
     return currentSet
 
 
-def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False, renderSingleLayer=False, colorManagement=False, filmTransparent=False):
+def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
+                     renderSingleLayer=False, colorManagement=False, filmTransparent=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -148,16 +152,16 @@ def countActiveViewLayers():
 
 
 def invalidBoolCheck():
-    """Report object names with bool modifiers that do not have Exact Solver and Self Intersection enabled.
+    """Report object with bool modifiers that do not have Exact Solver and Self Intersection enabled.
     Returns:  invalidBoolList which contains all objects with invalid Booleans"""
     invalidBoolList = list()
 
     for obj in bpy.context.scene.objects:
         for mod in obj.modifiers:
-            if mod.type == 'BOOLEAN':
-                if not (mod.solver == 'EXACT' and mod.use_self):
-                    invalidBoolList.append(obj.name)
-
+            if mod.type != 'BOOLEAN':
+                continue
+            if not (mod.solver == 'EXACT' and mod.use_self):
+                invalidBoolList.append(obj)
     return invalidBoolList
 
 
@@ -172,6 +176,18 @@ def invalidNlaCheck():
                     invalidNlaList.append(obj.name)
 
     return invalidNlaList
+
+
+def get_invalid_data_transfer_objects() -> list[Object]:
+    """Returns a list of objects with Data Transfer modifiers that do not have a Source object set."""
+    invalid_objects: list[Object] = []
+    for obj in bpy.context.scene.objects:
+        for modifier in obj.modifiers:
+            if modifier.type != 'DATA_TRANSFER':
+                continue
+            if modifier.object == None:
+                invalid_objects.append(obj)
+    return invalid_objects
 
 
 # preLoad handler to clear old info from old file when loading new project file
@@ -220,41 +236,41 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
     resFps: bpy.props.BoolProperty(
         name='resFps',
         default=False
-        )
+    )
 
     shadows: bpy.props.BoolProperty(
         name='shadows',
         default=False
-        )
+    )
 
     ao: bpy.props.BoolProperty(
         name='ao',
         default=False
-        )
+    )
 
     overscan: bpy.props.BoolProperty(
         name='overscan',
         default=False
-        )
+    )
     outparams: bpy.props.BoolProperty(
         name='outparams',
         default=False
-        )
+    )
 
     burnIn: bpy.props.BoolProperty(
         name='burnIn',
         default=False
-        )
+    )
 
     renderSingleLayer: bpy.props.BoolProperty(
         name='renderSingleLayer',
         default=False
-        )
+    )
 
     colorMangement: bpy.props.BoolProperty(
         name='colorMangement',
         default=False
-        )
+    )
 
     filmTransparent: bpy.props.BoolProperty(
         name="filmTransparent",
@@ -262,20 +278,61 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
     )
 
     def execute(self, context):
-        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan, outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
+        setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
+                         outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}
 
 
+class FTB_OT_SelectBooleanErrors_op(bpy.types.Operator):
+    bl_idname = "utils.select_boolean_errors"
+    bl_label = "Select Objects"
+    bl_description = "Selects all objects with boolean issues"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.ftbCurrentRenderSettings.invalidBoolObjects != None
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in context.scene.ftbCurrentRenderSettings.invalidBoolObjects:
+            obj.select_set(True)
+        return {'FINISHED'}
+
+
+class FTB_OT_SelectDataTransferErrors_op(bpy.types.Operator):
+    bl_idname = "utils.select_data_transfer_errors"
+    bl_label = "Select Objects"
+    bl_description = "Selects all objects with Data Transfer issues"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.ftbCurrentRenderSettings.invalid_data_transfer_objects != None
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in context.scene.ftbCurrentRenderSettings.invalid_data_transfer_objects:
+            obj.select_set(True)
+        return {'FINISHED'}
+
+
+classes = (FTB_OT_RenderCheckRefresh_op, FTB_OT_RenderCheckSetSettings_op, FTB_OT_SelectDataTransferErrors_op,
+           FTB_OT_SelectBooleanErrors_op)
+
+
 def register():
-    bpy.utils.register_class(FTB_OT_RenderCheckRefresh_op)
-    bpy.utils.register_class(FTB_OT_RenderCheckSetSettings_op)
+    for c in classes:
+        bpy.utils.register_class(c)
+
     bpy.app.handlers.load_pre.append(renderCheck_preLoad_handler)
 
 
 def unregister():
     bpy.app.handlers.load_pre.remove(renderCheck_preLoad_handler)
-    bpy.utils.unregister_class(FTB_OT_RenderCheckSetSettings_op)
-    bpy.utils.unregister_class(FTB_OT_RenderCheckRefresh_op)
+
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)

@@ -104,8 +104,9 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 if cs.invalidBoolObjects:
                     box = layout.box()
                     box.label(text=(str(len(cs.invalidBoolObjects)) + " Boolean Issues"), icon='ERROR')
-                    for name in cs.invalidBoolObjects:
-                        box.label(text=name)
+                    for obj in cs.invalidBoolObjects:
+                        box.label(text=obj.name_full)
+                    box.operator("utils.select_boolean_errors")
 
                 # NLA + ACTIVE ACTION
                 if cs.invalidNlaObjects:
@@ -113,6 +114,14 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box.label(text=(str(len(cs.invalidNlaObjects)) + " NLA issues"), icon='ERROR')
                     for name in cs.invalidNlaObjects:
                         box.label(text=name)
+
+                # DATA TRANSFER MODIFIERS
+                if cs.invalid_data_transfer_objects:
+                    box = layout.box()
+                    box.label(text=(f"{len(cs.invalid_data_transfer_objects)} Data Transfer Issues"), icon='ERROR')
+                    for obj in cs.invalid_data_transfer_objects:
+                        box.label(text=obj.name_full)
+                    box.operator("utils.select_data_transfer_errors")
 
                 # BURN IN
                 if cs.isBurnInActive:
@@ -130,7 +139,8 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box = layout.box()
                     box.label(text="\"Render Single Layer active\"", icon='ERROR')
                     # Display operator to change settings if they do not match final settings
-                    box.operator("utils.render_check_set_settings", text="Disable Render Single Layer").renderSingleLayer = True
+                    box.operator("utils.render_check_set_settings",
+                                 text="Disable Render Single Layer").renderSingleLayer = True
 
                 # VIEW LAYER ACTIVE COUNT SMALLER THAN TOTAL COUNT
                 if cs.activeViewLayerCount < cs.totalViewLayerCount:
@@ -154,7 +164,8 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
 
                     # Display operator to change settings if they do not match final settings
                     if not cs.matchColorMangement(matchData=fs):
-                        box.operator("utils.render_check_set_settings", text="Set Final Color Settings").colorMangement = True
+                        box.operator("utils.render_check_set_settings",
+                                     text="Set Final Color Settings").colorMangement = True
 
                 # RENDER SINGLE LAYER ACTIVE
                 if not cs.film_transparent:
