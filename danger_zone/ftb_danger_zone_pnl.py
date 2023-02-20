@@ -146,6 +146,7 @@ class FTB_PT_DangerZone_Panel(Panel):
                      text="Remove All Materials")
         col.operator("data.remove_image_duplicates")
         col.operator("data.remove_material_duplicates")
+        col.operator("data.remove_empty_libraries")
 
         col.separator()
         col.prop(wm, "ftbEdgeSplitScope")

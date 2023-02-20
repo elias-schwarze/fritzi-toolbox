@@ -1,8 +1,9 @@
 import numpy as np
 
 import bpy
-from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode
 
+from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode
+from .. utility_functions import ftb_logging as log
 from ..utility_functions.ftb_string_utils import is_name_duplicate, strip_End_Numbers
 
 
@@ -157,7 +158,7 @@ class FTB_OT_RemoveModifiers_Op(Operator):
         for obj in bpy.context.selected_objects:
             for mod in obj.modifiers:
                 obj.modifiers.remove(mod)
-        return{'FINISHED'}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         return bpy.context.window_manager.invoke_confirm(self, event)
@@ -306,7 +307,7 @@ class FTB_OT_RemoveImageDuplicates_Op(Operator):
         self.report({'INFO'}, str(remap_count) + " image duplicates found and remapped." +
                     " Open the terminal for comprehensive list of remappings")
 
-        return{'FINISHED'}
+        return {'FINISHED'}
 
 
 class FTB_OT_RemoveMaterialDuplicates_Op(Operator):
@@ -340,7 +341,7 @@ class FTB_OT_RemoveMaterialDuplicates_Op(Operator):
         self.report({'INFO'}, str(remap_count) + " material duplicates found and remapped." +
                     " Open the terminal for comprehensive list of remappings")
 
-        return{'FINISHED'}
+        return {'FINISHED'}
 
 
 class FTB_OT_Remove_Edge_Splits_Op(Operator):
@@ -398,12 +399,32 @@ class FTB_OT_Remove_Edge_Splits_Op(Operator):
                     self.removeEdgeSplit(obj)
                 self.report(
                     {'INFO'}, "Edge splits removed for all objects in selection.")
-        return{'FINISHED'}
+        return {'FINISHED'}
+
+
+class FTB_OT_Remove_Empty_Libraries_Op(Operator):
+    bl_idname = "data.remove_empty_libraries"
+    bl_label = "Remove Empty Libraries"
+    bl_description = "Removes all linked libraries without any referenced user IDs"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        counter = 0
+        for lib in bpy.data.libraries:
+            if len(lib.users_id) != 0:
+                continue
+            log.console(self, log.Severity.INFO, f"Removing library '{lib.name_full}'")
+            bpy.data.libraries.remove(lib)
+            counter += 1
+
+        log.report(self, log.Severity.INFO, f"Removed {counter} empty {('library', 'libraries')[counter != 1]}.")
+        return {'FINISHED'}
 
 
 classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
-    FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op
+    FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op,
+    FTB_OT_Remove_Empty_Libraries_Op
 )
 
 
