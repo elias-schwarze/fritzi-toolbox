@@ -39,6 +39,14 @@ def get_nla_track_from_strip(nla_strip: NlaStrip) -> NlaTrack:
     return None
 
 
+def get_strips_of_active_object() -> list[NlaStrip]:
+    nla_strips: list[NlaStrip] = []
+    for track in bpy.context.active_object.animation_data.nla_tracks:
+        for strip in track.strips:
+            nla_strips.append(strip)
+    return nla_strips
+
+
 def copy_strip_properties(from_strip: NlaStrip, to_strip: NlaStrip):
     to_strip.frame_end_ui = from_strip.frame_end_ui
     to_strip.frame_start_ui = from_strip.frame_start_ui
@@ -73,8 +81,8 @@ def apply_strip_scale(strip: NlaStrip):
 
 class FTB_OT_PrepareNLAStrip_OP(Operator):
     bl_idname = "nla.ftb_prepare_strip"
-    bl_label = "Prepare Active Strip"
-    bl_description = ("Prepares the active strip for Fritzi animations. Disables 'Sync Length', performs 'Smooth Keys'"
+    bl_label = "FTB: Clean Active Strip"
+    bl_description = ("Cleans the active strip for Fritzi animations. Disables 'Sync Length', performs 'Smooth Keys'"
                       " and 'Clean Keyframes' automatically on the active strip")
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -149,8 +157,8 @@ class FTB_OT_PrepareNLAStrip_OP(Operator):
 
 class FTB_OT_BatchPrepareNLAStrip_OP(Operator):
     bl_idname = "nla.ftb_batch_prepare_strips"
-    bl_label = "Prepare Selected Strips"
-    bl_description = ("Prepares selected strips for Fritzi animations. Disables 'Sync Length', performs 'Smooth Keys'"
+    bl_label = "FTB: Clean Selected Strips"
+    bl_description = ("Cleans selected strips for Fritzi animations. Disables 'Sync Length', performs 'Smooth Keys'"
                       " and 'Clean Keyframes' automatically on selected strips")
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -286,9 +294,9 @@ class FTB_OT_BatchPrepareNLAStrip_OP(Operator):
 
 class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
     bl_idname = "nla.ftb_clean_bake_strips"
-    bl_label = "Clean and bake active character"
-    bl_description = ("Cleans all strips by disabling 'Sync Length', performs 'Smooth Keys'"
-                      " and 'Clean Keyframes' and bakes all strips into one action.")
+    bl_label = "FTB: Clean and bake selected strips"
+    bl_description = ("Cleans all selected strips by disabling 'Sync Length', performs 'Smooth Keys',"
+                      " 'Clean Keyframes' and bakes all selected strips into one action.")
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -299,6 +307,14 @@ class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
 
         if context.active_object.animation_data.action:
             cls.poll_message_set("Push down active action on top of NLA-stack")
+            return False
+
+        selected_strips_belong_to_active_object = True
+
+        for strip in context.selected_nla_strips:
+            selected_strips_belong_to_active_object &= (context.active_object == strip.id_data)
+        if not selected_strips_belong_to_active_object:
+            cls.poll_message_set("All selected strips must belong to the active object")
             return False
 
         is_valid_context = ctx.is_valid()
@@ -328,13 +344,7 @@ class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
         layout.alert = False
 
     def execute(self, context):
-
-        nla_strips: list[NlaStrip] = []
-        for track in context.active_object.animation_data.nla_tracks:
-            for strip in track.strips:
-                nla_strips.append(strip)
-
-        number_of_strips = len(nla_strips)
+        number_of_strips = len(context.selected_nla_strips)
 
         with context.temp_override(area=ctx.viewport):
             try:
@@ -346,7 +356,7 @@ class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
         temp_track = context.active_object.animation_data.nla_tracks.new(prev=None)
         temp_track.name = "temp_track"
 
-        for strip in nla_strips:
+        for strip in context.selected_nla_strips:
             if CLEANED_STRIP_SUFFIX in strip.name:
                 log.console(self, log.Severity.INFO,
                             f"NLA-Strip '{strip.name}' has already been cleaned")
