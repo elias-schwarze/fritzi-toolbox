@@ -131,14 +131,31 @@ class FTB_OT_Bake_Interval_Op(Operator):
     bl_description = "Bakes lineart of active object but in intervals to reduce crashes in large scenes"
     bl_options = {"REGISTER", "UNDO"}
 
-    intervalSize: bpy.props.IntProperty(name="Interval Size", description="Number of frames baked in a single interval", default=30, min=1)
-    sleepTime: bpy.props.FloatProperty(name="Pause Time", description="Pause between intervals in seconds. Needed to prevent crashes from starting next interval too early", default=3.0, min=0.0001)
-    saveIntervals: bpy.props.BoolProperty(name="Save after Interval", description="Save blend file after each interval is completed", default=True)
-    saveAfterBake: bpy.props.BoolProperty(name="Save after Bake", description="Save blend file after bake is completed", default=True)
+    intervalSize: bpy.props.IntProperty(
+        name="Interval Size",
+        description="Number of frames baked in a single interval",
+        default=30, min=1)
+    sleepTime: bpy.props.FloatProperty(
+        name="Pause Time",
+        description="Pause between intervals in seconds. Needed to prevent crashes from starting next interval too early",
+        default=3.0, min=0.0001)
+    saveIntervals: bpy.props.BoolProperty(
+        name="Save after Interval",
+        description="Save blend file after each interval is completed",
+        default=True)
+    saveAfterBake: bpy.props.BoolProperty(
+        name="Save after Bake",
+        description="Save blend file after bake is completed",
+        default=True)
 
     @classmethod
     def poll(cls, context):
-        if bpy.context.active_object.type == 'GPENCIL':
+        if not bpy.data.is_saved:
+            cls.poll_message_set("File needs to be saved")
+            return False
+        if not context.active_object:
+            return False
+        if context.active_object.type == 'GPENCIL':
             return True
 
     def invoke(self, context, event):
@@ -147,6 +164,9 @@ class FTB_OT_Bake_Interval_Op(Operator):
     def execute(self, context):
 
         scene = bpy.context.scene
+        if scene.render.use_simplify:
+            scene.render.use_simplify = False
+
         initial_frame_start = scene.frame_start
         initial_frame_end = scene.frame_end
         bake_range = scene.frame_end - scene.frame_start
@@ -169,7 +189,6 @@ class FTB_OT_Bake_Interval_Op(Operator):
             time.sleep(self.sleepTime)
             if self.saveIntervals:
                 bpy.ops.wm.save_mainfile()
-                print("File was saved")
                 time.sleep(self.sleepTime)
 
         # reset start frame to original start frame from before starting increment loop
@@ -177,6 +196,7 @@ class FTB_OT_Bake_Interval_Op(Operator):
         print("Bake completed")
         if self.saveAfterBake:
             bpy.ops.wm.save_mainfile()
+        scene.render.use_simplify = True
         return {'FINISHED'}
 
 
