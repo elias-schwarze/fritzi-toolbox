@@ -377,7 +377,7 @@ class FTB_OT_Preview_Reload_Op(Operator):
         return {'FINISHED'}
 
 
-class FTB_OT_Preview_Reload_Op(Operator):
+class FTB_OT_Render_Shot_Preview_Op(Operator):
     bl_idname = "render.ftb_preview"
     bl_label = "FTB: Viewport Animation"
     bl_description = "Uses the active viewport to render a preview animation with specific render settings"
@@ -414,7 +414,8 @@ class FTB_OT_Preview_Reload_Op(Operator):
         return {'FINISHED'}
 
 
-classes = (FTB_OT_Preview_Render_Op, FTB_OT_Set_JPG_Output_Op, FTB_OT_Preview_Import_Op, FTB_OT_Preview_Reload_Op)
+classes = (FTB_OT_Preview_Render_Op, FTB_OT_Set_JPG_Output_Op, FTB_OT_Preview_Import_Op, FTB_OT_Preview_Reload_Op,
+           FTB_OT_Render_Shot_Preview_Op)
 
 
 def register():
