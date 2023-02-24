@@ -97,7 +97,7 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
             bpy.context.scene.eevee.gtao_quality = 1
             bpy.context.scene.eevee.use_gtao_bent_normals = True
             bpy.context.scene.eevee.use_gtao_bounce = True
-
+            bpy.context.scene.eevee.gi_cubemap_resolution = '64'
             # Overscan to avoid AO fading at screen edge
 
             bpy.context.scene.eevee.use_overscan = True
