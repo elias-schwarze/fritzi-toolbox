@@ -421,10 +421,53 @@ class FTB_OT_Remove_Empty_Libraries_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_UpgradeCharacterAOVs_Op(Operator):
+    bl_idname = "data.upgrade_character_aovs"
+    bl_label = "Upgrade Character AOVs"
+    bl_description = "Adds AOV Outputs to character material"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+
+        nodeOffsetIncrement = 100.0
+        nodeTree = bpy.context.active_object.active_material.node_tree
+
+        # explicitly copy location to avoid ending up with a reference
+        # we don't want to modify the location of the original active node
+
+        originalNode = nodeTree.nodes.active
+        for i in range(6):
+            nodeOffset = list(originalNode.location)
+
+            nodeOffset[0] = nodeOffset[0] + 600.0
+            nodeOffset[1] = nodeOffset[1] - 200.0 - (nodeOffsetIncrement*i)
+
+            aovNode = nodeTree.nodes.new(type='ShaderNodeOutputAOV')
+            aovNode.location = nodeOffset
+            aovNode.name = originalNode.outputs[i+1].name
+
+            nodeTree.links.new(input=originalNode.outputs[i+1], output=aovNode.inputs[1])
+
+        nodeOffset = list(originalNode.location)
+
+        geoInputNode = nodeTree.nodes.new(type='ShaderNodeNewGeometry')
+        geoInputNode.location[0] = nodeOffset[0] + 600.0
+        geoInputNode.location[1] = nodeOffset[1] - 850.0
+
+        aovNormal = nodeTree.nodes.new(type='ShaderNodeOutputAOV')
+        aovNormal.location[0] = nodeOffset[0] + 1000.0
+        aovNormal.location[1] = nodeOffset[1] - 850.0
+
+        aovNormal.name = "charNormal"
+
+        nodeTree.links.new(input=geoInputNode.outputs[1], output=aovNormal.inputs[0])
+        return{'FINISHED'}
+
+
 classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
     FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op,
-    FTB_OT_Remove_Empty_Libraries_Op
+    FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op
 )
 
 
