@@ -68,11 +68,22 @@ def getCurrentSettings(currentSet: RenderCheckData):
     currentSet.cmExposure = bpy.context.scene.view_settings.exposure
     currentSet.cmGamma = bpy.context.scene.view_settings.gamma
 
+    # Get AOVs
+    aovKeyList = list()
+    for aov in bpy.context.view_layer.aovs:
+        aovKeyList.append(aov.name)
+
+    aovValueList = list()
+    for aov in bpy.context.view_layer.aovs:
+        aovValueList.append(aov.type)
+
+    # create dictionary from AOV data so they can be compared to default AOVs more easily
+    currentSet.aovs = dict(zip(aovKeyList, aovValueList))
     return currentSet
 
 
 def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
-                     renderSingleLayer=False, colorManagement=False, filmTransparent=False):
+                     renderSingleLayer=False, colorManagement=False, filmTransparent=False, aovs=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -141,6 +152,20 @@ def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outp
     if filmTransparent:
         bpy.context.scene.render.film_transparent = defaultSet.film_transparent
 
+    # aovs
+    if aovs:
+        cs = getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
+
+        for key in defaultSet.aovs:
+            if key in cs.aovs:
+                if cs.aovs[key] is not defaultSet.aovs[key]:
+                    bpy.context.view_layer.aovs[key].type = defaultSet.aovs[key]
+
+            else:
+                newLayer = bpy.context.view_layer.aovs.add()
+                newLayer.name = key
+                newLayer.type = defaultSet.aovs[key]
+
 
 def countActiveViewLayers():
     count = 0
@@ -185,7 +210,7 @@ def get_invalid_data_transfer_objects() -> list[Object]:
         for modifier in obj.modifiers:
             if modifier.type != 'DATA_TRANSFER':
                 continue
-            if modifier.object == None:
+            if modifier.object is None:
                 invalid_objects.append(obj)
     return invalid_objects
 
@@ -277,10 +302,16 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    aovs: bpy.props.BoolProperty(
+        name="aovs",
+        default=False
+    )
+
     def execute(self, context):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
-                         colorManagement=self.colorMangement, filmTransparent=self.filmTransparent)
+                         colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
+                         aovs=self.aovs)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}
@@ -294,7 +325,7 @@ class FTB_OT_SelectBooleanErrors_op(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.ftbCurrentRenderSettings.invalidBoolObjects != None
+        return context.scene.ftbCurrentRenderSettings.invalidBoolObjects is not None
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
@@ -311,7 +342,7 @@ class FTB_OT_SelectDataTransferErrors_op(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.ftbCurrentRenderSettings.invalid_data_transfer_objects != None
+        return context.scene.ftbCurrentRenderSettings.invalid_data_transfer_objects is not None
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')

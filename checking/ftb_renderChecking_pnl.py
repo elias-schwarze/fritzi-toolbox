@@ -174,6 +174,12 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     # Display operator to change settings if they do not match final settings
                     box.operator("utils.render_check_set_settings", text="Enable Transparency").filmTransparent = True
 
+                # AOVS
+                if not cs.matchAovs(matchData=fs):
+                    box = layout.box()
+                    box.label(text="Some AOVs missing", icon='ERROR')
+                    box.operator("utils.render_check_set_settings", text="Add Missing AOVs").aovs = True
+
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()

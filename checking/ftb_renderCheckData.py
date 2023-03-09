@@ -50,6 +50,45 @@ class RenderCheckData:
     render_single_layer: bool = False
     film_transparent: bool = True
 
+    aovs = {
+        "VectorLightMask": "VALUE",
+        "DiffuseLightMask": "VALUE",
+        "VectorRimLightMask": "VALUE",
+        "VectorHighLightMask": "VALUE",
+        "DiffuseRimLightMask": "VALUE",
+        "DiffuseHighLightMask": "VALUE",
+        "charNormal": "COLOR",
+        "matte_glasses": "VALUE"
+    }
+
+    def matchAovs(self, matchData) -> bool:
+        """Returns True if all AOVs of this dataclass are contained in the target scene and have the same value"""
+        matchAov: bool = True
+
+        if not matchData:
+            matchAov = False
+            return matchAov
+
+        if not self.aovs:
+            matchAov = False
+            return matchAov
+
+        if len(self.aovs) == 0:
+            matchAov = False
+            return matchAov
+
+        for key in matchData.aovs:
+            if key not in self.aovs:
+                matchAov = False
+                return matchAov
+
+            else:
+                if self.aovs[key] != matchData.aovs[key]:
+                    matchAov = False
+                    return matchAov
+
+        return matchAov
+
     def getResText(self):
         """Build a string that can be displayed in a Ui label, contains information about resolution and framerate
         Returns: string"""
