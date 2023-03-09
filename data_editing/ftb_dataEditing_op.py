@@ -659,7 +659,7 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
                         equalizeSubdiv(obj=object, useVisibility=True)
                     else:
                         equalizeSubdiv(obj=object)
-                        
+
                 else:
                     if self.useVisibility:
                         equalizeSubdiv(obj=object, useViewportLevel=True, useVisibility=True)
