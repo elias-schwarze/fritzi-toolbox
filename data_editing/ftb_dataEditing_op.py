@@ -619,15 +619,22 @@ class FTB_OT_GetAbsoluteDataPath_Op(Operator):
         return bpy.context.window_manager.invoke_popup(self, width=500)
 
 
-def equalizeSubdiv(obj, useViewportLevel=False):
+def equalizeSubdiv(obj, useViewportLevel=False, useVisibility=False):
     # ignore linked objects with no override
     if (obj.library is None):
         for mod in obj.modifiers:
             if mod.type == 'SUBSURF':
                 if useViewportLevel:
-                    mod.render_levels = mod.levels
+                    if useVisibility:
+                        mod.show_render = mod.show_viewport
+                    else:
+                        mod.render_levels = mod.levels
                 else:
-                    mod.levels = mod.render_levels
+                    if useVisibility:
+                        mod.show_viewport = mod.show_render
+
+                    else:
+                        mod.levels = mod.render_levels
 
 
 class FTB_OT_EqualizeSubdivision_Op(Operator):
@@ -636,31 +643,55 @@ class FTB_OT_EqualizeSubdivision_Op(Operator):
     bl_description = "Equalizes between viewport and render subdiv levels"
     bl_options = {'REGISTER', 'UNDO'}
 
+    useVisibility: bpy.props.BoolProperty(
+        name='useVisbility',
+        default=False
+    )
+
     def execute(self, context):
         wm = bpy.context.window_manager
 
         # Case limit = All
         if (wm.ftbSubdivEqualScope == 'ALL'):
-            for obj in bpy.data.objects:
+            for object in bpy.data.objects:
                 if (wm.ftbSubdivEqualTarget == 'RENDER'):
-                    equalizeSubdiv(obj, False)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object)
+                        
                 else:
-                    equalizeSubdiv(obj, True)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useViewportLevel=True, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object, useViewportLevel=True)
 
         # Case limit = View Layer
         if (wm.ftbSubdivEqualScope == 'VIEW_LAYER'):
-            for obj in bpy.context.view_layer.objects:
+            for object in bpy.context.view_layer.objects:
                 if (wm.ftbSubdivEqualTarget == 'RENDER'):
-                    equalizeSubdiv(obj, False)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object)
                 else:
-                    equalizeSubdiv(obj, True)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useViewportLevel=True, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object, useViewportLevel=True)
 
         if (wm.ftbSubdivEqualScope == 'SELECTION'):
-            for obj in bpy.context.selected_objects:
+            for object in bpy.context.selected_objects:
                 if (wm.ftbSubdivEqualTarget == 'RENDER'):
-                    equalizeSubdiv(obj, False)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useViewportLevel=False, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object, useViewportLevel=False)
                 else:
-                    equalizeSubdiv(obj, True)
+                    if self.useVisibility:
+                        equalizeSubdiv(obj=object, useViewportLevel=True, useVisibility=True)
+                    else:
+                        equalizeSubdiv(obj=object, useViewportLevel=True)
 
         return {'FINISHED'}
 

@@ -203,7 +203,8 @@ class FTB_PT_DataEditing_Panel(Panel):
         col = layout.column()
         col.prop(bpy.context.window_manager, "ftbSubdivEqualScope")
 
-        col.operator("object.equalize_subdiv")
+        col.operator("object.equalize_subdiv", text="Equalize Subdiv Levels").useVisibility = False
+        col.operator("object.equalize_subdiv", text="Equalize Subdiv Visibility").useVisibility = True
 
         col = layout.column()
         col.separator()
