@@ -13,6 +13,9 @@ def getCurrentSettings(currentSet: RenderCheckData):
     currentSet.resY = bpy.context.scene.render.resolution_y
     currentSet.resPercent = bpy.context.scene.render.resolution_percentage
 
+    # samples
+    currentSet.renderSamples = bpy.context.scene.eevee.taa_render_samples
+
     # shadows
     currentSet.casShadow = bpy.context.scene.eevee.shadow_cascade_size
     currentSet.cubeShadow = bpy.context.scene.eevee.shadow_cube_size
@@ -82,7 +85,7 @@ def getCurrentSettings(currentSet: RenderCheckData):
     return currentSet
 
 
-def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
+def setFinalSettings(resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
                      renderSingleLayer=False, colorManagement=False, filmTransparent=False, aovs=False):
     """
     Set render settings to final settings.
@@ -96,6 +99,10 @@ def setFinalSettings(resFps=False, shadows=False, ao=False, overscan=False, outp
 
     # Generate new RenderCheckData instance with default settings
     defaultSet = RenderCheckData()
+
+    # samples
+    if samples:
+        bpy.context.scene.eevee.taa_render_samples = defaultSet.renderSamples
 
     # resolution, framerate
     if resFps:
@@ -263,6 +270,11 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    samples: bpy.props.BoolProperty(
+        name="samples",
+        default=False
+    )
+
     shadows: bpy.props.BoolProperty(
         name='shadows',
         default=False
@@ -311,7 +323,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
-                         aovs=self.aovs)
+                         aovs=self.aovs, samples=self.samples)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}

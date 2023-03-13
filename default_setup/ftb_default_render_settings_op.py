@@ -6,6 +6,7 @@ import string
 from bpy.app.handlers import persistent
 from bpy_extras.io_utils import ImportHelper
 from bpy.types import Operator
+from ..checking.ftb_renderCheckData import RenderCheckData
 from ..utility_functions import ftb_logging as Log
 from ..utility_functions.ftb_rendersettings import RenderSettings, RENDERSETTINGS_VERSION
 
@@ -71,32 +72,47 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
     bl_description = "Set render settings to project defaults"
     bl_options = {"REGISTER", "UNDO"}
 
-    @classmethod
-    def poll(cls, context):
-        wm = bpy.context.window_manager
-        if any([wm.bsetShadows, wm.bsetResolution, wm.bsetFramerate, wm.bsetEngine]):
-            return True
-        else:
-            return False
+    Shadows: bpy.props.BoolProperty(
+        name='Shadows',
+        default=False
+    )
+
+    Resolution: bpy.props.BoolProperty(
+        name='Resolution',
+        default=False
+    )
+
+    Framerate: bpy.props.BoolProperty(
+        name='Framerate',
+        default=False
+    )
+
+    Samples: bpy.props.BoolProperty(
+        name='Samples',
+        default=False
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        wm = bpy.context.window_manager
         messageString = "Setup successful for:"
+        defaults = RenderCheckData()
 
-        if wm.bsetShadows:
-            bpy.context.scene.eevee.shadow_cascade_size = '4096'
-            bpy.context.scene.eevee.shadow_cube_size = '4096'
-            bpy.context.scene.eevee.use_shadow_high_bitdepth = True
-            bpy.context.scene.eevee.use_soft_shadows = True
+        if self.Shadows:
+            bpy.context.scene.eevee.shadow_cascade_size = defaults.casShadow
+            bpy.context.scene.eevee.shadow_cube_size = defaults.cubeShadow
+            bpy.context.scene.eevee.use_shadow_high_bitdepth = defaults.highBitShadow
+            bpy.context.scene.eevee.use_soft_shadows = defaults.softShadow
 
             # Ambient Occlusion Settings
 
-            bpy.context.scene.eevee.use_gtao = True
-            bpy.context.scene.eevee.gtao_distance = 0.5
-            bpy.context.scene.eevee.gtao_factor = 1
-            bpy.context.scene.eevee.gtao_quality = 1
-            bpy.context.scene.eevee.use_gtao_bent_normals = True
-            bpy.context.scene.eevee.use_gtao_bounce = True
+            bpy.context.scene.eevee.use_gtao = defaults.useAo
+            bpy.context.scene.eevee.gtao_distance = defaults.aoDist
+            bpy.context.scene.eevee.gtao_factor = defaults.aoFactor
+            bpy.context.scene.eevee.gtao_quality = defaults.aoQuality
+            bpy.context.scene.eevee.use_gtao_bent_normals = defaults.aoBentNormals
+            bpy.context.scene.eevee.use_gtao_bounce = defaults.aoBounce
             bpy.context.scene.eevee.gi_cubemap_resolution = '64'
             # Overscan to avoid AO fading at screen edge
 
@@ -107,32 +123,32 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
 
         # set resolution to UHD at 100% scale
 
-        if wm.bsetResolution:
-            bpy.context.scene.render.resolution_x = 3840
-            bpy.context.scene.render.resolution_y = 2160
-            bpy.context.scene.render.resolution_percentage = 100
+        if self.Resolution:
+            bpy.context.scene.render.resolution_x = defaults.resX
+            bpy.context.scene.render.resolution_y = defaults.resY
+            bpy.context.scene.render.resolution_percentage = defaults.resPercent
 
             messageString += " Resolution,"
 
-        if wm.bsetFramerate:
-            bpy.context.scene.render.fps = 50
+        if self.Framerate:
+            bpy.context.scene.render.fps = defaults.framerate
 
             messageString += " Framerate,"
 
-        if wm.bsetEngine:
-            bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+        if self.Samples:
+            bpy.context.scene.eevee.taa_samples = defaults.renderSamples
+            bpy.context.scene.eevee.taa_render_samples = defaults.renderSamples
 
-            messageString += " Render Engine,"
-
-        if wm.bsetSamples:
-            bpy.context.scene.eevee.taa_samples = 256
-            bpy.context.scene.eevee.taa_render_samples = 256
+            messageString += " Samples,"
 
         # print string to blender output and remove last character, which is always a comma
 
         self.report({'INFO'}, messageString[:-1])
 
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
 
 class FTB_OT_ExportRenderSettings(Operator, ImportHelper):

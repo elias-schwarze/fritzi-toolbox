@@ -21,6 +21,8 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
 
         layout = self.layout
         col = layout.column()
+        col.operator("scene.default_render_settings")
+        col.separator()
         col.operator("utils.render_check_refresh", icon='FILE_REFRESH')
         col.prop(context.window_manager, "ftbRenderOnlyShowErrors")
 
@@ -44,7 +46,22 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
 
                     # Display operator to change settings if they do not match final settings
                     if not cs.matchResFps(matchData=fs):
-                        box.operator("utils.render_check_set_settings", text="Set Final Resolution"). resFps = True
+                        box.operator("utils.render_check_set_settings", text="Set Final Resolution").resFps = True
+
+                # SAMPLES
+                if (onlyErrors and not cs.matchSamples(matchData=fs)) or not onlyErrors:
+
+                    sampleText = cs.getSamplesText()
+                    box = layout.box()
+
+                    if not cs.matchSamples(matchData=fs):
+                        box.label(text=sampleText, icon='ERROR')
+                    else:
+                        box.label(text=sampleText)
+
+                    # Display operator to change settings if they do not match final settings
+                    if not cs.matchSamples(matchData=fs):
+                        box.operator("utils.render_check_set_settings", text="Set Render Samples").samples = True
 
                 # SHADOWS
                 if (onlyErrors and not cs.matchShadows(matchData=fs)) or not onlyErrors:

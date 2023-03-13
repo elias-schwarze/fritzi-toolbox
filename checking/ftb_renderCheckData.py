@@ -10,6 +10,8 @@ class RenderCheckData:
     resY: int = 2160
     resPercent: int = 100
 
+    renderSamples: int = 200
+
     casShadow: str = '4096'
     cubeShadow: str = '4096'
     highBitShadow: bool = True
@@ -95,6 +97,11 @@ class RenderCheckData:
 
         return (str(self.resX) + " x " + str(self.resY) + " x " + str(self.resPercent) + "% @ " + str(self.framerate) + "fps")
 
+    def getSamplesText(self):
+        """Build display string for sample count"""
+
+        return "Samples: " + str(self.renderSamples)
+
     def matchResFps(self, matchData):
         """Returns True if resolution and framerate of this instance matches with provided matchData"""
 
@@ -129,6 +136,10 @@ class RenderCheckData:
             return True
         else:
             return False
+
+    def matchSamples(self, matchData):
+        """Returns true if number of render samples match with provided matchData instance"""
+        return matchData.renderSamples == self.renderSamples
 
     def getAoText(self):
         """Build tuple of strings that can be displayed in a Ui label, contains information about ambient occlusion
