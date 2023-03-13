@@ -217,7 +217,7 @@ def get_invalid_data_transfer_objects() -> list[Object]:
         for modifier in obj.modifiers:
             if modifier.type != 'DATA_TRANSFER':
                 continue
-            if modifier.object is None:
+            if (modifier.object is None) or (modifier.show_render is False):
                 invalid_objects.append(obj)
     return invalid_objects
 
