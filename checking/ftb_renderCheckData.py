@@ -52,6 +52,8 @@ class RenderCheckData:
     render_single_layer: bool = False
     film_transparent: bool = True
 
+    uncOutput: bool = True
+
     aovs = {
         "VectorLightMask": "VALUE",
         "DiffuseLightMask": "VALUE",

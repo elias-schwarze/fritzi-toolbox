@@ -82,6 +82,15 @@ def getCurrentSettings(currentSet: RenderCheckData):
 
     # create dictionary from AOV data so they can be compared to default AOVs more easily
     currentSet.aovs = dict(zip(aovKeyList, aovValueList))
+
+    # get if output path is UNC or not
+    if len(bpy.context.scene.render.filepath) < 2:
+        currentSet.uncOutput = False
+    elif (bpy.context.scene.render.filepath[0] == "\\") and (bpy.context.scene.render.filepath[1] == "\\"):
+        currentSet.uncOutput = True
+    else:
+        currentSet.uncOutput = False
+
     return currentSet
 
 

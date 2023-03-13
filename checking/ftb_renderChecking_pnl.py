@@ -197,6 +197,11 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box.label(text="Some AOVs missing", icon='ERROR')
                     box.operator("utils.render_check_set_settings", text="Add Missing AOVs").aovs = True
 
+                # output not on network path
+                if not cs.uncOutput:
+                    box = layout.box()
+                    box.label(text="Output path is not UNC", icon='ERROR')
+
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()
