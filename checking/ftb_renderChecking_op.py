@@ -91,6 +91,16 @@ def getCurrentSettings(currentSet: RenderCheckData):
     else:
         currentSet.uncOutput = False
 
+    # get if current project file path is UNC or not
+    projPath = bpy.data.filepath
+
+    if len(projPath) < 2:
+        currentSet.uncProject = False
+    elif (projPath[0] == "\\") and (projPath[1] == "\\"):
+        currentSet.uncProject = True
+    else:
+        currentSet.uncProject = False
+
     return currentSet
 
 

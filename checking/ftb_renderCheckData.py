@@ -53,6 +53,7 @@ class RenderCheckData:
     film_transparent: bool = True
 
     uncOutput: bool = True
+    uncProject: bool = True
 
     aovs = {
         "VectorLightMask": "VALUE",
