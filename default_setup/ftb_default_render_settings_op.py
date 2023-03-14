@@ -74,22 +74,22 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
 
     Shadows: bpy.props.BoolProperty(
         name='Shadows',
-        default=False
+        default=True
     )
 
     Resolution: bpy.props.BoolProperty(
         name='Resolution',
-        default=False
+        default=True
     )
 
     Framerate: bpy.props.BoolProperty(
         name='Framerate',
-        default=False
+        default=True
     )
 
     Samples: bpy.props.BoolProperty(
         name='Samples',
-        default=False
+        default=True
     )
 
     def invoke(self, context, event):
@@ -148,7 +148,7 @@ class FTB_OT_DefaultRenderSettings_Op(Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        return bpy.context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
 
 class FTB_OT_ExportRenderSettings(Operator, ImportHelper):
