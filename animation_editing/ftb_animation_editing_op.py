@@ -51,10 +51,13 @@ def copy_strip_properties(from_strip: NlaStrip, to_strip: NlaStrip):
     to_strip.frame_end_ui = from_strip.frame_end_ui
     to_strip.frame_start_ui = from_strip.frame_start_ui
     to_strip.extrapolation = from_strip.extrapolation
+
+    # setting use_auto_blend will always modify blend_in and blend_out by nulling values, so we set this beforehand!
+    to_strip.use_auto_blend = from_strip.use_auto_blend
     to_strip.blend_type = from_strip.blend_type
     to_strip.blend_in = from_strip.blend_in
     to_strip.blend_out = from_strip.blend_out
-    to_strip.use_auto_blend = from_strip.use_auto_blend
+
     to_strip.use_reverse = from_strip.use_reverse
     to_strip.use_animated_time_cyclic = from_strip.use_animated_time_cyclic
     to_strip.use_animated_influence = from_strip.use_animated_influence
@@ -70,13 +73,21 @@ def copy_strip_properties(from_strip: NlaStrip, to_strip: NlaStrip):
 
 
 def apply_strip_scale(strip: NlaStrip):
-    if strip.scale == 1.0:
-        return
+    # if strip.scale == 1.0:
+    #     return
     _frame_end = strip.frame_end_ui
     _frame_start = strip.frame_start_ui
     strip.scale = 1
-    strip.action_frame_end = _frame_end
-    strip.action_frame_start = _frame_start
+    if _frame_end <= strip.action_frame_start:
+        strip.frame_start_ui = _frame_start
+        strip.action_frame_start = _frame_start
+        strip.frame_end_ui = _frame_end
+        strip.action_frame_end = _frame_end
+    else:
+        strip.frame_end_ui = _frame_end
+        strip.action_frame_end = _frame_end
+        strip.frame_start_ui = _frame_start
+        strip.action_frame_start = _frame_start
 
 
 class FTB_OT_PrepareNLAStrip_OP(Operator):
@@ -118,8 +129,12 @@ class FTB_OT_PrepareNLAStrip_OP(Operator):
         return True
 
     def execute(self, context):
-        strip = context.active_nla_strip
-        strip.use_sync_length = False
+        active_strip = context.active_nla_strip
+        track = context.active_nla_track
+
+        # disabling sync length for all strips beforehand so neighbouring strips do not accommodate for new available space
+        for strip in track.strips:
+            strip.use_sync_length = False
 
         with context.temp_override(area=ctx.viewport):
             try:
@@ -149,9 +164,9 @@ class FTB_OT_PrepareNLAStrip_OP(Operator):
 
             bpy.ops.nla.tweakmode_exit()
 
-        log.report(self, log.Severity.INFO, f"NLA-Strip: '{strip.name}' successfully cleaned")
-        if not strip.name.endswith(CLEANED_STRIP_SUFFIX):
-            strip.name += CLEANED_STRIP_SUFFIX
+        log.report(self, log.Severity.INFO, f"NLA-Strip: '{active_strip.name}' successfully cleaned")
+        if not active_strip.name.endswith(CLEANED_STRIP_SUFFIX):
+            active_strip.name += CLEANED_STRIP_SUFFIX
         return {'FINISHED'}
 
 
@@ -207,7 +222,6 @@ class FTB_OT_BatchPrepareNLAStrip_OP(Operator):
 
     def execute(self, context):
         # hack to batch process strips since you can't set an active strip via python (strip.active is read-only):
-
         #
         # creates a new temporary NLA-Track
         # copy strip to new temp nla-track to make it active
@@ -216,6 +230,32 @@ class FTB_OT_BatchPrepareNLAStrip_OP(Operator):
         # repeat...
 
         number_of_strips = len(context.selected_nla_strips)
+
+        # checking for multiple strips on one track to throw an error, since we can't reliably process this
+        nla_tracks = context.active_object.animation_data.nla_tracks
+        track_list: list[NlaTrack] = []
+        for track in nla_tracks:
+            if len(track.strips) < 2:
+                continue
+
+            # ignore already cleaned strips and those which are not selected
+            strip_are_irrelevant = True
+            for strip in track.strips:
+                strip_are_irrelevant &= CLEANED_STRIP_SUFFIX in strip.name or strip not in context.selected_nla_strips
+
+            if strip_are_irrelevant:
+                continue
+
+            track_list.append(track)
+
+        if track_list:
+            _track_list_str = "".join(track.name + ", " for track in track_list)[:-2]
+            _mutable_error_msg = (f"Track {_track_list_str} has", f"Tracks {_track_list_str} have")[len(track_list) > 1]
+            log.report(
+                self, log.Severity.ERROR,
+                (f"{_mutable_error_msg} multiple strips. Either clean strips individually with 'FTB:Clean Active Strip'"
+                 " or exclude them from selection."))
+            return {'CANCELLED'}
 
         with context.temp_override(area=ctx.viewport):
             try:
@@ -227,14 +267,22 @@ class FTB_OT_BatchPrepareNLAStrip_OP(Operator):
         temp_track = context.active_object.animation_data.nla_tracks.new(prev=None)
         temp_track.name = "temp_track"
 
+        # disabling sync length for all strips beforehand so neighbouring strips do not accommodate for new available space
         for strip in context.selected_nla_strips:
-            if CLEANED_STRIP_SUFFIX in strip.name:
-                log.console(self, log.Severity.INFO,
-                            f"NLA-Strip '{strip.name}' has already been cleaned")
-                continue
-
             strip.use_sync_length = False
-            apply_strip_scale(strip)
+
+        # applies scale for all selected strips to avoid deformations caused by following steps
+        # creating a copy of the list since apply_scale() will destroy context.selected_nla_strips somehow
+        nla_strips = context.selected_nla_strips.copy()
+        with context.temp_override(area=ctx.nla_ed):
+            if context.scene.is_nla_tweakmode:
+                bpy.ops.nla.tweakmode_exit()
+            bpy.ops.nla.apply_scale()
+
+        for strip in nla_strips:
+            if CLEANED_STRIP_SUFFIX in strip.name:
+                log.console(self, log.Severity.INFO, f"NLA-Strip '{strip.name}' has already been cleaned")
+                continue
 
             _action = strip.action
             _original_track: NlaTrack = get_nla_track_from_strip(strip)
@@ -346,6 +394,32 @@ class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
     def execute(self, context):
         number_of_strips = len(context.selected_nla_strips)
 
+        # checking for multiple strips on one track to throw an error, since we can't reliably process this
+        nla_tracks = context.active_object.animation_data.nla_tracks
+        track_list: list[NlaTrack] = []
+        for track in nla_tracks:
+            if len(track.strips) < 2:
+                continue
+
+            # ignore already cleaned strips and those which are not selected
+            strip_are_irrelevant = True
+            for strip in track.strips:
+                strip_are_irrelevant &= CLEANED_STRIP_SUFFIX in strip.name or strip not in context.selected_nla_strips
+
+            if strip_are_irrelevant:
+                continue
+
+            track_list.append(track)
+
+        if track_list:
+            _track_list_str = "".join(track.name + ", " for track in track_list)[:-2]
+            _mutable_error_msg = (f"Track {_track_list_str} has", f"Tracks {_track_list_str} have")[len(track_list) > 1]
+            log.report(
+                self, log.Severity.ERROR,
+                (f"{_mutable_error_msg} multiple strips. Either clean strips individually with 'FTB:Clean Active Strip'"
+                 " or exclude them from selection."))
+            return {'CANCELLED'}
+
         with context.temp_override(area=ctx.viewport):
             try:
                 bpy.ops.pose.select_all(action='SELECT')
@@ -356,14 +430,23 @@ class FTB_OT_CleanAndBakeNLAStrips_OP(Operator):
         temp_track = context.active_object.animation_data.nla_tracks.new(prev=None)
         temp_track.name = "temp_track"
 
+        # disabling sync length for all strips beforehand so neighbouring strips do not accommodate for new available space
         for strip in context.selected_nla_strips:
+            strip.use_sync_length = False
+
+        # applies scale for all selected strips to avoid deformations caused by following steps
+        # creating a copy of the list since apply_scale() will destroy context.selected_nla_strips somehow
+        nla_strips = context.selected_nla_strips.copy()
+        with context.temp_override(area=ctx.nla_ed):
+            if context.scene.is_nla_tweakmode:
+                bpy.ops.nla.tweakmode_exit()
+            bpy.ops.nla.apply_scale()
+
+        for strip in nla_strips:
             if CLEANED_STRIP_SUFFIX in strip.name:
                 log.console(self, log.Severity.INFO,
                             f"NLA-Strip '{strip.name}' has already been cleaned")
                 continue
-
-            strip.use_sync_length = False
-            apply_strip_scale(strip)
 
             _action = strip.action
             _original_track: NlaTrack = get_nla_track_from_strip(strip)
