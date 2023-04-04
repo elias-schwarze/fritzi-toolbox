@@ -28,7 +28,7 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
 
         if FTB_OT_RenderCheckRefresh_op.ranOnce:
             if bpy.context.scene.ftbCurrentRenderSettings:
-                cs = bpy.context.scene.ftbCurrentRenderSettings
+                cs: RenderCheckData = bpy.context.scene.ftbCurrentRenderSettings
 
                 # RESOLUTION
                 if (onlyErrors and not cs.matchResFps(matchData=fs)) or not onlyErrors:
@@ -206,6 +206,11 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 if not cs.uncProject:
                     box = layout.box()
                     box.label(text=".blend not opened via Network", icon='ERROR')
+
+                if not fs.simplify_subdiv_render == cs.simplify_subdiv_render:
+                    box = layout.box()
+                    box.label(text="Simplify render settings incorrect", icon='ERROR')
+                    box.operator("utils.render_check_set_settings", text="Set Defaults").simplify = True
 
 
 def register():

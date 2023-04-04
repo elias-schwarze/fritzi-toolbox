@@ -59,6 +59,9 @@ def getCurrentSettings(currentSet: RenderCheckData):
     # Get "Film Transparent" setting
     currentSet.film_transparent = bpy.context.scene.render.film_transparent
 
+    # simplify settings
+    currentSet.simplify_subdiv_render = bpy.context.scene.render.simplify_subdivision_render
+
     # Get objects that have nla strips and also an active action (this causes the nla strips to not work properly and breaks animation)
     # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
     currentSet.invalidNlaObjects = invalidNlaCheck()
@@ -104,8 +107,9 @@ def getCurrentSettings(currentSet: RenderCheckData):
     return currentSet
 
 
-def setFinalSettings(resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
-                     renderSingleLayer=False, colorManagement=False, filmTransparent=False, aovs=False):
+def setFinalSettings(
+        resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
+        renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -177,6 +181,10 @@ def setFinalSettings(resFps=False, samples=False, shadows=False, ao=False, overs
     # transparent background
     if filmTransparent:
         bpy.context.scene.render.film_transparent = defaultSet.film_transparent
+
+    # simplify default settings
+    if simplify:
+        bpy.context.scene.render.simplify_subdivision_render = defaultSet.simplify_subdiv_render
 
     # aovs
     if aovs:
@@ -333,6 +341,11 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    simplify: bpy.props.BoolProperty(
+        name="Simplify",
+        default=False
+    )
+
     aovs: bpy.props.BoolProperty(
         name="aovs",
         default=False
@@ -342,7 +355,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
-                         aovs=self.aovs, samples=self.samples)
+                         simplify=self.simplify, aovs=self.aovs, samples=self.samples)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
         return {'FINISHED'}

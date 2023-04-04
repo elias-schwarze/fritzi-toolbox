@@ -52,6 +52,8 @@ class RenderCheckData:
     render_single_layer: bool = False
     film_transparent: bool = True
 
+    simplify_subdiv_render: int = 6
+
     uncOutput: bool = True
     uncProject: bool = True
 
