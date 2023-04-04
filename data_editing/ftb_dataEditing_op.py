@@ -1186,11 +1186,11 @@ class FTB_OT_SetShotRange_OP(Operator):
         current_frame = context.scene.frame_current
         range_start = 0
         range_end = 0
-        for marker in context.scene.timeline_markers:
+        for i, marker in enumerate(context.scene.timeline_markers):
             if marker.frame < current_frame and marker.camera:
                 range_start = marker.frame
-            if marker.frame > current_frame and (marker.camera or marker.name == "end_of_scene"):
-                range_end = marker.frame - 1
+            if marker.frame > current_frame and (marker.camera or i == len(context.scene.timeline_markers)-1):
+                range_end = (marker.frame - 1, marker.frame)[i == len(context.scene.timeline_markers)-1]
                 break
 
         if range_end == 0 or range_start == 0:
