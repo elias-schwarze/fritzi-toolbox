@@ -1,5 +1,6 @@
 
 import bpy
+import string
 
 from bpy.types import Operator
 from bpy.app.handlers import persistent
@@ -9,6 +10,7 @@ from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Sca
 from .. utility_functions.ftb_string_utils import strip_End_Numbers
 from .. utility_functions.ftb_path_utils import getAbsoluteFilePath
+from .. utility_functions.ftb_string_utils import OS_SEPARATOR
 from .. utility_functions import ftb_logging as log
 
 
@@ -1037,6 +1039,169 @@ class FTB_OT_HideLatticeModifiers_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_SplitInShots_OP(Operator):
+    bl_idname = "scene.split_in_shots"
+    bl_label = "Split File in Shots"
+    bl_description = ("Splits sequence file in shots by saving copies with an unique file name, setting start/end frame"
+                      " ranges and the active camera automatically")
+    bl_options = {'REGISTER'}
+
+    naming_mask_is_valid: bool = True
+
+    def is_valid_name(self, name: str) -> bool:
+        _valid_chars = string.ascii_letters + string.digits + "-_#"
+        for c in name:
+            if c not in _valid_chars:
+                return False
+        return name != ""
+
+    end_frame: bpy.props.IntProperty(
+        name="Sequence end frame",
+        description="Last frame of this sequence",
+        default=0
+    )
+
+    naming_mask: bpy.props.StringProperty(
+        name="Filename",
+        description="Naming mask used for saving splits. Use ### as shot number placeholder for shot filenames",
+        default=""
+    )
+
+    dopesheet_editor: bpy.types.Area = None
+
+    @classmethod
+    def poll(cls, context):
+        for area in context.screen.areas:
+            if area.type == 'DOPESHEET_EDITOR':
+                cls.dopesheet_editor = area
+                break
+            cls.dopesheet_editor = None
+
+        if not cls.dopesheet_editor:
+            cls.poll_message_set("Need Timeline window in current workspace")
+            return False
+
+        return True
+
+    def invoke(self, context, event):
+        self.end_frame = context.scene.frame_end
+        self.naming_mask = f"{bpy.data.filepath.split(OS_SEPARATOR)[-1][:-6]}_###"
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "end_frame")
+        if not self.naming_mask_is_valid:
+            layout.alert = True
+            layout.label(text="Only letters, digits, -_# are allowed in names!")
+            layout.label(text="No whitespaces and Name may not be empty!")
+            layout.label(text="Use ### character set to designate shot number in file name!")
+        layout.prop(self, "naming_mask")
+        layout.alert = False
+
+    def execute(self, context):
+
+        if "###" not in self.naming_mask or not self.is_valid_name(self.naming_mask):
+            self.naming_mask_is_valid = False
+            return context.window_manager.invoke_props_dialog(self, width=400)
+
+        initial_frame_start = context.scene.frame_start
+        initial_end_frame = context.scene.frame_end
+        initial_current_frame = context.scene.frame_current
+        file_dir = bpy.data.filepath[:bpy.data.filepath.rfind(OS_SEPARATOR)+1]
+
+        # check for existing end marker at last sequence frame
+        end_marker = None
+        for marker in context.scene.timeline_markers:
+            if marker.frame == self.end_frame:
+                end_marker = marker
+
+        # create an end marker if there is none
+        if not end_marker:
+            context.scene.frame_current = self.end_frame
+            with bpy.context.temp_override(area=self.dopesheet_editor):
+                try:
+                    bpy.ops.marker.add()
+                except:
+                    log.report(self, log.Severity.ERROR, "Failed to add end marker")
+                    return {'CANCELLED'}
+
+            context.scene.timeline_markers[-1].name = "end_of_scene"
+
+        context.scene.frame_current = initial_current_frame
+
+        # find markers for corresponding shots, set start + end frames and save a copy
+        for i in range(0, len(context.scene.timeline_markers)-1):
+
+            current_marker = context.scene.timeline_markers[i]
+            if not current_marker.camera:
+                continue
+
+            shot_number = current_marker.camera.name.split(".")[-1]
+            next_marker = None
+            for j in range(i+1, len(context.scene.timeline_markers)-1):
+                marker = context.scene.timeline_markers[j]
+                if marker.camera:
+                    next_marker = marker
+                    break
+
+            range_end = initial_end_frame
+            if next_marker:
+                range_end = next_marker.frame-1
+
+            context.scene.frame_start = current_marker.frame
+            context.scene.frame_end = range_end
+            context.scene.camera = current_marker.camera
+
+            new_filename = f"{self.naming_mask.replace('###', shot_number)}.blend"
+            new_filepath = file_dir + new_filename
+
+            #print(f"Saving {new_filepath} with range: {current_marker.frame} - {range_end}")
+            try:
+                bpy.ops.wm.save_as_mainfile(filepath=new_filepath, copy=True)
+            except:
+                log.report(self, log.Severity.ERROR, f"Failed saving file - {new_filename}")
+                return {'CANCELLED'}
+
+        context.scene.frame_start = initial_frame_start
+        context.scene.frame_end = initial_end_frame
+        log.report(self, log.Severity.INFO, f"Shot splitting successful")
+        return {'FINISHED'}
+
+
+class FTB_OT_SetShotRange_OP(Operator):
+    bl_idname = "scene.set_shot_range"
+    bl_label = "FTB: Set Shot Range"
+    bl_description = ("Sets start and end frame based on selected current frame and camera markers next to it")
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.area.type != 'DOPESHEET_EDITOR':
+            cls.poll_message_set("Need Timeline window in current workspace")
+            return False
+        return True
+
+    def execute(self, context):
+        current_frame = context.scene.frame_current
+        range_start = 0
+        range_end = 0
+        for marker in context.scene.timeline_markers:
+            if marker.frame < current_frame and marker.camera:
+                range_start = marker.frame
+            if marker.frame > current_frame and (marker.camera or marker.name == "end_of_scene"):
+                range_end = marker.frame - 1
+                break
+
+        if range_end == 0 or range_start == 0:
+            log.report(self, log.Severity.ERROR, "Could not locate valid start or end marker")
+            return {'CANCELLED'}
+        context.scene.frame_start = range_start
+        context.scene.frame_end = range_end
+        log.report(self, log.Severity.INFO, f"Range set from {range_start} to {range_end}")
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
@@ -1046,7 +1211,7 @@ classes = (
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
     FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
-    FTB_OT_HideLatticeModifiers_Op
+    FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP
 )
 
 

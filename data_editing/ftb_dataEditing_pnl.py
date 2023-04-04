@@ -52,6 +52,10 @@ def draw_mat_gnodes_menu(self, context):
             gnodesIndexOp.matName = gnodesMatName
 
 
+def add_to_dopesheet_context_menu(self, context):
+    self.layout.operator("scene.set_shot_range")
+
+
 class FTB_PT_DataEditing_Panel(Panel):
     bl_label = "Data Editing"
     bl_space_type = "VIEW_3D"
@@ -420,12 +424,22 @@ class FTB_PT_ViewLayerManagementCollections_Panel(Panel):
             row.label(text="Please select a View Layer in the list above")
 
 
+class FTB_PT_ShotFixing_Panel(Panel):
+    bl_label = "Shot Fixing"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "FTB"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column()
+        col.operator("scene.split_in_shots")
+
+
 classes = (
-    FTB_PT_DataEditing_Panel,
-    FTB_PT_CollectionLineUsage_Panel,
-    FTB_UL_ViewLayer_List,
-    FTB_UL_ViewLayerCollections_List, FTB_PT_ViewLayerManagement_Panel,
-    FTB_PT_ViewLayerManagementCollections_Panel
+    FTB_PT_DataEditing_Panel, FTB_PT_CollectionLineUsage_Panel, FTB_UL_ViewLayer_List, FTB_UL_ViewLayerCollections_List,
+    FTB_PT_ViewLayerManagement_Panel, FTB_PT_ViewLayerManagementCollections_Panel, FTB_PT_ShotFixing_Panel
 )
 
 
@@ -434,9 +448,11 @@ def register():
         bpy.utils.register_class(c)
     bpy.types.OUTLINER_MT_context_menu.append(draw_outliner_tools)
     bpy.types.MATERIAL_MT_context_menu.append(draw_mat_gnodes_menu)
+    bpy.types.DOPESHEET_MT_context_menu.append(add_to_dopesheet_context_menu)
 
 
 def unregister():
+    bpy.types.DOPESHEET_MT_context_menu.remove(add_to_dopesheet_context_menu)
     bpy.types.MATERIAL_MT_context_menu.remove(draw_mat_gnodes_menu)
     bpy.types.OUTLINER_MT_context_menu.remove(draw_outliner_tools)
     for c in reversed(classes):
