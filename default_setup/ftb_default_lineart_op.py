@@ -164,8 +164,8 @@ class FTB_OT_Bake_Interval_Op(Operator):
     def execute(self, context):
 
         scene = bpy.context.scene
-        if scene.render.use_simplify:
-            scene.render.use_simplify = False
+
+        scene.render.use_simplify = False
 
         initial_frame_start = scene.frame_start
         initial_frame_end = scene.frame_end
@@ -193,10 +193,11 @@ class FTB_OT_Bake_Interval_Op(Operator):
 
         # reset start frame to original start frame from before starting increment loop
         scene.frame_start = initial_frame_start
+        scene.render.use_simplify = True
         print("Bake completed")
         if self.saveAfterBake:
             bpy.ops.wm.save_mainfile()
-        scene.render.use_simplify = True
+
         return {'FINISHED'}
 
 
