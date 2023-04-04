@@ -1131,32 +1131,33 @@ class FTB_OT_SplitInShots_OP(Operator):
         context.scene.frame_current = initial_current_frame
 
         # find markers for corresponding shots, set start + end frames and save a copy
-        for i in range(0, len(context.scene.timeline_markers)-1):
+        for i, marker in enumerate(sorted(context.scene.timeline_markers, key=lambda m: m.frame)):
 
-            current_marker = context.scene.timeline_markers[i]
-            if not current_marker.camera:
+            if i == len(context.scene.timeline_markers)-1:
                 continue
 
-            shot_number = current_marker.camera.name.split(".")[-1]
+            if not marker.camera:
+                continue
+
+            shot_number = marker.camera.name.split(".")[-1]
             next_marker = None
-            for j in range(i+1, len(context.scene.timeline_markers)-1):
-                marker = context.scene.timeline_markers[j]
-                if marker.camera:
-                    next_marker = marker
+            for nm in sorted(context.scene.timeline_markers, key=lambda m: m.frame):
+                if nm.camera and nm.frame > marker.frame:
+                    next_marker = nm
                     break
 
             range_end = initial_end_frame
             if next_marker:
                 range_end = next_marker.frame-1
 
-            context.scene.frame_start = current_marker.frame
+            context.scene.frame_start = marker.frame
             context.scene.frame_end = range_end
-            context.scene.camera = current_marker.camera
+            context.scene.camera = marker.camera
 
             new_filename = f"{self.naming_mask.replace('###', shot_number)}.blend"
             new_filepath = file_dir + new_filename
 
-            #print(f"Saving {new_filepath} with range: {current_marker.frame} - {range_end}")
+            #print(f"Saving {new_filepath} with range: {marker.frame} - {range_end}")
             try:
                 bpy.ops.wm.save_as_mainfile(filepath=new_filepath, copy=True)
             except:
@@ -1186,8 +1187,8 @@ class FTB_OT_SetShotRange_OP(Operator):
         current_frame = context.scene.frame_current
         range_start = 0
         range_end = 0
-        for i, marker in enumerate(context.scene.timeline_markers):
-            if marker.frame < current_frame and marker.camera:
+        for i, marker in enumerate(sorted(context.scene.timeline_markers, key=lambda m: m.frame)):
+            if marker.frame <= current_frame and marker.camera:
                 range_start = marker.frame
             if marker.frame > current_frame and (marker.camera or i == len(context.scene.timeline_markers)-1):
                 range_end = (marker.frame - 1, marker.frame)[i == len(context.scene.timeline_markers)-1]
