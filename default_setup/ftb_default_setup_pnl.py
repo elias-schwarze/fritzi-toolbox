@@ -100,17 +100,27 @@ class FTB_PT_Interval_Baking_Panel(Panel):
         col.operator("object.bake_interval")
 
 
+def custom_object_context_menu(self, context):
+    self.layout.separator()
+    self.layout.operator("object.add_ih_outline")
+    self.layout.operator("object.remove_ih_outline")
+
+
+classes = (FTB_PT_Defaults_Panel, FTB_PT_RenderPresets_Panel,
+           FTB_MT_RenderPresets_Options, FTB_PT_Interval_Baking_Panel)
+
+
 def register():
-    bpy.utils.register_class(FTB_PT_Defaults_Panel)
-    bpy.utils.register_class(FTB_PT_RenderPresets_Panel)
-    bpy.utils.register_class(FTB_MT_RenderPresets_Options)
-    bpy.utils.register_class(FTB_PT_Interval_Baking_Panel)
+    for c in classes:
+        bpy.utils.register_class(c)
     bpy.types.OUTLINER_MT_object.append(draw_lineart_copy)
+    bpy.types.OUTLINER_MT_object.append(custom_object_context_menu)
+    bpy.types.VIEW3D_MT_object_context_menu.append(custom_object_context_menu)
 
 
 def unregister():
+    bpy.types.VIEW3D_MT_object_context_menu.remove(custom_object_context_menu)
+    bpy.types.OUTLINER_MT_object.remove(custom_object_context_menu)
     bpy.types.OUTLINER_MT_object.remove(draw_lineart_copy)
-    bpy.utils.unregister_class(FTB_PT_Interval_Baking_Panel)
-    bpy.utils.unregister_class(FTB_MT_RenderPresets_Options)
-    bpy.utils.unregister_class(FTB_PT_RenderPresets_Panel)
-    bpy.utils.unregister_class(FTB_PT_Defaults_Panel)
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)
