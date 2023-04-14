@@ -123,7 +123,7 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     box.label(text=(str(len(cs.invalidBoolObjects)) + " Boolean Issues"), icon='ERROR')
                     for obj in cs.invalidBoolObjects:
                         box.label(text=obj.name_full)
-                    box.operator("utils.select_boolean_errors")
+                    box.operator("utils.fix_boolean_errors")
 
                 # NLA + ACTIVE ACTION
                 if cs.invalidNlaObjects:

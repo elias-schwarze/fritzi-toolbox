@@ -219,7 +219,7 @@ def invalidBoolCheck():
         for mod in obj.modifiers:
             if mod.type != 'BOOLEAN':
                 continue
-            if not (mod.solver == 'EXACT' and mod.use_self):
+            if not (mod.solver == 'EXACT' and mod.use_self) or not (mod.show_viewport and mod.show_render):
                 invalidBoolList.append(obj)
     return invalidBoolList
 
@@ -361,10 +361,10 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class FTB_OT_SelectBooleanErrors_op(bpy.types.Operator):
-    bl_idname = "utils.select_boolean_errors"
-    bl_label = "Select Objects"
-    bl_description = "Selects all objects with boolean issues"
+class FTB_OT_FixBooleanErrors_op(bpy.types.Operator):
+    bl_idname = "utils.fix_boolean_errors"
+    bl_label = "Fix Boolean Issues"
+    bl_description = "Fixes all Boolean issues compromising final visuals"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
@@ -372,9 +372,14 @@ class FTB_OT_SelectBooleanErrors_op(bpy.types.Operator):
         return context.scene.ftbCurrentRenderSettings.invalidBoolObjects is not None
 
     def execute(self, context):
-        bpy.ops.object.select_all(action='DESELECT')
         for obj in context.scene.ftbCurrentRenderSettings.invalidBoolObjects:
-            obj.select_set(True)
+            for modifier in obj.modifiers:
+                if modifier.type != 'BOOLEAN':
+                    continue
+                modifier.show_viewport = True
+                modifier.show_render = True
+                modifier.solver = 'EXACT'
+                modifier.use_self = True
         return {'FINISHED'}
 
 
@@ -396,7 +401,7 @@ class FTB_OT_SelectDataTransferErrors_op(bpy.types.Operator):
 
 
 classes = (FTB_OT_RenderCheckRefresh_op, FTB_OT_RenderCheckSetSettings_op, FTB_OT_SelectDataTransferErrors_op,
-           FTB_OT_SelectBooleanErrors_op)
+           FTB_OT_FixBooleanErrors_op)
 
 
 def register():
