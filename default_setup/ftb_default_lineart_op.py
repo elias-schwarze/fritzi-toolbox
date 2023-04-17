@@ -7,7 +7,6 @@ from ..utility_functions import ftb_logging as log
 
 IH_VIEWLAYER_NAME = "lines_invertedhull"
 IH_OBJECTS_COLLECTION_NAME = "OBJECTS_InvertedHull"
-OUTLINE_GROUPS_COLLECTION_NAME = "OUTLINE_groups"
 IH_AOV_NAME = "AOV_Inverted_Hull"
 IH_MATERIAL_NAME = "mat_inverted_hull_outline"
 IH_MODIFIER_NAME = "mod_inverted_hull"
@@ -233,7 +232,7 @@ def get_data_by_type_and_name(bpy_type: bpy.types.Collection | bpy.types.Materia
 class FTB_OT_AddToInvertedHullOutline_Op(Operator):
     bl_idname = "object.add_ih_outline"
     bl_label = "FTB: Add Inverted Hull Outline"
-    bl_description = "Adds selected objects to inverted hull outline setup"
+    bl_description = "Adds selected objects to inverted hull outline setup. Only works on local objects"
     bl_options = {"REGISTER", "UNDO"}
 
     DRIVER_EXPRESSION = "is_inverted_hull_view_layer(depsgraph)"
@@ -276,24 +275,14 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
             ih_aov.type = 'VALUE'
             ih_aov.name = IH_AOV_NAME
 
-        # check for existing inverted hull sub-collection in OUTLINE_groups collection
-        outline_groups_collection: Collection = get_data_by_type_and_name(Collection, OUTLINE_GROUPS_COLLECTION_NAME)
+        # check for existing inverted hull collection
         inverted_hull_collection: Collection = get_data_by_type_and_name(Collection, IH_OBJECTS_COLLECTION_NAME)
 
-        # if OUTLINE_groups does not exist, create it
-        if not outline_groups_collection:
-            try:
-                outline_groups_collection = bpy.data.collections.new(name=OUTLINE_GROUPS_COLLECTION_NAME)
-                context.scene.collection.children.link(outline_groups_collection)
-            except:
-                log.report(self, log.Severity.ERROR, "Outline groups Collection creation failed! Task aborted.")
-                return {'CANCELLED'}
-
-        # if inverted hull sub-collection does not exist, create it
+        # if inverted hull collection does not exist, create it
         if not inverted_hull_collection:
             try:
                 inverted_hull_collection = bpy.data.collections.new(name=IH_OBJECTS_COLLECTION_NAME)
-                outline_groups_collection.children.link(inverted_hull_collection)
+                context.scene.collection.children.link(inverted_hull_collection)
             except:
                 log.report(self, log.Severity.ERROR, "Inverted Hull Collection creation failed! Task aborted.")
                 return {'CANCELLED'}
@@ -307,6 +296,10 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
 
                 ih_outline_material.use_nodes = True
                 ih_outline_material.use_backface_culling = True
+                ih_outline_material.shadow_method = 'NONE'
+                ih_outline_material.diffuse_color = (0, 0, 0, 1)
+                ih_outline_material.roughness = 1
+                ih_outline_material.metallic = 1
 
                 _nodes = ih_outline_material.node_tree.nodes
                 _nodes.remove(_nodes.get('Principled BSDF'))
@@ -368,6 +361,8 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                     ih_modifier.offset = 1.0
                     ih_modifier.use_even_offset = True
                     ih_modifier.use_flip_normals = True
+                    ih_modifier.use_quality_normals = True
+                    ih_modifier.thickness_clamp = 1.25
                     _mat_offset = len(object.material_slots)-1
                     ih_modifier.material_offset = _mat_offset
                     ih_modifier.material_offset_rim = _mat_offset
