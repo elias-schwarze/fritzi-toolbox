@@ -3,7 +3,9 @@ import math
 import time
 from bpy.types import Operator, ViewLayer, Material, SolidifyModifier, AOV, Collection
 from bpy.app.handlers import persistent
+from ..utility_functions.ftb_path_utils import getFritziPreferences
 from ..utility_functions import ftb_logging as log
+
 
 IH_VIEWLAYER_NAME = "lines_invertedhull"
 IH_OBJECTS_COLLECTION_NAME = "OBJECTS_InvertedHull"
@@ -248,6 +250,9 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
         return True
 
     def execute(self, context):
+        from ..ftb_prefs import FTBPreferences
+        prefernces: FTBPreferences = getFritziPreferences()
+
         # check for inverted Hull view layer and get reference to it
         initial_view_layer: ViewLayer = context.view_layer
         inverted_hull_viewlayer: ViewLayer = get_data_by_type_and_name(ViewLayer, IH_VIEWLAYER_NAME)
@@ -297,9 +302,9 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                 ih_outline_material.use_nodes = True
                 ih_outline_material.use_backface_culling = True
                 ih_outline_material.shadow_method = 'NONE'
-                ih_outline_material.diffuse_color = (0, 0, 0, 1)
-                ih_outline_material.roughness = 1
-                ih_outline_material.metallic = 1
+                ih_outline_material.diffuse_color = prefernces.ih_material_diffuse_color
+                ih_outline_material.roughness = prefernces.ih_material_roughness
+                ih_outline_material.metallic = prefernces.ih_material_metallic
 
                 _nodes = ih_outline_material.node_tree.nodes
                 _nodes.remove(_nodes.get('Principled BSDF'))
@@ -357,12 +362,16 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                 try:
                     ih_modifier = object.modifiers.new(name=IH_MODIFIER_NAME, type='SOLIDIFY')
 
-                    ih_modifier.thickness = 0.01
-                    ih_modifier.offset = 1.0
-                    ih_modifier.use_even_offset = True
+                    ih_modifier.thickness = prefernces.ih_modifier_thickness
+                    ih_modifier.offset = prefernces.ih_modifier_offset
+                    ih_modifier.use_even_offset = prefernces.ih_modifier_even_thickness
+                    ih_modifier.use_quality_normals = prefernces.ih_modifier_use_quality_normals
+                    ih_modifier.thickness_clamp = prefernces.ih_modifier_thickness_clamp
+                    ih_modifier.use_rim = prefernces.ih_modifier_use_rim
+                    ih_modifier.use_rim_only = prefernces.ih_modifier_use_rim_only
+
                     ih_modifier.use_flip_normals = True
-                    ih_modifier.use_quality_normals = True
-                    ih_modifier.thickness_clamp = 1.25
+
                     _mat_offset = len(object.material_slots)-1
                     ih_modifier.material_offset = _mat_offset
                     ih_modifier.material_offset_rim = _mat_offset

@@ -1,6 +1,7 @@
 import bpy
 
 from bpy.types import Panel, Menu
+from ..ftb_prefs import FTBPreferences
 from ..utility_functions.ftb_path_utils import getFritziPreferences
 
 
@@ -106,8 +107,34 @@ def custom_object_context_menu(self, context):
     self.layout.operator("object.remove_ih_outline")
 
 
-classes = (FTB_PT_Defaults_Panel, FTB_PT_RenderPresets_Panel,
-           FTB_MT_RenderPresets_Options, FTB_PT_Interval_Baking_Panel)
+class FTB_PT_InvertedHullSettings_Panel(Panel):
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_parent_id = "FTB_PT_Defaults_Panel"
+    bl_label = "Inverted Hull Default Settings"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        preferences: FTBPreferences = getFritziPreferences()
+
+        layout = self.layout
+        row = layout.row()
+        row.prop(preferences, "ih_material_diffuse_color")
+
+        col = layout.column(align=False)
+        col.prop(preferences, "ih_material_metallic")
+        col.prop(preferences, "ih_material_roughness")
+
+        col.separator()
+        col.label(text="Solidify Settings")
+        modifier_properties = ("ih_modifier_thickness", "ih_modifier_offset", "ih_modifier_even_thickness",
+                               "ih_modifier_use_rim", "ih_modifier_use_rim_only", "ih_modifier_use_quality_normals",
+                               "ih_modifier_thickness_clamp")
+        [col.prop(preferences, property) for property in modifier_properties]
+
+
+classes = (FTB_PT_Defaults_Panel, FTB_PT_RenderPresets_Panel, FTB_MT_RenderPresets_Options,
+           FTB_PT_Interval_Baking_Panel, FTB_PT_InvertedHullSettings_Panel)
 
 
 def register():

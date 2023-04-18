@@ -4,6 +4,7 @@ import bpy
 from . import addon_updater_ops
 
 from .utility_functions.ftb_path_utils import getFritziPreferences
+from .default_setup.ftb_default_lineart_op import get_data_by_type_and_name, IH_MATERIAL_NAME
 
 
 class FTBPreferences(bpy.types.AddonPreferences):
@@ -74,6 +75,72 @@ class FTBPreferences(bpy.types.AddonPreferences):
         default=0,
         min=0,
         max=59)
+
+    def update_ih_material_settings(self, context):
+        ih_material: bpy.types.Material = get_data_by_type_and_name(bpy.types.Material, IH_MATERIAL_NAME)
+        if ih_material:
+            ih_material.diffuse_color = self.ih_material_diffuse_color
+            ih_material.roughness = self.ih_material_roughness
+            ih_material.metallic = self.ih_material_metallic
+
+    # inverted hull settings
+    ih_material_diffuse_color: bpy.props.FloatVectorProperty(name="Viewport Color",
+                                                             description="",
+                                                             subtype='COLOR',
+                                                             size=4,
+                                                             min=0.0,
+                                                             max=1.0,
+                                                             default=(0, 0, 0, 1),
+                                                             update=update_ih_material_settings)
+
+    ih_material_metallic: bpy.props.FloatProperty(name="Metallic",
+                                                  description="",
+                                                  min=0.0,
+                                                  max=1.0,
+                                                  default=1.0,
+                                                  update=update_ih_material_settings)
+
+    ih_material_roughness: bpy.props.FloatProperty(name="Roughness",
+                                                   description="",
+                                                   min=0.0,
+                                                   max=1.0,
+                                                   default=1.0,
+                                                   update=update_ih_material_settings)
+
+    ih_modifier_thickness: bpy.props.FloatProperty(name="Thickness",
+                                                   description="",
+                                                   precision=4,
+                                                   default=0.0036)
+
+    ih_modifier_offset: bpy.props.FloatProperty(name="Offset",
+                                                description="",
+                                                min=-1.0,
+                                                max=1.0,
+                                                precision=4,
+                                                default=1.0)
+
+    ih_modifier_thickness_clamp: bpy.props.FloatProperty(name="Thickness Clamp",
+                                                         description="",
+                                                         min=0.0,
+                                                         max=2.0,
+                                                         precision=4,
+                                                         default=1.25)
+
+    ih_modifier_even_thickness: bpy.props.BoolProperty(name="Even Thickness",
+                                                       description="",
+                                                       default=True)
+
+    ih_modifier_use_rim: bpy.props.BoolProperty(name="Rim Fill",
+                                                description="",
+                                                default=True)
+
+    ih_modifier_use_rim_only: bpy.props.BoolProperty(name="Only Rim",
+                                                     description="",
+                                                     default=False)
+
+    ih_modifier_use_quality_normals: bpy.props.BoolProperty(name="High Quality Normals",
+                                                            description="",
+                                                            default=True)
 
     def draw(self, context):
         layout = self.layout
