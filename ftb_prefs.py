@@ -37,6 +37,12 @@ class FTBPreferences(bpy.types.AddonPreferences):
                     " Only alerts on files saved within Fritzi Workspace",
         default=True)
 
+    alert_auto_pack_resources: bpy.props.BoolProperty(
+        name="Alert on \"Automatically Pack Resources\"",
+        description=("If enabled, a popup dialog is shown every time a blend file with \"Automatically Pack Resources\""
+                     "is loaded"),
+        default=True)
+
     hide_render_preset_manager: bpy.props.BoolProperty(
         name="Hide Render Preset Manager",
         description="Hides the render preset manager inside the render properties tab",
@@ -162,6 +168,8 @@ class FTBPreferences(bpy.types.AddonPreferences):
             row.enabled = True
         else:
             row.enabled = False
+
+        col.prop(getFritziPreferences(), "alert_auto_pack_resources")
 
         col.prop(getFritziPreferences(), "alert_absolute_paths")
         col.prop(getFritziPreferences(), "hide_render_preset_manager")

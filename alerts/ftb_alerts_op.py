@@ -81,6 +81,34 @@ class FTB_OT_Alert_P4_Temp_Fileath_Op(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_AlertAutoPackReSources(bpy.types.Operator):
+    bl_idname = "utils.alert_auto_pack_resources"
+    bl_label = "WARNING!"
+    bl_description = "Alerts user if \"Automatically Pack Resources\" is enabled"
+    bl_options = {'INTERNAL'}
+
+    disable_pack_resources: bpy.props.BoolProperty(
+        name="Disable \"Automatically Pack Resources\"",
+        description="Enable this to turn \"Automatically Pack Resources\" off", default=False)
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.alert = True
+        layout.label(text="Automatic resource packing is enabled.")
+        layout.alert = False
+        layout.separator()
+        layout.prop(self, "disable_pack_resources")
+        layout.separator()
+
+    def execute(self, context):
+        if self.disable_pack_resources:
+            bpy.data.use_autopack = False
+        return {'FINISHED'}
+
+
 @persistent
 def alert_p4_postLoad_handler(dummy):
     filepath = bpy.data.filepath
@@ -96,6 +124,9 @@ def auto_key_postLoad_handler(dummy):
 
     if (getFritziPreferences().alert_autokey and getFritziPreferences().always_disable_autokey is False):
         alertUserAutoKey()
+
+    if bpy.data.use_autopack and getFritziPreferences().alert_auto_pack_resources:
+        bpy.ops.utils.alert_auto_pack_resources('INVOKE_DEFAULT')
 
     return {'FINISHED'}
 
@@ -135,10 +166,14 @@ def custom_pre_save_handler(dummy):
     return {'FINISHED'}
 
 
+classes = (FTB_OT_AlertUserAutoKey_Op, FTB_OT_Alert_Absolute_Asset_Path_Op, FTB_OT_Alert_P4_Temp_Fileath_Op,
+           FTB_OT_AlertAutoPackReSources)
+
+
 def register():
-    bpy.utils.register_class(FTB_OT_AlertUserAutoKey_Op)
-    bpy.utils.register_class(FTB_OT_Alert_Absolute_Asset_Path_Op)
-    bpy.utils.register_class(FTB_OT_Alert_P4_Temp_Fileath_Op)
+    for c in classes:
+        bpy.utils.register_class(c)
+
     bpy.app.handlers.load_post.append(auto_key_postLoad_handler)
     bpy.app.handlers.save_pre.append(custom_pre_save_handler)
     bpy.app.handlers.load_post.append(alert_p4_postLoad_handler)
@@ -148,6 +183,6 @@ def unregister():
     bpy.app.handlers.load_post.remove(alert_p4_postLoad_handler)
     bpy.app.handlers.save_pre.remove(custom_pre_save_handler)
     bpy.app.handlers.load_post.remove(auto_key_postLoad_handler)
-    bpy.utils.unregister_class(FTB_OT_Alert_P4_Temp_Fileath_Op)
-    bpy.utils.unregister_class(FTB_OT_Alert_Absolute_Asset_Path_Op)
-    bpy.utils.unregister_class(FTB_OT_AlertUserAutoKey_Op)
+
+    for c in reversed(classes):
+        bpy.utils.unregister_class(c)
