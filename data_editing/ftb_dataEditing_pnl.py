@@ -133,7 +133,7 @@ class FTB_PT_DataEditing_Panel(Panel):
         description="Limit operation to whole scene or certain collections",
         items=[
             ('ALL', "All", "All Objects in the .blend file"),
-            ('COLLECTION', "Collection", "Limit to a colelction and it's children."),
+            ('COLLECTION', "Collection", "Limit to a collection and it's children."),
             ('SELECTION', "Selection", "Limit to currently selected objects.")
         ],
         default='ALL'
@@ -152,6 +152,23 @@ class FTB_PT_DataEditing_Panel(Panel):
             ('SELECTION', "Selection", "Limit to currently selected objects.")
         ],
         default='ALL'
+    )
+
+    bpy.types.WindowManager.ftbVisibilityScope = bpy.props.EnumProperty(
+        name="Scope",
+        description="Limit operation to objects, collections or selection",
+        items=[
+            ('OBJECTS', "ALL Objects", "Only the Objects in the .blend file"),
+            ('COLLECTIONS', "ALL Collections", "Only the Collections in the file"),
+            ('OBJ_IN_COLLECTION', "ALL Objects in Collection", "Limit to Objects inside a given Collection"),
+            ('COL_IN_COLLECTION', "ALL Collections in Collection", "Limit to Collections inside a given Collection")
+        ],
+        default='OBJECTS'
+    )
+
+    bpy.types.WindowManager.ftbVisibilityCollection = bpy.props.PointerProperty(
+        name="Collection",
+        type=bpy.types.Collection
     )
 
     def draw(self, context):
@@ -287,6 +304,19 @@ class FTB_PT_DataEditing_Panel(Panel):
         row = col.row(align=True)
         row.operator("object.hide_lattice_modifiers", text="Hide", icon='RESTRICT_VIEW_ON').showViewport = False
         row.operator("object.hide_lattice_modifiers", text="Show", icon='RESTRICT_VIEW_OFF').showViewport = True
+
+        
+        # Objects/Collections Visibility Editing
+        col = layout.column()
+        col.separator()
+        col.label(text="Visibilities:")
+        col.prop(bpy.context.window_manager, "ftbVisibilityScope")
+        if bpy.context.window_manager.ftbVisibilityScope in {'OBJ_IN_COLLECTION', 'COL_IN_COLLECTION'}:
+            col.prop_search(bpy.context.window_manager, "ftbVisibilityCollection", bpy.data, "collections")
+        col.operator("ftb.conform_visibilities", text="Use Render Visibility", icon='RESTRICT_RENDER_OFF').use_render = True
+        col.operator("ftb.conform_visibilities", text="Use Viewport Visibility", icon='RESTRICT_VIEW_OFF').use_render = False
+
+
 
 
 class FTB_PT_CollectionLineUsage_Panel(Panel):

@@ -1038,6 +1038,82 @@ class FTB_OT_HideLatticeModifiers_Op(Operator):
         refresh_ui()
         return {'FINISHED'}
 
+class FTB_OT_ConformVisibilites_OP(Operator):
+    bl_idname = "ftb.conform_visibilities"
+    bl_label = "Conform Visibilities"
+    bl_description = "Conforms visibilites to Render or Viewport visibilites."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    use_render: bpy.props.BoolProperty(
+        name="use_render",
+        default=True
+    )
+
+    @classmethod
+    def poll(cls, context):
+        wm = context.window_manager
+        if wm.ftbVisibilityScope in {'OBJ_IN_COLLECTION', 'COL_IN_COLLECTION'}:
+            if not wm.ftbVisibilityCollection:
+                return False
+        return True
+
+    def execute(self, context):
+
+        wm = context.window_manager
+
+        if wm.ftbVisibilityScope == 'OBJECTS' or wm.ftbVisibilityScope == 'OBJ_IN_COLLECTION':
+            
+            objects_to_conform = []
+            if wm.ftbVisibilityScope == 'OBJECTS':
+                objects_to_conform = context.scene.objects
+            if wm.ftbVisibilityScope == 'COLLECTION':
+                objects_to_conform = wm.ftbVisibilityCollection.all_objects
+
+            for obj in objects_to_conform:
+                if self.use_render:
+                    if obj.hide_render:
+                        obj.hide_set(True)
+                        obj.hide_viewport = True
+                    else:
+                        obj.hide_set(False)
+                        obj.hide_viewport = False
+                else:
+                    if obj.hide_viewport or obj.hide_get():
+                        obj.hide_render = True
+                    else:
+                        obj.hide_render = False
+
+        if wm.ftbVisibilityScope in {'COLLECTIONS', 'COL_IN_COLLECTION'}:
+            collections_to_conform = []
+            if wm.ftbVisibilityScope == 'COLLECTIONS':
+                collections_to_conform = context.scene.collection.children_recursive
+            
+            if wm.ftbVisibilityScope == 'COL_IN_COLLECTION':
+                collections_to_conform = wm.ftbVisibilityCollection.children_recursive
+                collections_to_conform.append(wm.ftbVisibilityCollection)
+
+            for collection in collections_to_conform:
+                layer_children_recursive = [col for col in self.traverse_tree(context.view_layer.layer_collection)]
+                view_layer_collection = next((col for col in layer_children_recursive if col.name == collection.name), None)
+
+                if self.use_render:
+                    if collection.hide_render:
+                        collection.hide_viewport = True
+                        view_layer_collection.hide_viewport = True
+                    else:
+                        collection.hide_viewport = False
+                        view_layer_collection.hide_viewport = False
+                else:
+                    if collection.hide_viewport or view_layer_collection.hide_viewport:
+                        collection.hide_render = True
+                    else:
+                        collection.hide_render = False
+        return {'FINISHED'}
+    
+    def traverse_tree(self, t):
+        yield t
+        for child in t.children:
+            yield from self.traverse_tree(child)
 
 class FTB_OT_SplitInShots_OP(Operator):
     bl_idname = "scene.split_in_shots"
@@ -1212,7 +1288,7 @@ classes = (
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
     FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
-    FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP
+    FTB_OT_HideLatticeModifiers_Op, FTB_OT_ConformVisibilites_OP, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP
 )
 
 
