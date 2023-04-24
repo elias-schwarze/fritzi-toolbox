@@ -1,6 +1,6 @@
 import bpy
 
-from bpy.types import Object
+from bpy.types import Object, Modifier
 from .ftb_renderCheckData import RenderCheckData
 from bpy.app.handlers import persistent
 
@@ -40,10 +40,6 @@ def getCurrentSettings(currentSet: RenderCheckData):
     currentSet.outDepth = bpy.context.scene.render.image_settings.color_depth
     currentSet.outCodec = bpy.context.scene.render.image_settings.exr_codec
 
-    # Find objects with booleans set to Fast missing self intersection setting
-    # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
-    currentSet.invalidBoolObjects = invalidBoolCheck()
-
     # Get state of burn in
     currentSet.isBurnInActive = bpy.context.scene.render.use_stamp
 
@@ -61,11 +57,6 @@ def getCurrentSettings(currentSet: RenderCheckData):
 
     # simplify settings
     currentSet.simplify_subdiv_render = bpy.context.scene.render.simplify_subdivision_render
-
-    # Get objects that have nla strips and also an active action (this causes the nla strips to not work properly and breaks animation)
-    # Only stores names instead of whole object references, to avoid issues when objects are deleted by the user
-    currentSet.invalidNlaObjects = invalidNlaCheck()
-    currentSet.invalid_data_transfer_objects = get_invalid_data_transfer_objects()
 
     # Get Color Management settings
     currentSet.cmDisplayDevice = bpy.context.scene.display_settings.display_device
@@ -103,6 +94,28 @@ def getCurrentSettings(currentSet: RenderCheckData):
         currentSet.uncProject = True
     else:
         currentSet.uncProject = False
+
+    currentSet.invalidNlaObjects.clear()
+    currentSet.invalidBoolObjects.clear()
+    currentSet.invalid_data_transfer_objects.clear()
+    currentSet.modifier_visibility_issues.clear()
+    # loop over all objects to find errors
+    for obj in bpy.context.view_layer.objects:
+        if is_invalid_nla_object(obj):
+            currentSet.invalidNlaObjects.append(obj)
+
+        for modifier in obj.modifiers:
+            if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE', 'LATTICE', 'SOLIDIFY', 'SUBSURF'):
+                continue
+
+            if is_invalid_bool_modifier(modifier):
+                currentSet.invalidBoolObjects.append(obj)
+            if is_invalid_data_transfer_modifier(modifier):
+                currentSet.invalid_data_transfer_objects.append(obj)
+            elif is_invalid_displace_lattice_solidify_modifier(modifier):
+                currentSet.modifier_visibility_issues.append(obj)
+            elif is_invalid_subdiv_modifier(modifier):
+                currentSet.modifier_visibility_issues.append(obj)
 
     return currentSet
 
@@ -210,48 +223,60 @@ def countActiveViewLayers():
     return count
 
 
-def invalidBoolCheck():
-    """Report object with bool modifiers that do not have Exact Solver and Self Intersection enabled.
-    Returns:  invalidBoolList which contains all objects with invalid Booleans"""
-    invalidBoolList = list()
-
-    for obj in bpy.context.scene.objects:
-        for mod in obj.modifiers:
-            if mod.type != 'BOOLEAN':
-                continue
-            if not (mod.solver == 'EXACT' and mod.use_self) or not (mod.show_viewport and mod.show_render):
-                invalidBoolList.append(obj)
-    return invalidBoolList
+def is_invalid_bool_modifier(modifier: bpy.types.BooleanModifier) -> bool:
+    """
+    Returns True if boolean modifier not uses solver EXACT, not use self and show viewport or show render are off
+    """
+    if modifier.type != 'BOOLEAN':
+        return False
+    return not (modifier.solver == 'EXACT' and modifier.use_self) or not (
+        modifier.show_viewport and modifier.show_render)
 
 
-def invalidNlaCheck():
-    """Report object names with NLA strips and active action. These objects will likely have broken animation.
-    Returns invalidNlaList[str] which contains object names with invalid NLA setup"""
-    invalidNlaList = list()
-    for obj in bpy.context.scene.objects:
-        if getattr(obj.animation_data, 'use_nla', False):
-            if getattr(obj.animation_data, 'nla_tracks', False):
-                if getattr(obj.animation_data, 'action', False):
-                    invalidNlaList.append(obj.name)
+def is_invalid_nla_object(object: Object) -> bool:
+    """
+    Returns True if object has an active action on top of NLA-track. These objects will likely have broken animation.
+    """
+    if getattr(object.animation_data, 'use_nla', False):
+        if getattr(object.animation_data, 'nla_tracks', False):
+            if getattr(object.animation_data, 'action', False):
+                return True
 
-    return invalidNlaList
-
-
-def get_invalid_data_transfer_objects() -> list[Object]:
-    """Returns a list of objects with Data Transfer modifiers that do not have a Source object set."""
-    invalid_objects: list[Object] = []
-    for obj in bpy.context.scene.objects:
-        for modifier in obj.modifiers:
-            if modifier.type != 'DATA_TRANSFER':
-                continue
-            if (modifier.object is None) or (modifier.show_render is False):
-                invalid_objects.append(obj)
-    return invalid_objects
+    return False
 
 
-# preLoad handler to clear old info from old file when loading new project file
+def is_invalid_data_transfer_modifier(modifier: bpy.types.DataTransferModifier) -> bool:
+    """Returns True if data transfer modifier has no valid source object set."""
+    if modifier.type != 'DATA_TRANSFER':
+        return False
+    return (modifier.object is None) or (modifier.show_render is False)
+
+
+def is_invalid_displace_lattice_solidify_modifier(modifier: Modifier) -> bool:
+    """
+    Returns True if modifier is enabled in render but not in viewport. 
+    If the modifier is not rendered, it also disables the modifier in viewport  
+    """
+    if modifier.type not in ('DISPLACE', 'LATTICE', 'SOLIDIFY'):
+        return False
+    # ignore the modifier if show_render is disabled and disable show_viewport
+    if not modifier.show_render:
+        modifier.show_viewport = modifier.show_render
+        return False
+
+    return not (modifier.show_viewport and modifier.show_render)
+
+
+def is_invalid_subdiv_modifier(modifier: bpy.types.SubsurfModifier) -> bool:
+    """Returns True if render and viewport levels are not equal."""
+    if modifier.type != 'SUBSURF':
+        return False
+    return modifier.render_levels != modifier.levels
+
+
 @persistent
 def renderCheck_preLoad_handler(dummy):
+    """preLoad handler to clear old info from old file when loading new project file"""
     FTB_OT_RenderCheckRefresh_op.ranOnce = False
     return {'FINISHED'}
 
@@ -380,6 +405,33 @@ class FTB_OT_FixBooleanErrors_op(bpy.types.Operator):
                 modifier.show_render = True
                 modifier.solver = 'EXACT'
                 modifier.use_self = True
+
+        bpy.ops.utils.render_check_refresh()
+        return {'FINISHED'}
+
+
+class FTB_OT_FixModifierVisiblityIssues_op(bpy.types.Operator):
+    bl_idname = "utils.fix_modifier_visiblity_issues"
+    bl_label = "Fix Modifier Visibility Issues"
+    bl_description = "Fixes all modifier related visibilty issues compromising final render results"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.ftbCurrentRenderSettings.modifier_visibility_issues is not None
+
+    def execute(self, context):
+        faulty_objects = context.scene.ftbCurrentRenderSettings.modifier_visibility_issues
+        for obj in faulty_objects:
+            for modifier in obj.modifiers:
+                if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE', 'LATTICE', 'SOLIDIFY', 'SUBSURF'):
+                    continue
+                if modifier.type == 'SUBSURF':
+                    modifier.levels = modifier.render_levels
+
+                modifier.show_viewport = modifier.show_render
+
+        bpy.ops.utils.render_check_refresh()
         return {'FINISHED'}
 
 
@@ -401,7 +453,7 @@ class FTB_OT_SelectDataTransferErrors_op(bpy.types.Operator):
 
 
 classes = (FTB_OT_RenderCheckRefresh_op, FTB_OT_RenderCheckSetSettings_op, FTB_OT_SelectDataTransferErrors_op,
-           FTB_OT_FixBooleanErrors_op)
+           FTB_OT_FixBooleanErrors_op, FTB_OT_FixModifierVisiblityIssues_op)
 
 
 def register():

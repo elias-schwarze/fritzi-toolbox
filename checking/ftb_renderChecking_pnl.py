@@ -128,9 +128,9 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 # NLA + ACTIVE ACTION
                 if cs.invalidNlaObjects:
                     box = layout.box()
-                    box.label(text=(str(len(cs.invalidNlaObjects)) + " NLA issues"), icon='ERROR')
-                    for name in cs.invalidNlaObjects:
-                        box.label(text=name)
+                    box.label(text=(f"{len(cs.invalidNlaObjects)} NLA issues"), icon='ERROR')
+                    for obj in cs.invalidNlaObjects:
+                        box.label(text=obj.name)
 
                 # DATA TRANSFER MODIFIERS
                 if cs.invalid_data_transfer_objects:
@@ -139,6 +139,14 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                     for obj in cs.invalid_data_transfer_objects:
                         box.label(text=obj.name_full)
                     box.operator("utils.select_data_transfer_errors")
+
+                # MODIFIER VISIBLITY ISSUES
+                if cs.modifier_visibility_issues:
+                    box = layout.box()
+                    box.label(text=(f"{len(cs.modifier_visibility_issues)} Modifier Visibility Issues"), icon='ERROR')
+                    for obj in cs.modifier_visibility_issues:
+                        box.label(text=obj.name_full)
+                    box.operator("utils.fix_modifier_visiblity_issues")
 
                 # BURN IN
                 if cs.isBurnInActive:

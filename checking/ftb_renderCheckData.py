@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -38,11 +38,13 @@ class RenderCheckData:
     cmExposure = 0.0
     cmGamma = 1.0
 
-    invalidBoolObjects: list = None
+    invalidBoolObjects: list = field(default_factory=list)
 
-    invalidNlaObjects: list = None
+    invalidNlaObjects: list = field(default_factory=list)
 
-    invalid_data_transfer_objects: list = None
+    invalid_data_transfer_objects: list = field(default_factory=list)
+
+    modifier_visibility_issues: list = field(default_factory=list)
 
     isBurnInActive: bool = False
 
