@@ -56,6 +56,11 @@ def add_to_dopesheet_context_menu(self, context):
     self.layout.operator("scene.set_shot_range")
 
 
+def add_to_add_menu(self, context):
+    self.layout.separator()
+    self.layout.operator("object.add_fritzi_lightrig", icon='LIGHT_SUN')
+
+
 class FTB_PT_DataEditing_Panel(Panel):
     bl_label = "Data Editing"
     bl_space_type = "VIEW_3D"
@@ -435,6 +440,8 @@ class FTB_PT_ShotFixing_Panel(Panel):
         layout = self.layout
         col = layout.column()
         col.operator("scene.split_in_shots")
+        col.operator("scene.set_camera_clipping")
+        col.operator("object.add_fritzi_lightrig", text="Add Fritzi Sun Light", icon='LIGHT_SUN')
 
 
 classes = (
@@ -449,9 +456,11 @@ def register():
     bpy.types.OUTLINER_MT_context_menu.append(draw_outliner_tools)
     bpy.types.MATERIAL_MT_context_menu.append(draw_mat_gnodes_menu)
     bpy.types.DOPESHEET_MT_context_menu.append(add_to_dopesheet_context_menu)
+    bpy.types.VIEW3D_MT_add.append(add_to_add_menu)
 
 
 def unregister():
+    bpy.types.VIEW3D_MT_add.remove(add_to_add_menu)
     bpy.types.DOPESHEET_MT_context_menu.remove(add_to_dopesheet_context_menu)
     bpy.types.MATERIAL_MT_context_menu.remove(draw_mat_gnodes_menu)
     bpy.types.OUTLINER_MT_context_menu.remove(draw_outliner_tools)

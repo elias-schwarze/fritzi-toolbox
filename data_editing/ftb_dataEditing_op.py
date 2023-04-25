@@ -14,6 +14,9 @@ from .. utility_functions.ftb_string_utils import OS_SEPARATOR
 from .. utility_functions import ftb_logging as log
 
 
+END_MARKER_NAME = "end_of_sequence"
+
+
 @persistent
 def UpdateLayerID(self, context):
     wm = bpy.context.window_manager
@@ -1126,7 +1129,7 @@ class FTB_OT_SplitInShots_OP(Operator):
                     log.report(self, log.Severity.ERROR, "Failed to add end marker")
                     return {'CANCELLED'}
 
-            context.scene.timeline_markers[-1].name = "end_of_scene"
+            context.scene.timeline_markers[-1].name = END_MARKER_NAME
 
         context.scene.frame_current = initial_current_frame
 
@@ -1157,7 +1160,7 @@ class FTB_OT_SplitInShots_OP(Operator):
             new_filename = f"{self.naming_mask.replace('###', shot_number)}.blend"
             new_filepath = file_dir + new_filename
 
-            #print(f"Saving {new_filepath} with range: {marker.frame} - {range_end}")
+            # print(f"Saving {new_filepath} with range: {marker.frame} - {range_end}")
             try:
                 bpy.ops.wm.save_as_mainfile(filepath=new_filepath, copy=True)
             except:
@@ -1176,6 +1179,12 @@ class FTB_OT_SetShotRange_OP(Operator):
     bl_description = ("Sets start and end frame based on selected current frame and camera markers next to it")
     bl_options = {'REGISTER', 'UNDO'}
 
+    end_frame_number: bpy.props.IntProperty(name="New End Frame Number",
+                                            default=0)
+    range_start = 0
+    range_end = 0
+    no_end_marker_found = False
+
     @classmethod
     def poll(cls, context):
         if context.area.type != 'DOPESHEET_EDITOR':
@@ -1183,23 +1192,219 @@ class FTB_OT_SetShotRange_OP(Operator):
             return False
         return True
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Could not find valid end marker.")
+        layout.label(text="Please enter a frame number to add a new marker:")
+        if self.range_end <= self.range_start:
+            layout.alert = True
+            layout.label(text=f"Frame end number must be greater than {self.range_start}")
+            layout.alert = False
+        self.layout.prop(self, "end_frame_number")
+        self.range_end = self.end_frame_number
+
     def execute(self, context):
         current_frame = context.scene.frame_current
-        range_start = 0
-        range_end = 0
+        if self.no_end_marker_found:
+            if self.range_end <= self.range_start:
+                return context.window_manager.invoke_props_dialog(self, width=300)
+
+            try:
+                context.scene.frame_current = self.range_end
+                bpy.ops.marker.add()
+            except:
+                log.report(self, log.Severity.ERROR, "Failed to add marker")
+                return {'CANCELLED'}
+
+            context.scene.timeline_markers[-1].name = END_MARKER_NAME
+            context.scene.frame_current = current_frame
+
         for i, marker in enumerate(sorted(context.scene.timeline_markers, key=lambda m: m.frame)):
             if marker.frame <= current_frame and marker.camera:
-                range_start = marker.frame
+                self.range_start = marker.frame
             if marker.frame > current_frame and (marker.camera or i == len(context.scene.timeline_markers)-1):
-                range_end = (marker.frame - 1, marker.frame)[i == len(context.scene.timeline_markers)-1]
+                self.range_end = (marker.frame - 1, marker.frame)[i == len(context.scene.timeline_markers)-1]
+                self.no_end_marker_found = False
                 break
 
-        if range_end == 0 or range_start == 0:
-            log.report(self, log.Severity.ERROR, "Could not locate valid start or end marker")
+        if self.range_start == 0:
+            log.report(self, log.Severity.ERROR, "Could not locate valid start marker")
             return {'CANCELLED'}
-        context.scene.frame_start = range_start
-        context.scene.frame_end = range_end
-        log.report(self, log.Severity.INFO, f"Range set from {range_start} to {range_end}")
+
+        if self.range_end == 0:
+            self.end_frame_number = context.scene.frame_end
+            self.no_end_marker_found = True
+            return context.window_manager.invoke_props_dialog(self, width=300)
+
+        context.scene.frame_start = self.range_start
+        context.scene.frame_end = self.range_end
+        log.report(self, log.Severity.INFO, f"Range set from {self.range_start} to {self.range_end}")
+        return {'FINISHED'}
+
+
+class FTB_OT_SetCameraClipping(Operator):
+    bl_idname = "scene.set_camera_clipping"
+    bl_label = "Set Camera Clipping"
+    bl_description = "Sets \"Clip Start\" and \"Clip End\" attribute for all cameras in the scene."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    new_clip_start: bpy.props.FloatProperty(name="New Clip Start",
+                                            default=1.0,
+                                            min=0.001,
+                                            precision=1)
+
+    new_clip_end: bpy.props.FloatProperty(name="New Clip Start",
+                                          default=1000.0,
+                                          precision=1)
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "new_clip_start")
+        self.layout.prop(self, "new_clip_end")
+
+    def execute(self, context):
+        for camera in bpy.data.cameras:
+            camera.clip_start = self.new_clip_start
+            camera.clip_end = self.new_clip_end
+
+        return {'FINISHED'}
+
+
+def add_driver(source, target, prop, dataPath, index=-1, negative=False, func=""):
+    # from https://blender.stackexchange.com/questions/39127/how-to-put-together-a-driver-with-python
+    # slightly modified for my needs
+    ''' Add driver to source prop (at index), driven by target dataPath '''
+
+    if index != -1:
+        d = source.driver_add(prop, index).driver
+    else:
+        d = source.driver_add(prop).driver
+
+    v = d.variables.new()
+    v.name = prop
+    v.targets[0].id = target
+    v.targets[0].data_path = dataPath
+
+    d.expression = f"{func}" if func else v.name
+    d.expression = d.expression if not negative else "-1 * " + d.expression
+
+
+class FTB_OT_AddFritziLightRig(Operator):
+    bl_idname = "object.add_fritzi_lightrig"
+    bl_label = "Fritzi Sun Light"
+    bl_description = "Adds a custom light rig using two suns controlled by an empty with custom properties"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT' and context.space_data.type == 'VIEW_3D'
+
+    def spawn_fritzi_sun(self, name) -> bpy.types.Object:
+        bpy.ops.object.light_add(type='SUN', radius=1, align='WORLD')
+        obj = bpy.context.active_object
+        obj.name = name
+        obj.select_set(False)
+        obj.hide_select = True
+
+        return obj
+
+    def add_custom_property(self, object, prop_name, default, min_max, precision=3, description="", subtype=""):
+        if prop_name in object:
+            return
+
+        object[prop_name] = default
+
+        ui = object.id_properties_ui(prop_name)
+
+        ui.update(description=description)
+        ui.update(default=default)
+        ui.update(min=min_max[0], soft_min=min_max[0])
+        ui.update(max=min_max[1], soft_max=min_max[1])
+        ui.update(precision=precision)
+
+        if subtype != "":
+            ui.update(subtype=subtype)
+
+        # update dependencies to register new property
+        object.update_tag()
+
+    def execute(self, context):
+
+        bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', rotation=(3.1459, 0, 0))
+        rig_root = context.active_object
+        rig_root.name = "fritzi_sun_rig"
+
+        sun_light = self.spawn_fritzi_sun("Light")
+        sun_bleed = self.spawn_fritzi_sun("Bleed")
+
+        sun_light.parent = rig_root
+        sun_light.matrix_parent_inverse = rig_root.matrix_world.inverted()
+        sun_bleed.parent = rig_root
+        sun_bleed.matrix_parent_inverse = rig_root.matrix_world.inverted()
+
+        rig_root.select_set(True)
+        context.view_layer.objects.active = rig_root
+
+        # check for LIGHTS Collection and link everthing to it if it exists
+        active_collection = context.collection
+        lights_collection = None
+        lf_index = bpy.data.collections.find("LIGHTS")
+        if lf_index != -1:
+            lights_collection = bpy.data.collections[lf_index]
+
+        if lights_collection:
+            lights_collection.objects.link(rig_root)
+            lights_collection.objects.link(sun_light)
+            lights_collection.objects.link(sun_bleed)
+            active_collection.objects.unlink(rig_root)
+            active_collection.objects.unlink(sun_light)
+            active_collection.objects.unlink(sun_bleed)
+
+        intensity_range = (0.0, 1000.0)
+        color_range = (0.0, 1.0)
+        bias_range = (0.0, 360.0)
+        self.add_custom_property(rig_root, "Bleed Amount", 1.0, bias_range)
+        self.add_custom_property(rig_root, "Bleed Color", (1.0, 1.0, 0.597), color_range, precision=4, subtype='COLOR')
+        self.add_custom_property(rig_root, "Bleed Intensity", 12.0, intensity_range)
+        self.add_custom_property(rig_root, "Light Color", (1.0, 1.0, 0.847), color_range, precision=4, subtype='COLOR')
+        self.add_custom_property(rig_root, "Light Intensity", 25.0, intensity_range)
+        self.add_custom_property(rig_root, "Light Shadow Bias", 0.0, bias_range)
+
+        add_driver(sun_light.data, rig_root, "energy", "[\"Light Intensity\"]")
+        add_driver(sun_light.data, rig_root, "angle", "[\"Light Shadow Bias\"]", func="radians(angle)")
+        add_driver(sun_light.data, rig_root, "color", "[\"Light Color\"][0]", index=0)
+        add_driver(sun_light.data, rig_root, "color", "[\"Light Color\"][1]", index=1)
+        add_driver(sun_light.data, rig_root, "color", "[\"Light Color\"][2]", index=2)
+
+        add_driver(sun_bleed.data, rig_root, "energy", "[\"Bleed Intensity\"]")
+        add_driver(sun_bleed.data, rig_root, "color", "[\"Bleed Color\"][0]", index=0)
+        add_driver(sun_bleed.data, rig_root, "color", "[\"Bleed Color\"][1]", index=1)
+        add_driver(sun_bleed.data, rig_root, "color", "[\"Bleed Color\"][2]", index=2)
+
+        # add driver for bleed amount
+        d = sun_bleed.data.driver_add("angle").driver
+
+        v = d.variables.new()
+        v.name = "bias"
+        v.targets[0].id = rig_root
+        v.targets[0].data_path = "[\"Light Shadow Bias\"]"
+
+        v = d.variables.new()
+        v.name = "bleed"
+        v.targets[0].id = rig_root
+        v.targets[0].data_path = "[\"Bleed Amount\"]"
+
+        d.expression = "radians(bias+bleed)"
+
         return {'FINISHED'}
 
 
@@ -1212,7 +1417,8 @@ classes = (
     FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
     FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
-    FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP
+    FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP, FTB_OT_SetCameraClipping,
+    FTB_OT_AddFritziLightRig
 )
 
 
