@@ -1408,6 +1408,66 @@ class FTB_OT_AddFritziLightRig(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_SetFritziPropShaderAttributes(Operator):
+    bl_idname = "scene.set_fritzi_shader_attributes"
+    bl_label = "Set Fritzi Shader Attributes"
+    bl_description = "Sets Fritzi Shader Attributes by name to a new value. Attribute must be a single numerical value"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    new_value: bpy.props.FloatProperty(name="New Value",
+                                            default=1000.0,
+                                            min=0.000,
+                                            precision=1)
+
+    input_name: bpy.props.StringProperty(name="Name of desired Input to change",
+                                         default="Shaded Range Steps")
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "input_name")
+        self.layout.prop(self, "new_value")
+
+    def execute(self, context):
+
+        def set_shaded_steps_recursivly(node: bpy.types.NodeGroup, input_name: str):
+            if node.type != 'GROUP':
+                return
+            if not node.node_tree:
+                return
+            if node.node_tree.name.startswith("shader-Fritzi_Props"):
+                if input_name not in node.inputs:
+                    return
+                if node.inputs[input_name].type != 'VALUE':
+                    return
+                node.inputs[input_name].default_value = self.new_value
+            else:
+                if input_name in node.inputs:
+                    if node.inputs[input_name].type != 'VALUE':
+                        return
+                    node.inputs[input_name].default_value = self.new_value
+
+                for grp_node in node.node_tree.nodes:
+                    set_shaded_steps_recursivly(grp_node, input_name)
+
+        for material in bpy.data.materials:
+            if not material.node_tree:
+                continue
+
+            for node in material.node_tree.nodes:
+                if node.type != 'GROUP':
+                    continue
+
+                set_shaded_steps_recursivly(node, self.input_name)
+
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
     FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
@@ -1418,7 +1478,7 @@ classes = (
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
     FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
     FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP, FTB_OT_SetCameraClipping,
-    FTB_OT_AddFritziLightRig
+    FTB_OT_AddFritziLightRig, FTB_OT_SetFritziPropShaderAttributes
 )
 
 

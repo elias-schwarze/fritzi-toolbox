@@ -441,6 +441,7 @@ class FTB_PT_ShotFixing_Panel(Panel):
         col = layout.column()
         col.operator("scene.split_in_shots")
         col.operator("scene.set_camera_clipping")
+        col.operator("scene.set_fritzi_shader_attributes")
         col.operator("object.add_fritzi_lightrig", text="Add Fritzi Sun Light", icon='LIGHT_SUN')
 
 
