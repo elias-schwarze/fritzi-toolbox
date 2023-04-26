@@ -105,7 +105,8 @@ def getCurrentSettings(currentSet: RenderCheckData):
             currentSet.invalidNlaObjects.append(obj)
 
         for modifier in obj.modifiers:
-            if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE', 'LATTICE', 'SOLIDIFY', 'SUBSURF'):
+            if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE',
+                                     'LATTICE', 'SOLIDIFY', 'SUBSURF', 'MULTIRES'):
                 continue
 
             if is_invalid_bool_modifier(modifier):
@@ -257,7 +258,7 @@ def is_invalid_displace_lattice_solidify_modifier(modifier: Modifier) -> bool:
     Returns True if modifier is enabled in render but not in viewport. 
     If the modifier is not rendered, it also disables the modifier in viewport  
     """
-    if modifier.type not in ('DISPLACE', 'LATTICE', 'SOLIDIFY'):
+    if modifier.type not in ('DISPLACE', 'LATTICE', 'SOLIDIFY', 'MULTIRES'):
         return False
     # ignore the modifier if show_render is disabled and disable show_viewport
     if not modifier.show_render:
