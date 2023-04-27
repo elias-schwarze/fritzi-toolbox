@@ -2,7 +2,7 @@ import numpy as np
 
 import bpy
 
-from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode
+from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode, ShaderNodeTree
 from .. utility_functions import ftb_logging as log
 from ..utility_functions.ftb_string_utils import is_name_duplicate, strip_End_Numbers
 
@@ -344,6 +344,69 @@ class FTB_OT_RemoveMaterialDuplicates_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_RemoveNodeGroupDuplicates_Op(Operator):
+    bl_idname = "data.remove_nodegroup_duplicates"
+    bl_label = "Remove Node Group Dupes"
+    bl_description = ("Removes node group duplicates from blend file (ignores linked node groups). Duplicates will be "
+                      "remapped, setting users to zero. All duplicates will be deleted when closing the file or "
+                      "performing manual clean up using File Menu")
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+
+        def is_nodegrp_duplicate(source: ShaderNodeTree, duplicate: ShaderNodeTree) -> bool:
+            _result: bool = True
+
+            _expr: list[bool] = [is_name_duplicate(source.name_full, duplicate.name_full),
+                                 len(source.nodes) == len(duplicate.nodes),
+                                 len(source.links) == len(duplicate.links),
+                                 len(source.inputs) == len(duplicate.inputs),
+                                 len(source.outputs) == len(duplicate.outputs),
+                                 source.inputs.keys() == duplicate.inputs.keys(),
+                                 source.outputs.keys() == duplicate.outputs.keys()
+                                 ]
+
+            for e in _expr:
+                _result &= e
+
+            return _result
+
+        def get_nodegrp_duplicates(source_group: ShaderNodeTree) -> list[ShaderNodeTree]:
+
+            node_groups = bpy.data.node_groups
+            duplicates: list[ShaderNodeTree] = []
+
+            for current_grp in node_groups:
+                if current_grp == source_group or current_grp.library != None:
+                    continue
+
+                if is_nodegrp_duplicate(source_group, current_grp):
+                    duplicates.append(current_grp)
+
+            return duplicates
+
+        # code to loop through grps and remove the dupes
+        last_duplicates_found: list[ShaderNodeTree] = []
+        remap_count = 0
+        for current_grp in bpy.data.node_groups:
+            if current_grp in last_duplicates_found or current_grp.name.startswith("NodeGroup"):
+                continue
+
+            duplicates: list[ShaderNodeTree] = get_nodegrp_duplicates(current_grp)
+
+            if duplicates:
+                last_duplicates_found.extend(duplicates)
+                current_grp.name = strip_End_Numbers(current_grp.name_full)
+                for dup in duplicates:
+                    dup.user_remap(current_grp)
+                    remap_count += 1
+                    log.console(self, log.Severity.NONE, f"Remapping group {dup.name_full} to {current_grp.name_full}")
+        log.console(self, log.Severity.NONE, "\033[96m \033[1m End of node group dupe removal \033[0m")
+        log.report(self, log.Severity.INFO, f"{remap_count} node group duplicates found and remapped. "
+                   "Open the terminal for comprehensive list of remappings")
+        return {'FINISHED'}
+
+
 class FTB_OT_Remove_Edge_Splits_Op(Operator):
     bl_idname = "object.remove_edge_splits"
     bl_label = "Remove Edge Splits"
@@ -461,13 +524,13 @@ class FTB_OT_UpgradeCharacterAOVs_Op(Operator):
         aovNormal.name = "charNormal"
 
         nodeTree.links.new(input=geoInputNode.outputs[1], output=aovNormal.inputs[0])
-        return{'FINISHED'}
+        return {'FINISHED'}
 
 
 classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
     FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op,
-    FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op
+    FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op, FTB_OT_RemoveNodeGroupDuplicates_Op
 )
 
 

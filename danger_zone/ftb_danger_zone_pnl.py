@@ -144,9 +144,13 @@ class FTB_PT_DangerZone_Panel(Panel):
                      text="Remove All Modifiers")
         col.operator("object.remove_all_materials",
                      text="Remove All Materials")
-        col.operator("data.remove_image_duplicates")
-        col.operator("data.remove_material_duplicates")
         col.operator("data.remove_empty_libraries")
+
+        col.separator()
+        col.label(text="Duplicate Removal")
+        col.operator("data.remove_image_duplicates")
+        col.operator("data.remove_nodegroup_duplicates")
+        col.operator("data.remove_material_duplicates", icon='ERROR')
 
         col.separator()
         col.prop(wm, "ftbEdgeSplitScope")
