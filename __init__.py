@@ -34,7 +34,7 @@ bl_info = {
     "author": "Elias Schwarze, Robert Lehmann",
     "description": "A suite of tools for the Fritzi Project",
     "blender": (3, 3, 0),
-    "version": (1, 13, 2),
+    "version": (1, 14, 0),
     "location": "3D Viewport > Properties panel (N) > FTB Tab",
     "category": "Object"
 }
