@@ -402,6 +402,7 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                         f"{('object was', 'objects were')[object_counts['incompatible'] > 1]}"
                         f" incompatible!")
 
+        bpy.ops.scene.ih_view_layer_setup()
         log.report(self, (log.Severity.INFO, log.Severity.WARNING)[incompatible_objects_processed], message)
         return {'FINISHED'}
 
@@ -491,8 +492,41 @@ class FTB_OT_RemoveFromInvertedHullOutline_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_InvertedHullViewLayerSetup(Operator):
+    bl_idname = "scene.ih_view_layer_setup"
+    bl_label = "IH View Layer Setup"
+    bl_description = ("Excludes Inverted Hull collection on all viewlayers other than the Inverted Hull Viewlayer. "
+                      "Excludes all collections on the Inverted Hull viewlayer except for Inverted Hull collection")
+    bl_options = {"REGISTER", "UNDO"}
+
+    @ classmethod
+    def poll(cls, context):
+        if not get_data_by_type_and_name(ViewLayer, IH_VIEWLAYER_NAME):
+            cls.poll_message_set("Inverted Hull Viewlayer not found!")
+            return False
+        return True
+
+    def execute(self, context):
+        lf_index = context.view_layer.layer_collection.children.find(IH_OBJECTS_COLLECTION_NAME)
+        if lf_index == -1:
+            log.report(self, log.Severity.ERROR, "Could not find Inverted Hull Collection")
+            return {'CANCELLED'}
+
+        for viewlayer in context.scene.view_layers:
+            if viewlayer.name != IH_VIEWLAYER_NAME:
+                viewlayer.layer_collection.children[lf_index].exclude = True
+                continue
+
+            for child in viewlayer.layer_collection.children:
+                child.exclude = True
+            viewlayer.layer_collection.children[lf_index].exclude = False
+
+        return {'FINISHED'}
+
+
 classes = (FTB_OT_DefaultAddLineart_Op, FTB_OT_Copy_Optimize_Lines_Op, FTB_OT_Bake_Interval_Op,
-           FTB_OT_AddToInvertedHullOutline_Op, FTB_OT_RemoveFromInvertedHullOutline_Op)
+           FTB_OT_AddToInvertedHullOutline_Op, FTB_OT_RemoveFromInvertedHullOutline_Op,
+           FTB_OT_InvertedHullViewLayerSetup)
 
 
 @ persistent
