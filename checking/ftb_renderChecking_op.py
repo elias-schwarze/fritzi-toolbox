@@ -4,6 +4,8 @@ from bpy.types import Object, Modifier
 from .ftb_renderCheckData import RenderCheckData
 from bpy.app.handlers import persistent
 
+MODIFIER_TYPE_LIST = ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE', 'LATTICE', 'SOLIDIFY', 'SUBSURF', 'MULTIRES', 'ARMATURE')
+
 
 def getCurrentSettings(currentSet: RenderCheckData):
     """Takes in a RenderCheckData() instance and populates each field with the current values from the current project file"""
@@ -105,17 +107,16 @@ def getCurrentSettings(currentSet: RenderCheckData):
             currentSet.invalidNlaObjects.append(obj)
 
         for modifier in obj.modifiers:
-            if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE',
-                                     'LATTICE', 'SOLIDIFY', 'SUBSURF', 'MULTIRES'):
+            if modifier.type not in MODIFIER_TYPE_LIST:
                 continue
 
             if is_invalid_bool_modifier(modifier):
                 currentSet.invalidBoolObjects.append(obj)
             if is_invalid_data_transfer_modifier(modifier):
                 currentSet.invalid_data_transfer_objects.append(obj)
-            elif is_invalid_displace_lattice_solidify_modifier(modifier):
+            if has_visibility_conformity_issue(modifier):
                 currentSet.modifier_visibility_issues.append(obj)
-            elif is_invalid_subdiv_modifier(modifier):
+            if is_invalid_subdiv_modifier(modifier):
                 currentSet.modifier_visibility_issues.append(obj)
 
     return currentSet
@@ -226,12 +227,16 @@ def countActiveViewLayers():
 
 def is_invalid_bool_modifier(modifier: bpy.types.BooleanModifier) -> bool:
     """
-    Returns True if boolean modifier not uses solver EXACT, not use self and show viewport or show render are off
+    Returns True if boolean modifier does not use solver EXACT and use self
     """
+
     if modifier.type != 'BOOLEAN':
         return False
-    return not (modifier.solver == 'EXACT' and modifier.use_self) or not (
-        modifier.show_viewport and modifier.show_render)
+    # ignore the modifier if show_render is disabled
+    if not modifier.show_render:
+        return False
+
+    return not (modifier.solver == 'EXACT' and modifier.use_self)
 
 
 def is_invalid_nla_object(object: Object) -> bool:
@@ -253,12 +258,12 @@ def is_invalid_data_transfer_modifier(modifier: bpy.types.DataTransferModifier) 
     return (modifier.object is None) or (modifier.show_render is False)
 
 
-def is_invalid_displace_lattice_solidify_modifier(modifier: Modifier) -> bool:
+def has_visibility_conformity_issue(modifier: Modifier) -> bool:
     """
     Returns True if modifier is enabled in render but not in viewport. 
     If the modifier is not rendered, it also disables the modifier in viewport  
     """
-    if modifier.type not in ('DISPLACE', 'LATTICE', 'SOLIDIFY', 'MULTIRES'):
+    if modifier.type not in MODIFIER_TYPE_LIST:
         return False
     # ignore the modifier if show_render is disabled and disable show_viewport
     if not modifier.show_render:
@@ -424,8 +429,9 @@ class FTB_OT_FixModifierVisiblityIssues_op(bpy.types.Operator):
     def execute(self, context):
         faulty_objects = context.scene.ftbCurrentRenderSettings.modifier_visibility_issues
         for obj in faulty_objects:
+            modifier: bpy.types.Modifier
             for modifier in obj.modifiers:
-                if modifier.type not in ('BOOLEAN', 'DATA_TRANSFER', 'DISPLACE', 'LATTICE', 'SOLIDIFY', 'SUBSURF'):
+                if modifier.type not in MODIFIER_TYPE_LIST:
                     continue
                 if modifier.type == 'SUBSURF':
                     modifier.levels = modifier.render_levels

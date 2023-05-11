@@ -144,8 +144,6 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 if cs.modifier_visibility_issues:
                     box = layout.box()
                     box.label(text=(f"{len(cs.modifier_visibility_issues)} Modifier Visibility Issues"), icon='ERROR')
-                    for obj in cs.modifier_visibility_issues:
-                        box.label(text=obj.name_full)
                     box.operator("utils.fix_modifier_visiblity_issues")
 
                 # BURN IN
