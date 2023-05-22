@@ -43,6 +43,13 @@ class FTBPreferences(bpy.types.AddonPreferences):
                      "is loaded"),
         default=True)
 
+    alert_override_auto_resync: bpy.props.BoolProperty(
+        name="Alert on inactive \"Override Auto Resync\"",
+        description=(
+            "If enabled, a popup dialog is shown every time a blend file is loaded while \"Override Auto Resync\""
+            "is disabled"),
+        default=True)
+
     hide_render_preset_manager: bpy.props.BoolProperty(
         name="Hide Render Preset Manager",
         description="Hides the render preset manager inside the render properties tab",
@@ -172,6 +179,7 @@ class FTBPreferences(bpy.types.AddonPreferences):
         col.prop(getFritziPreferences(), "alert_auto_pack_resources")
 
         col.prop(getFritziPreferences(), "alert_absolute_paths")
+        col.prop(getFritziPreferences(), "alert_override_auto_resync")
         col.prop(getFritziPreferences(), "hide_render_preset_manager")
 
         # Updater draw function, could also pass in col as third arg.

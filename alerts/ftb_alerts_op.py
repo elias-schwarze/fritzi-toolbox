@@ -109,6 +109,26 @@ class FTB_OT_AlertAutoPackReSources(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_AlertOverrideAutoResync(bpy.types.Operator):
+    bl_idname = "utils.alert_override_auto_resync"
+    bl_label = "WARNING!"
+    bl_description = "Alerts user if \"Override Auto Resync\" is disabled"
+    bl_options = {'INTERNAL'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.alert = True
+        layout.label(text="Override Auto Resync is disabled!")
+        layout.separator()
+        layout.alert = False
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 @persistent
 def alert_p4_postLoad_handler(dummy):
     filepath = bpy.data.filepath
@@ -127,6 +147,10 @@ def auto_key_postLoad_handler(dummy):
 
     if bpy.data.use_autopack and getFritziPreferences().alert_auto_pack_resources:
         bpy.ops.utils.alert_auto_pack_resources('INVOKE_DEFAULT')
+
+    inactive_override_auto_resync = not bpy.context.preferences.experimental.override_auto_resync
+    if getFritziPreferences().alert_override_auto_resync and inactive_override_auto_resync:
+        bpy.ops.utils.alert_override_auto_resync('INVOKE_DEFAULT')
 
     return {'FINISHED'}
 
@@ -167,7 +191,7 @@ def custom_pre_save_handler(dummy):
 
 
 classes = (FTB_OT_AlertUserAutoKey_Op, FTB_OT_Alert_Absolute_Asset_Path_Op, FTB_OT_Alert_P4_Temp_Fileath_Op,
-           FTB_OT_AlertAutoPackReSources)
+           FTB_OT_AlertAutoPackReSources, FTB_OT_AlertOverrideAutoResync)
 
 
 def register():
