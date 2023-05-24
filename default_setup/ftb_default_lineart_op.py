@@ -402,7 +402,7 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                         f"{('object was', 'objects were')[object_counts['incompatible'] > 1]}"
                         f" incompatible!")
 
-        bpy.ops.scene.ih_view_layer_setup()
+        # bpy.ops.scene.ih_view_layer_setup()
         log.report(self, (log.Severity.INFO, log.Severity.WARNING)[incompatible_objects_processed], message)
         return {'FINISHED'}
 
