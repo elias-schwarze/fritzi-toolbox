@@ -105,6 +105,7 @@ def custom_object_context_menu(self, context):
     self.layout.separator()
     self.layout.operator("object.add_ih_outline")
     self.layout.operator("object.remove_ih_outline")
+    self.layout.operator("object.adjust_ih_thickness")
 
 
 class FTB_PT_InvertedHullSettings_Panel(Panel):
