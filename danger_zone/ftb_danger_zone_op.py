@@ -5,6 +5,7 @@ import bpy
 from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode, ShaderNodeTree
 from .. utility_functions import ftb_logging as log
 from ..utility_functions.ftb_string_utils import is_name_duplicate, strip_End_Numbers
+from ..utility_functions.ftb_transform_utils import apply_bone_world_matrix
 
 
 def is_image_duplicate(source: Image, duplicate: Image):
@@ -527,10 +528,45 @@ class FTB_OT_UpgradeCharacterAOVs_Op(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_FixPrecisionError_Op(bpy.types.Operator):
+    bl_idname = "object.fix_precision_error"
+    bl_label = "Fix Character Precision Error"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+
+        if not bpy.context.active_object:
+            self.report({'ERROR'}, "No armature selected.")
+            return {'CANCELLED'}
+
+        if not bpy.context.active_object.type == 'ARMATURE':
+            self.report({'ERROR'}, "Active object is not an armature.")
+            return {'CANCELLED'}
+
+        armObj = bpy.context.active_object
+        grpEmpty = armObj.parent
+        emptyName = bpy.context.active_object.name + "_precisionEmpty"
+        fixEmpty = bpy.data.objects.new(emptyName, None)
+        bpy.context.scene.collection.objects.link(fixEmpty)
+
+        poseBone = bpy.context.active_pose_bone
+        childConstraint = poseBone.constraints.new('CHILD_OF')
+        childConstraint.target = fixEmpty
+
+        #bpy.ops.view3d.snap_cursor_to_selected
+        #grpEmpty.location = bpy.context.scene.cursor.location
+
+        # move empty to bone world postion via matrix_world of armature
+        #apply_bone_world_matrix(poseBone=poseBone, armObject=armObj, targetObject=grpEmpty)
+
+        return {'FINISHED'}
+
+
 classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
     FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op,
-    FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op, FTB_OT_RemoveNodeGroupDuplicates_Op
+    FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op, FTB_OT_RemoveNodeGroupDuplicates_Op,
+    FTB_OT_FixPrecisionError_Op
 )
 
 

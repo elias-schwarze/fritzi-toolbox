@@ -60,3 +60,11 @@ def rot_copy(item, mat):
         item.rotation_axis_angle = axis_angle
     else:
         item.rotation_euler = mat.to_3x3().to_euler(item.rotation_mode)
+
+
+def apply_bone_world_matrix(poseBone, armObject, targetObject):
+    """apply world matrix of a Bone to an Object, which transforms the object to match the world transform on the bone."""
+    # get armature object from the pose bone
+    armObj = armObject
+    matrix_final = armObj.matrix_world @ poseBone.matrix
+    targetObject.matrix_world = matrix_final
