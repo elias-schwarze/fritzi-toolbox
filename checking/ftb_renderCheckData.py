@@ -6,8 +6,8 @@ class RenderCheckData:
     """A class that can contain all relevant render settings and methods to compare against defaults for render check."""
 
     framerate: int = 50
-    resX: int = 3840
-    resY: int = 2160
+    resX: int = 1920
+    resY: int = 1080
     resPercent: int = 100
 
     renderSamples: int = 200

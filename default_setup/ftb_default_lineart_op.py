@@ -362,7 +362,10 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
                 try:
                     ih_modifier = object.modifiers.new(name=IH_MODIFIER_NAME, type='SOLIDIFY')
 
-                    ih_modifier.thickness = prefernces.ih_modifier_thickness
+                    # set thickness based on object scale to achieve similiar thickness for scaled objects
+                    scale_average = sum(abs(n) for n in object.scale) / len(object.scale)
+                    ih_modifier.thickness = prefernces.ih_modifier_thickness / scale_average
+
                     ih_modifier.offset = prefernces.ih_modifier_offset
                     ih_modifier.use_even_offset = prefernces.ih_modifier_even_thickness
                     ih_modifier.use_quality_normals = prefernces.ih_modifier_use_quality_normals
@@ -466,11 +469,13 @@ class FTB_OT_RemoveFromInvertedHullOutline_Op(Operator):
                     ih_modifier.driver_remove(d_path)
                 object.modifiers.remove(ih_modifier)
 
-            # remove ih_outline material + slot
-            lf_index = object.material_slots.find(IH_MATERIAL_NAME)
-            if lf_index != -1:
-                object.data.materials.pop(index=lf_index)
-            object_counts["successful"] += 1
+            # if the mesh is not a linked duplicate, remove IH material slot, otherwise keep it
+            if object.data.users <= 1:
+                # remove ih_outline material + slot
+                lf_index = object.material_slots.find(IH_MATERIAL_NAME)
+                if lf_index != -1:
+                    object.data.materials.pop(index=lf_index)
+                object_counts["successful"] += 1
 
         # if there is no object left in IH_collection remove IH related collection, aov pass, material and viewlayer
         message = (f"Removed {object_counts['successful']} {('object', 'objects')[object_counts['successful'] > 1]}"
@@ -494,9 +499,9 @@ class FTB_OT_RemoveFromInvertedHullOutline_Op(Operator):
 
 class FTB_OT_InvertedHullViewLayerSetup(Operator):
     bl_idname = "scene.ih_view_layer_setup"
-    bl_label = "IH View Layer Setup"
-    bl_description = ("Excludes Inverted Hull collection on all viewlayers other than the Inverted Hull Viewlayer. "
-                      "Excludes all collections on the Inverted Hull viewlayer except for Inverted Hull collection")
+    bl_label = "IH Viewlayer Finalisation"
+    bl_description = ("Excludes Inverted Hull collection on all viewlayers other than the Inverted Hull Viewlayer and "
+                      "configures the IH-Viewlayer with appropriate settings for final rendering")
     bl_options = {"REGISTER", "UNDO"}
 
     @ classmethod
@@ -507,26 +512,103 @@ class FTB_OT_InvertedHullViewLayerSetup(Operator):
         return True
 
     def execute(self, context):
+
+        def set_exclude(exclude: bool, collection: bpy.types.LayerCollection):
+            collection.exclude = exclude
+            if collection.children:
+                for child in collection.children:
+                    set_exclude(exclude, child)
+
+        def copy_layercollection_settings(source: bpy.types.LayerCollection, target: bpy.types.LayerCollection):
+            target.exclude = source.exclude
+            target.collection.hide_select = source.collection.hide_select
+            target.hide_viewport = source.hide_viewport
+            target.holdout = source.holdout
+            target.indirect_only = source.indirect_only
+
+            if source.children:
+                for childsource, childtarget in zip(source.children, target.children):
+                    copy_layercollection_settings(childsource, childtarget)
+
+        def copy_viewlayer_settings(source: ViewLayer, target: ViewLayer):
+            for colsource, coltarget in zip(source.layer_collection.children, target.layer_collection.children):
+                copy_layercollection_settings(colsource, coltarget)
+
         lf_index = context.view_layer.layer_collection.children.find(IH_OBJECTS_COLLECTION_NAME)
+        viewlayer_3d = get_data_by_type_and_name(ViewLayer, "3d")
+        ih_viewlayer = get_data_by_type_and_name(ViewLayer, IH_VIEWLAYER_NAME)
         if lf_index == -1:
             log.report(self, log.Severity.ERROR, "Could not find Inverted Hull Collection")
             return {'CANCELLED'}
+        if not viewlayer_3d:
+            log.report(self, log.Severity.ERROR, "Could not find viewlayer with name \"3d\"")
+            return {'CANCELLED'}
+        if not ih_viewlayer:
+            log.report(self, log.Severity.ERROR, "Could not find Inverted-Hull Viewlayer")
+            return {'CANCELLED'}
 
+        copy_viewlayer_settings(viewlayer_3d, ih_viewlayer)
+
+        # exclude ih collection from all other viewlayers
         for viewlayer in context.scene.view_layers:
             if viewlayer.name != IH_VIEWLAYER_NAME:
                 viewlayer.layer_collection.children[lf_index].exclude = True
                 continue
+        # exclude outline collections in ih viewlayer
+        for child in viewlayer.layer_collection.children:
+            if child.name in ("OUTLINES", "OUTLINE_groups"):
+                set_exclude(True, child)
 
-            for child in viewlayer.layer_collection.children:
-                child.exclude = True
-            viewlayer.layer_collection.children[lf_index].exclude = False
+        viewlayer.layer_collection.children[lf_index].exclude = False
+
+        return {'FINISHED'}
+
+
+class FTB_OT_AdjustInvertedHullThickness(Operator):
+    bl_idname = "object.adjust_ih_thickness"
+    bl_label = "FTB: Adjust IH-Thickness"
+    bl_description = "Adjust the inverted hull thickness for selected objects"
+    bl_options = {"REGISTER", "UNDO"}
+
+    thickness: bpy.props.FloatProperty(name="IH-Thickness",
+                                       description="New thickness value for the IH-modifier",
+                                       default=0.003,
+                                       precision=4,
+                                       min=0.0001,
+                                       max=20.0)
+
+    apply_scale: bpy.props.BoolProperty(name="Apply Thickness Scale",
+                                        description="Sets the inverted hull thickness for selected objects based on " +
+                                        "their scale to achieve a similiar thickness value",
+                                        default=True)
+
+    @ classmethod
+    def poll(cls, context):
+        if context.mode != 'OBJECT':
+            cls.poll_message_set("Must be in Object Mode")
+            return False
+        if len(context.selected_objects) < 1:
+            cls.poll_message_set("Select at least one object")
+            return False
+        return True
+
+    def execute(self, context):
+
+        for object in context.selected_objects:
+            for modifier in object.modifiers:
+                if modifier.type != 'SOLIDIFY':
+                    continue
+                if modifier.name != IH_MODIFIER_NAME:
+                    continue
+                scale_average = sum(abs(n) for n in object.scale) / len(object.scale)
+                modifier.thickness = self.thickness / (1, scale_average)[self.apply_scale]
 
         return {'FINISHED'}
 
 
 classes = (FTB_OT_DefaultAddLineart_Op, FTB_OT_Copy_Optimize_Lines_Op, FTB_OT_Bake_Interval_Op,
            FTB_OT_AddToInvertedHullOutline_Op, FTB_OT_RemoveFromInvertedHullOutline_Op,
-           FTB_OT_InvertedHullViewLayerSetup)
+           FTB_OT_InvertedHullViewLayerSetup, FTB_OT_AdjustInvertedHullThickness)
 
 
 @ persistent
