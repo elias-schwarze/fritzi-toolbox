@@ -123,7 +123,7 @@ class FTBPreferences(bpy.types.AddonPreferences):
     ih_modifier_thickness: bpy.props.FloatProperty(name="Thickness",
                                                    description="",
                                                    precision=4,
-                                                   default=0.0036)
+                                                   default=0.0018)
 
     ih_modifier_offset: bpy.props.FloatProperty(name="Offset",
                                                 description="",

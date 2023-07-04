@@ -260,7 +260,7 @@ class FTB_OT_AddToInvertedHullOutline_Op(Operator):
         # if it does not exist, create it and get reference
         if not inverted_hull_viewlayer:
             try:
-                bpy.ops.scene.view_layer_add()
+                bpy.ops.scene.view_layer_add(type='COPY')
                 inverted_hull_viewlayer = context.view_layer
                 inverted_hull_viewlayer.name = IH_VIEWLAYER_NAME
                 context.window.view_layer = initial_view_layer
@@ -572,7 +572,7 @@ class FTB_OT_AdjustInvertedHullThickness(Operator):
 
     thickness: bpy.props.FloatProperty(name="IH-Thickness",
                                        description="New thickness value for the IH-modifier",
-                                       default=0.003,
+                                       default=0.0018,
                                        precision=4,
                                        min=0.0001,
                                        max=20.0)
