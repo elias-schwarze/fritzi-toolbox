@@ -59,6 +59,9 @@ class RenderCheckData:
     uncOutput: bool = True
     uncProject: bool = True
 
+    use_compositing: bool = False
+    use_sequencer: bool = False
+
     aovs = {
         "VectorLightMask": "VALUE",
         "DiffuseLightMask": "VALUE",

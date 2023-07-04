@@ -67,6 +67,10 @@ def getCurrentSettings(currentSet: RenderCheckData):
     currentSet.cmExposure = bpy.context.scene.view_settings.exposure
     currentSet.cmGamma = bpy.context.scene.view_settings.gamma
 
+    # post processing settings
+    currentSet.use_compositing = bpy.context.scene.render.use_compositing
+    currentSet.use_sequencer = bpy.context.scene.render.use_sequencer
+
     # Get AOVs
     aovKeyList = list()
     for aov in bpy.context.view_layer.aovs:
@@ -124,7 +128,8 @@ def getCurrentSettings(currentSet: RenderCheckData):
 
 def setFinalSettings(
         resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
-        renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False):
+        renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False,
+        post_processing=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -215,6 +220,10 @@ def setFinalSettings(
                 newLayer.name = key
                 newLayer.type = defaultSet.aovs[key]
 
+    if post_processing:
+        bpy.context.scene.render.use_compositing = defaultSet.use_compositing
+        bpy.context.scene.render.use_sequencer = defaultSet.use_sequencer
+
 
 def countActiveViewLayers():
     count = 0
@@ -293,7 +302,8 @@ class FTB_OT_RenderCheckRefresh_op(bpy.types.Operator):
     bl_description = "Run automated tests to prepare for rendering"
     bl_options = {"REGISTER", "UNDO"}
 
-    # If the operator was not run at least once after startup, do not display any info to avoid null references from old data that has already been freed
+    # If the operator was not run at least once after startup, do not display any info to avoid null references
+    # from old data that has already been freed
     ranOnce = False
 
     # should only work in object mode
@@ -382,13 +392,35 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    post_processing: bpy.props.BoolProperty(
+        name="postprocessing",
+        default=False
+    )
+
     def execute(self, context):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
-                         simplify=self.simplify, aovs=self.aovs, samples=self.samples)
+                         simplify=self.simplify, aovs=self.aovs, samples=self.samples,
+                         post_processing=self.post_processing)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
+
+        # reinitialize operator props that may have been previously set
+        self.resFps = False
+        self.shadows = False
+        self.ao = False
+        self.overscan = False
+        self.outparams = False
+        self.burnIn = False
+        self.renderSingleLayer = False
+        self.colorMangement = False
+        self.filmTransparent = False
+        self.simplify = False
+        self.aovs = False
+        self.samples = False
+        self.post_processing = False
+
         return {'FINISHED'}
 
 
