@@ -406,7 +406,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
 
-        # reinitialize operator props that may have been previously set
+        # reinitialize operator props that may have been set previously
         self.resFps = False
         self.shadows = False
         self.ao = False

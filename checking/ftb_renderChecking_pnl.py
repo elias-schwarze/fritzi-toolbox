@@ -237,6 +237,12 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
             box.label(text="Simplify render settings incorrect", icon='ERROR')
             box.operator("utils.render_check_set_settings", text="Set Defaults").simplify = True
 
+        # check if scene contains baked lightning
+        if context.scene.eevee.gi_cache_info.startswith("No light cache"):
+            box = layout.box()
+            box.label(text="No baked Lightning", icon='INFO')
+            box.operator("scene.light_cache_bake")
+
 
 def register():
     bpy.types.Scene.ftbCurrentRenderSettings = RenderCheckData()
