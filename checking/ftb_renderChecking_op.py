@@ -270,16 +270,11 @@ def is_invalid_data_transfer_modifier(modifier: bpy.types.DataTransferModifier) 
 def has_visibility_conformity_issue(modifier: Modifier) -> bool:
     """
     Returns True if modifier is enabled in render but not in viewport.
-    If the modifier is not rendered, it also disables the modifier in viewport
     """
     if modifier.type not in MODIFIER_TYPE_LIST:
         return False
-    # ignore the modifier if show_render is disabled and disable show_viewport
-    # if not modifier.show_render:
-    #     modifier.show_viewport = modifier.show_render
-    #     return False
 
-    return not (modifier.show_viewport and modifier.show_render)
+    return not (modifier.show_viewport == modifier.show_render)
 
 
 def is_invalid_subdiv_modifier(modifier: bpy.types.SubsurfModifier) -> bool:
