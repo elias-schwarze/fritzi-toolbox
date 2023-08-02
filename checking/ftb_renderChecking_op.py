@@ -275,9 +275,9 @@ def has_visibility_conformity_issue(modifier: Modifier) -> bool:
     if modifier.type not in MODIFIER_TYPE_LIST:
         return False
     # ignore the modifier if show_render is disabled and disable show_viewport
-    if not modifier.show_render:
-        modifier.show_viewport = modifier.show_render
-        return False
+    # if not modifier.show_render:
+    #     modifier.show_viewport = modifier.show_render
+    #     return False
 
     return not (modifier.show_viewport and modifier.show_render)
 
