@@ -52,6 +52,10 @@ def draw_mat_gnodes_menu(self, context):
             gnodesIndexOp.matName = gnodesMatName
 
 
+def append_to_outliner_context_menu(self, context):
+    self.layout.operator("outliner.remove_empty_collection")
+
+
 def add_to_dopesheet_context_menu(self, context):
     self.layout.operator("scene.set_shot_range")
 
@@ -455,6 +459,8 @@ classes = (
 def register():
     for c in classes:
         bpy.utils.register_class(c)
+    bpy.types.OUTLINER_MT_collection.append(append_to_outliner_context_menu)
+    bpy.types.OUTLINER_MT_collection_new.append(append_to_outliner_context_menu)
     bpy.types.OUTLINER_MT_context_menu.append(draw_outliner_tools)
     bpy.types.MATERIAL_MT_context_menu.append(draw_mat_gnodes_menu)
     bpy.types.DOPESHEET_MT_context_menu.append(add_to_dopesheet_context_menu)
@@ -466,5 +472,7 @@ def unregister():
     bpy.types.DOPESHEET_MT_context_menu.remove(add_to_dopesheet_context_menu)
     bpy.types.MATERIAL_MT_context_menu.remove(draw_mat_gnodes_menu)
     bpy.types.OUTLINER_MT_context_menu.remove(draw_outliner_tools)
+    bpy.types.OUTLINER_MT_collection_new.remove(append_to_outliner_context_menu)
+    bpy.types.OUTLINER_MT_collection.remove(append_to_outliner_context_menu)
     for c in reversed(classes):
         bpy.utils.unregister_class(c)

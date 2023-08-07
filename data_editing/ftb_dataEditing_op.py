@@ -1279,6 +1279,31 @@ class FTB_OT_SetCameraClipping(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_RemoveEmptyCollection(Operator):
+    bl_idname = "outliner.remove_empty_collection"
+    bl_label = "Remove Empty Collections"
+    bl_description = "Removes all collections inside the active collection which contain no objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.area.type != 'OUTLINER':
+            return False
+        return True
+
+    def execute(self, context):
+        collection: bpy.types.Collection
+        for collection in context.collection.children_recursive:
+            if len(collection.all_objects) > 0:
+                continue
+            bpy.data.collections.remove(collection)
+
+        if len(context.collection.all_objects) < 1:
+            bpy.data.collections.remove(context.collection)
+
+        return {'FINISHED'}
+
+
 def add_driver(source, target, prop, dataPath, index=-1, negative=False, func=""):
     # from https://blender.stackexchange.com/questions/39127/how-to-put-together-a-driver-with-python
     # slightly modified for my needs
@@ -1478,7 +1503,7 @@ classes = (
     FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
     FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
     FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP, FTB_OT_SetCameraClipping,
-    FTB_OT_AddFritziLightRig, FTB_OT_SetFritziPropShaderAttributes
+    FTB_OT_AddFritziLightRig, FTB_OT_SetFritziPropShaderAttributes, FTB_OT_RemoveEmptyCollection
 )
 
 
