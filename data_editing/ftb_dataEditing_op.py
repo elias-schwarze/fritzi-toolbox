@@ -1,6 +1,8 @@
 
 import bpy
+import inspect
 import string
+import sys
 
 from bpy.types import Operator
 from bpy.app.handlers import persistent
@@ -1493,23 +1495,14 @@ class FTB_OT_SetFritziPropShaderAttributes(Operator):
         return {'FINISHED'}
 
 
-classes = (
-    FTB_OT_OverrideRetainTransform_Op, FTB_OT_CollectionNameToMaterial_Op, FTB_OT_ObjectNameToMaterial_Op,
-    FTB_OT_CopyLocation_Op, FTB_OT_CopyRotation_Op, FTB_OT_CopyScale_Op, FTB_OT_SetLineartSettings_Op,
-    FTB_OT_SetMatLinks_Op, FTB_OT_ClearMaterialSlots_Op, FTB_OT_PropagateLineUsage_Op,
-    FTB_OT_SetToCenter_Op, FTB_OT_OriginToCursor_Op, FTB_OT_LimitToThisViewLayer_Op,
-    FTB_OT_GetAbsoluteDataPath_Op, FTB_OT_ResetLineartSettings_Op, FTB_OT_EqualizeSubdivision_Op,
-    FTB_OT_SetExactBooleans_OP, FTB_OT_SetFastBooleans_OP, FTB_OT_HideBooleansViewport_OP,
-    FTB_OT_UnhideBooleansViewport_OP, FTB_OT_HideBooleansRender_OP, FTB_OT_UnhideBooleansRender_OP,
-    FTB_OT_SelfIntersectionBoolean_OP, FTB_OT_UseHoleTolerantBoolean_OP,
-    FTB_OT_HideLatticeModifiers_Op, FTB_OT_SplitInShots_OP, FTB_OT_SetShotRange_OP, FTB_OT_SetCameraClipping,
-    FTB_OT_AddFritziLightRig, FTB_OT_SetFritziPropShaderAttributes, FTB_OT_RemoveEmptyCollection
-)
+classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
 
 
 def register():
     for c in classes:
-        bpy.utils.register_class(c)
+        if "FTB_" not in c[0]:
+            continue
+        bpy.utils.register_class(globals()[c[0]])
 
     bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineUsageButton)
@@ -1520,4 +1513,6 @@ def unregister():
     bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
 
     for c in reversed(classes):
-        bpy.utils.unregister_class(c)
+        if "FTB_" not in c[0]:
+            continue
+        bpy.utils.unregister_class(globals()[c[0]])
