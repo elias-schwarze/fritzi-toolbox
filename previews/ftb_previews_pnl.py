@@ -104,18 +104,20 @@ class FTB_PT_PreviewSelector_Panel(Panel):
                  text="Bottom", toggle=True)
 
 
-def draw_ftb_render_anim_operator(self, context):
+def add_to_3dview_menu(self, context):
     layout = self.layout
-    layout.operator("render.ftb_preview")
+    layout.separator()
+    layout.operator("render.ftb_shot_previews")
+    # layout.operator("render.ftb_preview")
 
 
 def register():
     bpy.utils.register_class(FTB_PT_Previews_Panel)
     bpy.utils.register_class(FTB_PT_PreviewSelector_Panel)
-    # bpy.types.VIEW3D_MT_view.append(draw_ftb_render_anim_operator)
+    bpy.types.VIEW3D_MT_view.append(add_to_3dview_menu)
 
 
 def unregister():
-    # bpy.types.VIEW3D_MT_view.remove(draw_ftb_render_anim_operator)
+    bpy.types.VIEW3D_MT_view.remove(add_to_3dview_menu)
     bpy.utils.unregister_class(FTB_PT_Previews_Panel)
     bpy.utils.unregister_class(FTB_PT_PreviewSelector_Panel)
