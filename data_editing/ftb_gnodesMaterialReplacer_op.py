@@ -78,7 +78,8 @@ def createIndexMatNodes():
     getMatIndex = setMatNodeGroup.nodes.new(type="GeometryNodeInputMaterialIndex")
     getMatIndex.location = (0.0, -200.0)
 
-    compareNode = setMatNodeGroup.nodes.new(type="FunctionNodeCompareFloats")
+    compareNode = setMatNodeGroup.nodes.new(type="FunctionNodeCompare")
+    compareNode.data_type = 'FLOAT'
     compareNode.operation = 'EQUAL'
     compareNode.location = (250.0, -150.0)
 
