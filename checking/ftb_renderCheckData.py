@@ -62,6 +62,8 @@ class RenderCheckData:
     use_compositing: bool = False
     use_sequencer: bool = False
 
+    use_bloom: bool = False
+
     aovs = {
         "VectorLightMask": "VALUE",
         "DiffuseLightMask": "VALUE",

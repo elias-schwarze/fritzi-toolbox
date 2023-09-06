@@ -57,6 +57,9 @@ def getCurrentSettings(currentSet: RenderCheckData):
     # Get "Film Transparent" setting
     currentSet.film_transparent = bpy.context.scene.render.film_transparent
 
+    # Get Bloom enabled
+    currentSet.use_bloom = bpy.context.scene.eevee.use_bloom
+
     # simplify settings
     currentSet.simplify_subdiv_render = bpy.context.scene.render.simplify_subdivision_render
 
@@ -129,7 +132,7 @@ def getCurrentSettings(currentSet: RenderCheckData):
 def setFinalSettings(
         resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
         renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False,
-        post_processing=False):
+        post_processing=False, use_bloom=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -205,6 +208,10 @@ def setFinalSettings(
     # simplify default settings
     if simplify:
         bpy.context.scene.render.simplify_subdivision_render = defaultSet.simplify_subdiv_render
+
+    # bloom
+    if use_bloom:
+        bpy.context.scene.eevee.use_bloom = defaultSet.use_bloom
 
     # aovs
     if aovs:
@@ -392,12 +399,17 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    use_bloom: bpy.props.BoolProperty(
+        name='bloom',
+        default=False
+    )
+
     def execute(self, context):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
                          simplify=self.simplify, aovs=self.aovs, samples=self.samples,
-                         post_processing=self.post_processing)
+                         post_processing=self.post_processing, use_bloom=self.use_bloom)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
 
@@ -415,6 +427,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         self.aovs = False
         self.samples = False
         self.post_processing = False
+        self.use_bloom = False
 
         return {'FINISHED'}
 

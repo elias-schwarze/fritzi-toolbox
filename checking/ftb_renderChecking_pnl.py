@@ -127,6 +127,12 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
             box.label(text="Compositor/Sequencer enabled", icon='ERROR')
             box.operator("utils.render_check_set_settings", text="Disable Compositor/Sequencer").post_processing = True
 
+        # BLOOM
+        if context.scene.eevee.use_bloom:
+            box = layout.box()
+            box.label(text="Bloom enabled", icon='ERROR')
+            box.operator("utils.render_check_set_settings", text="Disable Bloom").use_bloom = True
+
         # BOOLEANS
         if cs.invalidBoolObjects:
             box = layout.box()
