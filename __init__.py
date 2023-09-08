@@ -13,8 +13,6 @@
 
 from . import ftb_prefs, addon_updater_ops
 from .previews import ftb_previews_pnl, ftb_previews_op
-from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op
-from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op, ftb_gnodesMaterialReplacer_op
 from .checking import ftb_objectChecking_pnl, ftb_objectChecking_op, ftb_renderChecking_pnl, ftb_renderChecking_op
 from .data_editing import ftb_dataEditing_pnl, ftb_dataEditing_op, ftb_gnodesMaterialReplacer_op
 from .danger_zone import ftb_danger_zone_pnl, ftb_danger_zone_op
