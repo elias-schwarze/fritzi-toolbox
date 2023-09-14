@@ -5,7 +5,6 @@ import string
 import sys
 
 from bpy.types import Operator
-from bpy.app.handlers import persistent
 
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Loc
 from .. utility_functions.ftb_transform_utils import ob_Copy_Vis_Rot
@@ -19,12 +18,6 @@ from .. utility_functions import ftb_logging as log
 END_MARKER_NAME = "end_of_sequence"
 
 
-@persistent
-def UpdateLayerID(self, context):
-    wm = bpy.context.window_manager
-    wm.MaskLayerID = BinToDec(bpy.context.collection.lineart_intersection_mask)
-
-
 def DecToBin(n, OutBinaryArray):
     if not n == 0:
         OutBinaryArray.append(n % 2)
@@ -36,62 +29,6 @@ def BinToDec(BinaryArray):
     for i in reversed(range(len(BinaryArray))):
         n += BinaryArray[i] * pow(2, i)
     return n
-
-
-def ConvertLayerIDToMask(self, context):
-    Collection = context.collection
-    LayerID = context.window_manager.MaskLayerID
-
-    Mask = []
-    DecToBin((LayerID % 256), Mask)
-    for i in range(len(Mask), 8):
-        Mask.append(0)
-
-    for i in range(0, len(Collection.lineart_intersection_mask)):
-        Collection.lineart_intersection_mask[i] = Mask[i]
-
-
-def ModifyCollectionLineArtMask(Collection, Mask):
-    Collection.lineart_use_intersection_mask = Mask[0]
-    for i in range(0, len(Collection.lineart_intersection_mask)):
-        Collection.lineart_intersection_mask[i] = Mask[(i+1) % 9]
-
-
-def PropagateCollectionMaskSettings(Collection, Mask, bForAllChildren=False):
-
-    if Collection.children:
-        for c in Collection.children:
-            ModifyCollectionLineArtMask(c, Mask)
-            if bForAllChildren:
-                PropagateCollectionMaskSettings(c, Mask, bForAllChildren)
-
-
-def GetMaskSettings(FromCollection):
-    Mask = [0]*9
-
-    Mask[0] = FromCollection.lineart_use_intersection_mask
-    for i in range(0, len(FromCollection.lineart_intersection_mask)):
-        Mask[(i+1) % 9] = FromCollection.lineart_intersection_mask[i]
-
-    return Mask
-
-
-def drawLineArtMaskButton(self, context):
-    wm = context.window_manager
-
-    ButtonLabel = "Propagate to all children"
-    if not wm.bForAllChildren:
-        ButtonLabel = "Propagate to immediate children"
-
-    layout = self.layout
-    col = layout.column()
-    col.alignment = 'RIGHT'
-    col.prop(wm, "MaskLayerID", text="Layer")
-    col.separator()
-
-    row = col.row(align=True)
-    row.operator("collection.propagatelineartmask", text=ButtonLabel)
-    row.prop(wm, "bForAllChildren", text="", icon='OUTLINER_OB_GROUP_INSTANCE')
 
 
 def drawLineUsageButton(self, context):
@@ -525,32 +462,6 @@ class FTB_OT_ClearMaterialSlots_Op(Operator):
             self.report(
                 {'INFO'},
                 "Operation Finished. Successfully cleared " + str(slotCount) + " slots on " + str(objCount) + " objects.")
-
-        return {'FINISHED'}
-
-
-class FTB_OT_PropagateLineArtMaskSettings_Op(Operator):
-
-    bpy.types.WindowManager.bForAllChildren = bpy.props.BoolProperty(
-        default=True)
-    bpy.types.WindowManager.MaskLayerID = bpy.props.IntProperty(
-        min=0, max=255, update=ConvertLayerIDToMask)
-
-    bl_idname = "collection.propagatelineartmask"
-    bl_label = "Propagate to child collections"
-    bl_description = "Copies the Line Art Mask settings from this collection to all its children or its immediate children."
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        collection = context.collection
-        mask = GetMaskSettings(collection)
-        PropagateCollectionMaskSettings(
-            collection, mask, context.window_manager.bForAllChildren)
-
-        if context.window_manager.bForAllChildren:
-            self.report({'INFO'}, "Mask settings applied to all children")
-        else:
-            self.report({'INFO'}, "Mask settings applied to immediate children")
 
         return {'FINISHED'}
 
@@ -1504,13 +1415,11 @@ def register():
             continue
         bpy.utils.register_class(globals()[c[0]])
 
-    bpy.app.handlers.depsgraph_update_pre.append(UpdateLayerID)
     bpy.types.COLLECTION_PT_lineart_collection.append(drawLineUsageButton)
 
 
 def unregister():
     bpy.types.COLLECTION_PT_lineart_collection.remove(drawLineUsageButton)
-    bpy.app.handlers.depsgraph_update_pre.remove(UpdateLayerID)
 
     for c in reversed(classes):
         if "FTB_" not in c[0]:

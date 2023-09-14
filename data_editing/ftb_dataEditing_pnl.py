@@ -1,6 +1,5 @@
 import bpy
 from bpy.types import Panel, UIList
-from .ftb_dataEditing_op import BinToDec
 
 bpy.types.Scene.active_view_layer = bpy.props.IntProperty(
     name="Active View Layer in the view layer management list",
@@ -298,50 +297,6 @@ class FTB_PT_DataEditing_Panel(Panel):
         row.operator("object.hide_lattice_modifiers", text="Show", icon='RESTRICT_VIEW_OFF').showViewport = True
 
 
-class FTB_PT_CollectionLineUsage_Panel(Panel):
-    bl_label = "Line Art Layer Usage"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'collection'
-    bl_category = "FTB"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    def draw(self, context):
-        layout = self.layout
-
-        if bpy.context.active_object:
-            gpobject = bpy.context.active_object
-
-            # check for any valid lineart modifiers
-            if gpobject.type == 'GPENCIL':
-                if gpobject.grease_pencil_modifiers:
-                    for mod in gpobject.grease_pencil_modifiers:
-                        if mod.type == 'GP_LINEART':
-
-                            nameString = mod.name + ": "
-                            layerNumberString = str(BinToDec(mod.use_intersection_mask))
-
-                            # create warning string if "Exact Match" option is unchecked
-                            if not mod.use_intersection_match:
-                                layerNumberString = layerNumberString + ", Exact Match disabled!"
-
-                            row = layout.row()
-
-                            row.label(text=nameString)
-                            row.label(text=layerNumberString)
-
-                            usageString = ""
-
-                            for usage in mod.use_intersection_mask:
-                                if usage:
-                                    usageString = usageString + "X"
-                                else:
-                                    usageString = usageString + "0"
-                            outputString = usageString[0:4] + " | " + usageString[4:8]
-
-                            row.label(text=outputString)
-
-
 class FTB_UL_ViewLayer_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_property):
         layout.scale_x = 1.2
@@ -451,7 +406,7 @@ class FTB_PT_ShotFixing_Panel(Panel):
 
 
 classes = (
-    FTB_PT_DataEditing_Panel, FTB_PT_CollectionLineUsage_Panel, FTB_UL_ViewLayer_List, FTB_UL_ViewLayerCollections_List,
+    FTB_PT_DataEditing_Panel, FTB_UL_ViewLayer_List, FTB_UL_ViewLayerCollections_List,
     FTB_PT_ViewLayerManagement_Panel, FTB_PT_ViewLayerManagementCollections_Panel, FTB_PT_ShotFixing_Panel
 )
 
