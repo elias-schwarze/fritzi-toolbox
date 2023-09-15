@@ -3,7 +3,7 @@ import bpy
 
 from bpy.app.handlers import persistent
 from bpy.types import Operator
-from .. utility_functions.ftb_string_utils import *
+from .. utility_functions.ftb_string_utils import ContainsPropID, GetFilenameString, ReplaceInvalidChars, UsesInvalidChars, INVALID_CHARS
 from . import Asset
 
 TRESHOLD = 0.001
@@ -135,7 +135,7 @@ def SelectErrors(ErrorList: list):
 
 def SelectPropertiesPanel(PanelEnum: str):
     for area in bpy.context.screen.areas:
-        if(area.type == 'PROPERTIES'):
+        if (area.type == 'PROPERTIES'):
             try:
                 area.spaces[0].context = PanelEnum
             except RuntimeError:
@@ -178,7 +178,7 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
             cls.poll_message_set("File must be saved to use this feature")
             return False
 
-        if not(wm.PropCollectionReference and wm.PropEmptyReference):
+        if not (wm.PropCollectionReference and wm.PropEmptyReference):
             cls.poll_message_set("Missing Prop Collection and/or Prop Empty Object")
             return False
 
@@ -233,7 +233,7 @@ class FTB_OT_PerformAssetCheck_Op(Operator):
                                 _bSubDError = True
                         elif m.type == 'DISPLACE':
                             _bDisplaceNotify = False
-                            if not(m.texture and m.direction in ['X', 'Y', 'Z', 'RGB_TO_XYZ']):
+                            if not (m.texture and m.direction in ['X', 'Y', 'Z', 'RGB_TO_XYZ']):
                                 _bDisplaceError = True
 
                     if _bSubDError and o.type != 'LATTICE':
@@ -697,7 +697,7 @@ class FTB_OT_Toggle_Face_Orient_Op(Operator):
 
     def execute(self, context):
         context.window_manager.bNormalsButtonClicked = True
-        context.space_data.overlay.show_face_orientation = not(context.space_data.overlay.show_face_orientation)
+        context.space_data.overlay.show_face_orientation = not (context.space_data.overlay.show_face_orientation)
         return {'FINISHED'}
 
 
