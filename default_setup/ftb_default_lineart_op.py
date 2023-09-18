@@ -1,7 +1,7 @@
 import bpy
 import math
 import time
-from bpy.types import Operator, ViewLayer, Material, SolidifyModifier, AOV, Collection
+from bpy.types import Operator, ViewLayer, Material, SolidifyModifier, AOV, Collection, Object, Text
 from bpy.app.handlers import persistent
 from ..utility_functions.ftb_path_utils import getFritziPreferences
 from ..utility_functions import ftb_logging as log
@@ -606,9 +606,167 @@ class FTB_OT_AdjustInvertedHullThickness(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_OutlineCharacterSetup(Operator):
+    bl_idname = "collection.outline_character_setup"
+    bl_label = "FTB: Character Outline Setup"
+    bl_description = ("Loops over all objects inside the active collection and tries to sort them into the"
+                      " corresponding outline groups")
+    bl_options = {'REGISTER', 'UNDO'}
+
+    collection_error: bool = False
+
+    @ classmethod
+    def poll(cls, context):
+        if context.area.type != 'OUTLINER':
+            return False
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def draw(self, context):
+        layout = self.layout
+        if self.collection_error and not context.scene.outline_target_collection:
+            layout.alert = True
+            layout.label(text="Pick a valid Target Collection")
+            layout.alert = False
+        layout.prop(context.scene, "outline_target_collection")
+        if self.collection_error and not context.scene.outline_mouth_collection:
+            layout.alert = True
+            layout.label(text="Pick a valid Mouth Collection")
+            layout.alert = False
+        layout.prop(context.scene, "outline_mouth_collection")
+
+    def execute(self, context):
+        L0_target_collection: Collection = context.scene.outline_target_collection
+        L2_mouth_collection: Collection = context.scene.outline_mouth_collection
+        if not L0_target_collection:
+            self.collection_error = True
+            return context.window_manager.invoke_props_dialog(self, width=500)
+        if not L2_mouth_collection:
+            self.collection_error = True
+            return context.window_manager.invoke_props_dialog(self, width=500)
+
+        self.collection_error = False
+        L1_target_collection: Collection = get_data_by_type_and_name(Collection, L0_target_collection.name[:-2]+"L1")
+        L2_target_collection: Collection = get_data_by_type_and_name(Collection, L0_target_collection.name[:-2]+"L2")
+
+        no_intersection_collection: Collection = get_data_by_type_and_name(Collection, "OBJECTS_NoIntersection")
+        force_intersection_collection: Collection = get_data_by_type_and_name(Collection, "OBJECTS_ForceIntersection")
+        extra_objects_collection: Collection = get_data_by_type_and_name(Collection, "EXTRA_CharacterObjects")
+        exclude_collection: Collection = get_data_by_type_and_name(Collection, "OBJECTS_Excluded")
+
+        if not (L1_target_collection and L2_target_collection):
+            log.report(self, log.Severity.ERROR,
+                       f"Could not find L1 or L2 group of \"{L0_target_collection.name}\" collection.  Aborting...")
+            return {'CANCELLED'}
+
+        if not (no_intersection_collection and force_intersection_collection and extra_objects_collection
+                and exclude_collection):
+            log.report(self, log.Severity.ERROR, "Could not find Outline Groups Setup. Aborting...")
+            return {'CANCELLED'}
+
+        outline_log_name = "00_outline_sorting_log"
+        if outline_log_name not in bpy.data.texts:
+            bpy.data.texts.new(outline_log_name)
+        outline_sorting_log: Text = bpy.data.texts[outline_log_name]
+
+        def link_object_to_collection(collection: Collection, object: Object):
+            if collection.all_objects.find(object.name) != -1:
+                outline_sorting_log.write(
+                    f"\n\t#Object \"{object.name}\" ignored -> already linked to collection \"{collection.name}\"")
+                return
+            collection.objects.link(object)
+            outline_sorting_log.write(f"\n\tObject \"{object.name}\" linked to collection \"{collection.name}\"")
+
+        collection_name = context.collection.name.lower()
+
+        first_logline = "\n\nStarting sorting process for objects in collection".upper()
+        outline_sorting_log.write(f"{first_logline} \"{context.collection.name}\"")
+        for object in context.collection.all_objects:
+            object_name = object.name.lower()
+
+            if object.type not in ('MESH', 'CURVE'):
+                outline_sorting_log.write(
+                    f"\n\t#Object \"{object.name}\" ignored -> Object is of type {object.type}. Type MESH CURVE required")
+                continue
+
+            # ignore hidden objects except for eye_close
+            if not object.visible_get() and "eye_close" not in object.name:
+                outline_sorting_log.write(
+                    f"\n\t#Object \"{object.name}\" ignored -> Object is not visible in viewport")
+                continue
+
+            if any(e in object_name for e in ("glasses_inner", "sputnik_eye_white", "eyes_geo_l", "eyes_geo_r",
+                                              "glassesglas", "glasses_geo.003_inner", "glasses_geo.004_inner")):
+                link_object_to_collection(exclude_collection, object)
+                continue
+            elif any(e in object_name for e in ("eye_", "mustache", "glasses", "necklace", "earring")):
+                if "glasses" in object_name and any(e in collection_name for e in ("c332", "c333")):
+                    link_object_to_collection(extra_objects_collection, object)
+                    continue
+
+                link_object_to_collection(L1_target_collection, object)
+                if "earring" in object_name:
+                    link_object_to_collection(force_intersection_collection, object)
+                continue
+            elif any(e in object_name for e in ("eyeline", "cheekline", "eyebagline", "faceline", "mouth", "toungue")):
+                eyeline_exceptions = ("demonstrant02", "c315", "c290", "c301", "c302", "c303")
+                if "mouth" in object_name and "stasibrille" in collection_name:
+                    link_object_to_collection(L1_target_collection, object)
+                    continue
+                elif "eyeline" in object_name and any(e in collection_name for e in eyeline_exceptions):
+                    link_object_to_collection(extra_objects_collection, object)
+                    continue
+
+                link_object_to_collection(L2_target_collection, object)
+                continue
+            elif any(e in object_name for e in ("teeth", "tongue", "tounge")):
+                link_object_to_collection(L2_mouth_collection, object)
+                continue
+            elif any(e in object_name for e in ("beard", "earline", "eyebrow", "eyelash", "nostril", "dot", "eyes_geo",
+                                                "freckles")):
+                if "beard" in object_name:
+                    if any(e in collection_name for e in ("demonstrant01", "c333",
+                                                          "kameramann", "westextramann03")):
+                        link_object_to_collection(L1_target_collection, object)
+                        continue
+                elif "eyebrow" in object_name:
+                    eyebrow_exceptions = (
+                        "klaus", "rothkirch", "kameramann", "agitator", "ecki", "harry", "lauer", "c290", "c297",
+                        "demonstrant01", "c332",  "westextramann04", "westextramann05")
+                    if any(e in collection_name for e in eyebrow_exceptions):
+                        link_object_to_collection(L1_target_collection, object)
+                        continue
+                elif "eyelash" in object_name and "julia" in collection_name:
+                    link_object_to_collection(L2_target_collection, object)
+                    continue
+
+                link_object_to_collection(extra_objects_collection, object)
+                continue
+            else:
+                link_object_to_collection(L0_target_collection, object)
+                if any(e in object_name for e in ("clip", "hair", "nosepiercing", "hat")):
+                    link_object_to_collection(force_intersection_collection, object)
+                    continue
+                elif "zwilling" in collection_name and "sphere" in object_name:
+                    link_object_to_collection(force_intersection_collection, object)
+                    continue
+                elif any(e in object_name for e in ("ear", "nose")):
+                    if "nose" in object_name and "sputnik" in collection_name:
+                        continue
+                    link_object_to_collection(no_intersection_collection, object)
+
+        report_msg = f"Sorting objects from collection \"{context.collection.name}\" into Outline Groups finished!"
+        outline_sorting_log.write(f"\n{report_msg}")
+        outline_sorting_log.write(f"\n{''.join('_' for i in range(0,120))}")
+        log.report(self, log.Severity.INFO, report_msg)
+        return {'FINISHED'}
+
+
 classes = (FTB_OT_DefaultAddLineart_Op, FTB_OT_Copy_Optimize_Lines_Op, FTB_OT_Bake_Interval_Op,
            FTB_OT_AddToInvertedHullOutline_Op, FTB_OT_RemoveFromInvertedHullOutline_Op,
-           FTB_OT_InvertedHullViewLayerSetup, FTB_OT_AdjustInvertedHullThickness)
+           FTB_OT_InvertedHullViewLayerSetup, FTB_OT_AdjustInvertedHullThickness, FTB_OT_OutlineCharacterSetup)
 
 
 @ persistent
@@ -618,13 +776,46 @@ def register_inverted_hull_driver_expression(self, context) -> None:
     bpy.app.driver_namespace[is_inverted_hull_view_layer.__name__] = is_inverted_hull_view_layer
 
 
+def target_collection_poll(self, object) -> bool:
+    char_outline_collection: Collection = get_data_by_type_and_name(Collection, "CHARACTERS")
+    if not char_outline_collection:
+        return False
+
+    return char_outline_collection.user_of_id(object) and "_L0" in object.name
+
+
+def mouth_collection_poll(self, object) -> bool:
+    char_outline_collection: Collection = get_data_by_type_and_name(Collection, "CHARACTERS")
+    if not char_outline_collection:
+        return False
+
+    return char_outline_collection.user_of_id(object)
+
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.app.handlers.load_post.append(register_inverted_hull_driver_expression)
 
+    bpy.types.Scene.outline_target_collection = bpy.props.PointerProperty(
+        type=bpy.types.Collection,
+        name="Target Collection",
+        description=("Pick an outline L0 collection for the character objects to be sorted into. "
+                     "The operator will try to locate L1 and L2 groups on its own"),
+        options={'SKIP_SAVE'},
+        poll=target_collection_poll)
+
+    bpy.types.Scene.outline_mouth_collection = bpy.props.PointerProperty(
+        type=bpy.types.Collection,
+        name="Mouth Collection",
+        description="Pick collection for all outline mouth objects. Usually an L2 Outline Group.",
+        options={'SKIP_SAVE'},
+        poll=mouth_collection_poll)
+
 
 def unregister():
+    del bpy.types.Scene.outline_target_collection
+    del bpy.types.Scene.outline_mouth_collection
     bpy.app.handlers.load_post.remove(register_inverted_hull_driver_expression)
     for c in reversed(classes):
         bpy.utils.unregister_class(c)

@@ -138,16 +138,23 @@ classes = (FTB_PT_Defaults_Panel, FTB_PT_RenderPresets_Panel, FTB_MT_RenderPrese
            FTB_PT_Interval_Baking_Panel, FTB_PT_InvertedHullSettings_Panel)
 
 
+def append_to_outliner_context_menu(self, context):
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator("collection.outline_character_setup")
+
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.OUTLINER_MT_object.append(draw_lineart_copy)
     bpy.types.OUTLINER_MT_object.append(custom_object_context_menu)
+    bpy.types.OUTLINER_MT_collection.append(append_to_outliner_context_menu)
     bpy.types.VIEW3D_MT_object_context_menu.append(custom_object_context_menu)
 
 
 def unregister():
     bpy.types.VIEW3D_MT_object_context_menu.remove(custom_object_context_menu)
+    bpy.types.OUTLINER_MT_collection.remove(append_to_outliner_context_menu)
     bpy.types.OUTLINER_MT_object.remove(custom_object_context_menu)
     bpy.types.OUTLINER_MT_object.remove(draw_lineart_copy)
     for c in reversed(classes):
