@@ -7,7 +7,7 @@ def ftb_random_rotation(minRot=0.0, maxRot=0.0, randomizeDirection=True):
     randomRot = random.uniform(minRot, maxRot)
 
     if (randomizeDirection):
-        if(random.getrandbits(1) is True):
+        if (random.getrandbits(1) is True):
             randomRot *= -1
 
     return radians(randomRot)
@@ -18,7 +18,7 @@ def world_to_basis(active, obj):
     local = obj.parent.matrix_world.inverted() @ active.matrix_world
     P = obj.matrix_basis @ obj.matrix_local.inverted()
     mat = P @ local
-    return(mat)
+    return (mat)
 
 
 def ob_Copy_Vis_Loc(obj, sourceObj):
