@@ -3,9 +3,9 @@ import numpy as np
 import bpy
 
 from bpy.types import Operator, Image, Material, FloatColorAttribute, ShaderNode, ShaderNodeTree
-from .. utility_functions import ftb_logging as log
+from ..utility_functions import ftb_logging as log
 from ..utility_functions.ftb_string_utils import is_name_duplicate, strip_End_Numbers
-from ..utility_functions.ftb_transform_utils import apply_bone_world_matrix
+# from ..utility_functions.ftb_transform_utils import apply_bone_world_matrix
 
 
 def is_image_duplicate(source: Image, duplicate: Image):
@@ -378,7 +378,7 @@ class FTB_OT_RemoveNodeGroupDuplicates_Op(Operator):
             duplicates: list[ShaderNodeTree] = []
 
             for current_grp in node_groups:
-                if current_grp == source_group or current_grp.library != None:
+                if current_grp == source_group or current_grp.library is not None:
                     continue
 
                 if is_nodegrp_duplicate(source_group, current_grp):
@@ -553,11 +553,53 @@ class FTB_OT_FixPrecisionError_Op(bpy.types.Operator):
         childConstraint = poseBone.constraints.new('CHILD_OF')
         childConstraint.target = fixEmpty
 
-        #bpy.ops.view3d.snap_cursor_to_selected
-        #grpEmpty.location = bpy.context.scene.cursor.location
+        # bpy.ops.view3d.snap_cursor_to_selected
+        # grpEmpty.location = bpy.context.scene.cursor.location
 
         # move empty to bone world postion via matrix_world of armature
-        #apply_bone_world_matrix(poseBone=poseBone, armObject=armObj, targetObject=grpEmpty)
+        # apply_bone_world_matrix(poseBone=poseBone, armObject=armObj, targetObject=grpEmpty)
+
+        return {'FINISHED'}
+
+
+class FTB_OT_MoveHierarchyRootObjects(bpy.types.Operator):
+    bl_idname = "object.move_hierarchy_root_objects"
+    bl_label = "Move Hierarchy Roots"
+    bl_description = "Move objects from active collection that do not have parent objects"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def draw(self, context):
+        layout = self.layout
+        if bpy.context.collection is None:
+            layout.label(text="No active collection", icon='ERROR')
+
+        elif len(bpy.context.collection.all_objects) == 0:
+            layout.label(text="Active collection contains no objects", icon='ERROR')
+
+        else:
+            layout.label(text=bpy.context.collection.name, icon='OUTLINER_COLLECTION')
+            layout.prop(context.window_manager, "ftbTranslateVector")
+
+    def execute(self, context):
+        if bpy.context.collection is None or len(bpy.context.collection.all_objects) == 0:
+            self.report({'INFO'}, "Translation cancelled")
+            return {'CANCELLED'}
+
+        unparentedList = list()
+        activeColl = bpy.context.collection
+
+        if len(activeColl.all_objects) == 0:
+            return {'CANCELLED'}
+
+        for obj in activeColl.all_objects:
+            if obj.parent is None:
+                unparentedList.append(obj)
+                obj.location[0] += bpy.context.window_manager.ftbTranslateVector[0]
+                obj.location[1] += bpy.context.window_manager.ftbTranslateVector[1]
+                obj.location[2] += bpy.context.window_manager.ftbTranslateVector[2]
 
         return {'FINISHED'}
 
@@ -566,7 +608,7 @@ classes = (
     FTB_OT_RemoveMaterials_Op, FTB_OT_RemoveModifiers_Op, FTB_OT_EditShaderProperty_Op,
     FTB_OT_RemoveImageDuplicates_Op, FTB_OT_RemoveMaterialDuplicates_Op, FTB_OT_Remove_Edge_Splits_Op,
     FTB_OT_Remove_Empty_Libraries_Op, FTB_OT_UpgradeCharacterAOVs_Op, FTB_OT_RemoveNodeGroupDuplicates_Op,
-    FTB_OT_FixPrecisionError_Op
+    FTB_OT_MoveHierarchyRootObjects
 )
 
 
@@ -574,7 +616,12 @@ def register():
     for c in classes:
         bpy.utils.register_class(c)
 
+    bpy.types.WindowManager.ftbTranslateVector = bpy.props.FloatVectorProperty(
+        name="Translation", subtype='TRANSLATION', unit='LENGTH'
+    )
+
 
 def unregister():
+    del bpy.types.WindowManager.ftbTranslateVector
     for c in reversed(classes):
         bpy.utils.unregister_class(c)
