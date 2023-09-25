@@ -701,17 +701,13 @@ class FTB_OT_OutlineCharacterSetup(Operator):
                                               "glassesglas", "glasses_geo.003_inner", "glasses_geo.004_inner")):
                 link_object_to_collection(exclude_collection, object)
                 continue
-            elif any(e in object_name for e in ("eye_", "mustache", "glasses", "necklace", "earring")):
-                if "glasses" in object_name and any(e in collection_name for e in ("c332", "c333")):
-                    link_object_to_collection(extra_objects_collection, object)
-                    continue
-
+            elif any(e in object_name for e in ("eye_", "mustache", "necklace", "earring")):
                 link_object_to_collection(L1_target_collection, object)
                 if "earring" in object_name:
                     link_object_to_collection(force_intersection_collection, object)
                 continue
             elif any(e in object_name for e in ("eyeline", "cheekline", "eyebagline", "faceline", "mouth", "toungue")):
-                eyeline_exceptions = ("demonstrant02", "c315", "c290", "c301", "c302", "c303")
+                eyeline_exceptions = ("demonstrant02", "c315", "c290", "c301", "c302", "c303", "crowd")
                 if "mouth" in object_name and "stasibrille" in collection_name:
                     link_object_to_collection(L1_target_collection, object)
                     continue
@@ -727,8 +723,7 @@ class FTB_OT_OutlineCharacterSetup(Operator):
             elif any(e in object_name for e in ("beard", "earline", "eyebrow", "eyelash", "nostril", "dot", "eyes_geo",
                                                 "freckles")):
                 if "beard" in object_name:
-                    if any(e in collection_name for e in ("demonstrant01", "c333",
-                                                          "kameramann", "westextramann03")):
+                    if any(e in collection_name for e in ("demonstrant01", "c333", "kameramann", "westextramann03")):
                         link_object_to_collection(L1_target_collection, object)
                         continue
                 elif "eyebrow" in object_name:
@@ -745,6 +740,10 @@ class FTB_OT_OutlineCharacterSetup(Operator):
                 link_object_to_collection(extra_objects_collection, object)
                 continue
             else:
+                if "glasses" in object_name and any(e in collection_name for e in ("c332", "c333")):
+                    link_object_to_collection(extra_objects_collection, object)
+                    continue
+
                 link_object_to_collection(L0_target_collection, object)
                 if any(e in object_name for e in ("clip", "hair", "nosepiercing", "hat")):
                     link_object_to_collection(force_intersection_collection, object)
