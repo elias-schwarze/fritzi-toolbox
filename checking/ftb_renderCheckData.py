@@ -64,6 +64,11 @@ class RenderCheckData:
 
     use_bloom: bool = False
 
+    cry_object_pass: bool = True
+    cry_asset_pass: bool = True
+    cry_levels: int = 2
+    cry_accurate: bool = True
+
     aovs = {
         "VectorLightMask": "VALUE",
         "DiffuseLightMask": "VALUE",
@@ -214,6 +219,18 @@ class RenderCheckData:
         matchCmGamma = matchData.cmGamma == self.cmGamma
 
         if all([matchCmDisplayDevice, matchCmViewTransform, matchCmLook, matchCmExposure, matchCmGamma]):
+            return True
+        else:
+            return False
+
+    def matchCryptomatte(self, matchData):
+        """Returns True if cryptomatte settings match with provided matchData instance"""
+        matchObject = matchData.cry_object_pass == self.cry_object_pass
+        matchAsset = matchData.cry_asset_pass == self.cry_asset_pass
+        matchAccurate = matchData.cry_accurate == self.cry_accurate
+        matchLevels = matchData.cry_levels == self.cry_levels
+
+        if all([matchObject, matchAsset, matchAccurate, matchLevels]):
             return True
         else:
             return False

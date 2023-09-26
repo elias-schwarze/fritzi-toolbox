@@ -85,6 +85,12 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
             if not cs.matchShadows(matchData=fs):
                 box.operator("utils.render_check_set_settings", text="Set Final Shadows").shadows = True
 
+        #  CRYPTOMATTE
+        if not cs.matchCryptomatte(matchData=fs):
+            box = layout.box()
+            box.label(text="Cryptomatte mismatch", icon='ERROR')
+            box.operator("utils.render_check_set_settings", text="Set Cryptomatte").cryptomatte = True
+
         # AMBIENT OCCLUSION
         if (onlyErrors and not cs.matchAo(matchData=fs)) or not onlyErrors:
             aoText = cs.getAoText()

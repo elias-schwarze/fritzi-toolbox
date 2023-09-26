@@ -86,6 +86,13 @@ def getCurrentSettings(currentSet: RenderCheckData):
     # create dictionary from AOV data so they can be compared to default AOVs more easily
     currentSet.aovs = dict(zip(aovKeyList, aovValueList))
 
+    # Get Cryptomatte settings
+    if (bpy.context.scene.view_layers["3d"]):
+        currentSet.cry_asset_pass = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_asset
+        currentSet.cry_object_pass = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_object
+        currentSet.cry_levels = bpy.context.scene.view_layers["3d"].pass_cryptomatte_depth
+        currentSet.cry_accurate = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_accurate
+
     # get if output path is UNC or not
     if len(bpy.context.scene.render.filepath) < 2:
         currentSet.uncOutput = False
@@ -132,7 +139,7 @@ def getCurrentSettings(currentSet: RenderCheckData):
 def setFinalSettings(
         resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
         renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False,
-        post_processing=False, use_bloom=False):
+        post_processing=False, use_bloom=False, cryptomatte=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -212,6 +219,13 @@ def setFinalSettings(
     # bloom
     if use_bloom:
         bpy.context.scene.eevee.use_bloom = defaultSet.use_bloom
+
+    # cryptomatte
+    if cryptomatte:
+        bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_object = defaultSet.cry_object_pass
+        bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_asset = defaultSet.cry_asset_pass
+        bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_accurate = defaultSet.cry_accurate
+        bpy.context.scene.view_layers["3d"].pass_cryptomatte_depth = defaultSet.cry_levels
 
     # aovs
     if aovs:
@@ -404,12 +418,17 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    cryptomatte: bpy.props.BoolProperty(
+        name="cryptomatte",
+        default=False
+    )
+
     def execute(self, context):
         setFinalSettings(resFps=self.resFps, shadows=self.shadows, ao=self.ao, overscan=self.overscan,
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
                          simplify=self.simplify, aovs=self.aovs, samples=self.samples,
-                         post_processing=self.post_processing, use_bloom=self.use_bloom)
+                         post_processing=self.post_processing, use_bloom=self.use_bloom, cryptomatte=self.cryptomatte)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
 
@@ -428,6 +447,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         self.samples = False
         self.post_processing = False
         self.use_bloom = False
+        self.cryptomatte = False
 
         return {'FINISHED'}
 
