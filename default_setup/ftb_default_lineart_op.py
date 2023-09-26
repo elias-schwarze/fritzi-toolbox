@@ -14,6 +14,9 @@ IH_MATERIAL_NAME = "mat_inverted_hull_outline"
 IH_MODIFIER_NAME = "mod_inverted_hull"
 DRIVER_PATHS = ("show_viewport", "show_render")
 
+AOV_COLLECTION_NAME = "OBJECTS_AOVPass"
+AOV_PASS_NAME = "AOV_transparent_object"
+
 
 class FTB_OT_DefaultAddLineart_Op(Operator):
     bl_idname = "object.default_add_lineart"
@@ -606,6 +609,136 @@ class FTB_OT_AdjustInvertedHullThickness(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_AddObjectToTransparentAOV_Op(Operator):
+    bl_idname = "object.add_transparent_aov"
+    bl_label = "FTB: Add Transparent AOV"
+    bl_description = (f"Adds selected objects to collection called \"{AOV_COLLECTION_NAME}\" and creates corresponding"
+                      " AOV pass if it doesn't exist")
+    bl_options = {"REGISTER", "UNDO"}
+
+    outlinegroups_collection_name = "OUTLINE_groups"
+
+    @ classmethod
+    def poll(cls, context):
+        if context.mode != 'OBJECT':
+            cls.poll_message_set("Must be in Object Mode!")
+            return False
+        if not context.selected_objects:
+            cls.poll_message_set("Select at least one object")
+            return False
+        if cls.outlinegroups_collection_name not in bpy.data.collections:
+            cls.poll_message_set(f"\"{cls.outlinegroups_collection_name}\" collection not found!")
+            return False
+        return True
+
+    def execute(self, context):
+
+        def set_aov_pass_settings(aov_pass: AOV):
+            aov_pass.type = 'VALUE'
+            aov_pass.name = AOV_PASS_NAME
+
+        outline_groups_collection: Collection = bpy.data.collections[self.outlinegroups_collection_name]
+        aov_collection: Collection = get_data_by_type_and_name(Collection, AOV_COLLECTION_NAME)
+        default_3d_viewlayer: ViewLayer = get_data_by_type_and_name(ViewLayer, "3d")
+
+        if not default_3d_viewlayer:
+            log.report(self, log.Severity.ERROR, "Could not find default \"3d\" viewlayer!")
+            return {'CANCELLED'}
+
+        if not aov_collection:
+            aov_collection = bpy.data.collections.new(AOV_COLLECTION_NAME)
+            outline_groups_collection.children.link(aov_collection)
+
+        aov_collection.lineart_usage = 'EXCLUDE'
+        aov_collection.hide_render = True
+
+        for viewlayer in context.scene.view_layers:
+            outline_groups_layer_collection = viewlayer.layer_collection.children[self.outlinegroups_collection_name]
+            aov_layer_collection = outline_groups_layer_collection.children[AOV_COLLECTION_NAME]
+            if "3d" in viewlayer.name:
+                aov_layer_collection.exclude = False
+            else:
+                aov_layer_collection.exclude = True
+
+        aov_pass: AOV = None
+        if AOV_PASS_NAME not in default_3d_viewlayer.aovs:
+            aov_pass = default_3d_viewlayer.aovs.add()
+            set_aov_pass_settings(aov_pass)
+        aov_pass = default_3d_viewlayer.aovs[AOV_PASS_NAME]
+        set_aov_pass_settings(aov_pass)
+
+        for object in context.selected_objects:
+            if object.type not in ('MESH', 'FONT', 'CURVE', 'SURFACE'):
+                continue
+
+            if object.name not in aov_collection.all_objects:
+                aov_collection.objects.link(object)
+
+            # unlink object from other Outline group collections
+            collection: Collection
+            for collection in outline_groups_collection.children_recursive:
+                if collection is aov_collection:
+                    continue
+
+                if collection.user_of_id(object):
+                    collection.objects.unlink(object)
+
+        if len(aov_collection.all_objects) < 1:
+            bpy.ops.object.remove_transparent_aov()
+
+        log.report(self, log.Severity.INFO, f"Selected objects added to \"{AOV_COLLECTION_NAME}\" collection")
+        return {'FINISHED'}
+
+
+class FTB_OT_RemoveObjectFromTransparentAOV_Op(Operator):
+    bl_idname = "object.remove_transparent_aov"
+    bl_label = "FTB: Remove Transparent AOV"
+    bl_description = (f"Removes selected objects from \"{AOV_COLLECTION_NAME}\" collection and removes collection and "
+                      "corresponding AOV pass if the collection is empty")
+    bl_options = {"REGISTER", "UNDO"}
+
+    @ classmethod
+    def poll(cls, context):
+        if context.mode != 'OBJECT':
+            cls.poll_message_set("Must be in Object Mode!")
+            return False
+        if not context.selected_objects:
+            cls.poll_message_set("Select at least one object")
+            return False
+        if AOV_COLLECTION_NAME not in bpy.data.collections:
+            cls.poll_message_set(f"\"{AOV_COLLECTION_NAME}\" collection not found!")
+            return False
+        return True
+
+    def execute(self, context):
+        aov_collection: Collection = bpy.data.collections[AOV_COLLECTION_NAME]
+        for object in context.selected_objects:
+            if object.name not in aov_collection.objects:
+                continue
+
+            aov_collection.objects.unlink(object)
+
+        message = f"Selected objects removed from \"{AOV_COLLECTION_NAME}\" collection"
+        if len(aov_collection.all_objects) > 0:
+            log.report(self, log.Severity.INFO, message)
+            return {'FINISHED'}
+
+        default_3d_viewlayer: ViewLayer = get_data_by_type_and_name(ViewLayer, "3d")
+
+        if default_3d_viewlayer:
+            if AOV_PASS_NAME in default_3d_viewlayer.aovs:
+                lf_index = default_3d_viewlayer.aovs.find(AOV_PASS_NAME)
+                default_3d_viewlayer.active_aov_index = lf_index
+                bpy.ops.scene.view_layer_remove_aov()
+
+        bpy.data.collections.remove(aov_collection)
+
+        message = (f"All objects removed from \"{AOV_COLLECTION_NAME}\" collection."
+                   "Removing AOV Pass and collection itself.")
+        log.report(self, log.Severity.INFO, message)
+        return {'FINISHED'}
+
+
 class FTB_OT_OutlineCharacterSetup(Operator):
     bl_idname = "collection.outline_character_setup"
     bl_label = "FTB: Character Outline Setup"
@@ -763,9 +896,64 @@ class FTB_OT_OutlineCharacterSetup(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_AddTransparentAOVNode_Op(Operator):
+    bl_idname = "node.add_transparent_aov"
+    bl_label = "FTB: Add Transparent AOV Node"
+    bl_description = "Adds a custom AOV Output node required for the Fritzi compositing setup"
+    bl_options = {"REGISTER", "UNDO"}
+
+    x: float = 0
+    y: float = 0
+
+    @ classmethod
+    def poll(cls, context):
+        if context.space_data.tree_type != "ShaderNodeTree":
+            cls.poll_message_set("Can only be called from within Shader Node Editor!")
+            return False
+        if not context.active_object.active_material:
+            cls.poll_message_set("No active material selected!")
+            return False
+
+        return True
+
+    def invoke(self, context, event):
+        region = context.region.view2d
+        uiscale = context.preferences.system.ui_scale
+        x, y = region.region_to_view(event.mouse_region_x, event.mouse_region_y)
+        self.x = x/uiscale
+        self.y = y/uiscale
+        return self.execute(context)
+
+    def execute(self, context):
+        active_mat_tree = context.active_object.active_material.node_tree
+
+        for node in active_mat_tree.nodes:
+            if node.type != 'OUTPUT_AOV':
+                continue
+
+            if node.name == AOV_PASS_NAME:
+                log.report(self, log.Severity.WARNING, "Transparent AOV Output node already exists.")
+                return {'CANCELLED'}
+
+        aov_node = active_mat_tree.nodes.new('ShaderNodeOutputAOV')
+        aov_node.name = AOV_PASS_NAME
+        aov_node.inputs[0].default_value = (1, 1, 1, 1)
+        aov_node.inputs[1].default_value = 1.0
+
+        aov_node.use_custom_color = True
+        aov_node.color = (0, 0, 0.6)
+        aov_node.location = (self.x, self.y)
+        aov_node.width = 200
+
+        log.report(self, log.Severity.INFO, "Transparent AOV Output node created.")
+        return {'FINISHED'}
+
+
 classes = (FTB_OT_DefaultAddLineart_Op, FTB_OT_Copy_Optimize_Lines_Op, FTB_OT_Bake_Interval_Op,
            FTB_OT_AddToInvertedHullOutline_Op, FTB_OT_RemoveFromInvertedHullOutline_Op,
-           FTB_OT_InvertedHullViewLayerSetup, FTB_OT_AdjustInvertedHullThickness, FTB_OT_OutlineCharacterSetup)
+           FTB_OT_InvertedHullViewLayerSetup, FTB_OT_AdjustInvertedHullThickness, FTB_OT_OutlineCharacterSetup,
+           FTB_OT_AddObjectToTransparentAOV_Op, FTB_OT_RemoveObjectFromTransparentAOV_Op,
+           FTB_OT_AddTransparentAOVNode_Op)
 
 
 @ persistent

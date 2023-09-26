@@ -106,6 +106,9 @@ def custom_object_context_menu(self, context):
     self.layout.operator("object.add_ih_outline")
     self.layout.operator("object.remove_ih_outline")
     self.layout.operator("object.adjust_ih_thickness")
+    self.layout.separator()
+    self.layout.operator("object.add_transparent_aov")
+    self.layout.operator("object.remove_transparent_aov")
 
 
 class FTB_PT_InvertedHullSettings_Panel(Panel):
@@ -143,6 +146,14 @@ def append_to_outliner_context_menu(self, context):
     self.layout.operator("collection.outline_character_setup")
 
 
+def append_to_node_editor_context_menu(self, context):
+    if context.space_data.tree_type != "ShaderNodeTree":
+        return
+    self.layout.separator()
+    self.layout.operator_context = 'INVOKE_DEFAULT'
+    self.layout.operator("node.add_transparent_aov")
+
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
@@ -150,9 +161,11 @@ def register():
     bpy.types.OUTLINER_MT_object.append(custom_object_context_menu)
     bpy.types.OUTLINER_MT_collection.append(append_to_outliner_context_menu)
     bpy.types.VIEW3D_MT_object_context_menu.append(custom_object_context_menu)
+    bpy.types.NODE_MT_context_menu.append(append_to_node_editor_context_menu)
 
 
 def unregister():
+    bpy.types.NODE_MT_context_menu.remove(append_to_node_editor_context_menu)
     bpy.types.VIEW3D_MT_object_context_menu.remove(custom_object_context_menu)
     bpy.types.OUTLINER_MT_collection.remove(append_to_outliner_context_menu)
     bpy.types.OUTLINER_MT_object.remove(custom_object_context_menu)
