@@ -830,6 +830,10 @@ class FTB_OT_OutlineCharacterSetup(Operator):
                     f"\n\t#Object \"{object.name}\" ignored -> Object is not visible in viewport")
                 continue
 
+            if any(e in object_name for e in ("dott", "feuer", "docht")):
+                outline_sorting_log.write(f"\n\t#Object \"{object.name}\" ignored -> Object is blacklisted")
+                continue
+
             if any(e in object_name for e in ("glasses_inner", "sputnik_eye_white", "eyes_geo_l", "eyes_geo_r",
                                               "glassesglas", "glasses_geo.003_inner", "glasses_geo.004_inner")):
                 link_object_to_collection(exclude_collection, object)
