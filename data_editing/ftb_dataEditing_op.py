@@ -1406,6 +1406,41 @@ class FTB_OT_SetFritziPropShaderAttributes(Operator):
         return {'FINISHED'}
 
 
+class FTB_OT_PurgeCollection(Operator):
+    bl_idname = "collection.purge"
+    bl_label = "FTB: Purge Collection"
+    bl_description = "Hard deletes all objects inside active collection even if they are linked or referenced elsewhere"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.mode != 'OBJECT':
+            cls.poll_message_set("Must be in OBJECT mode!")
+            return False
+        return True
+
+    def execute(self, context):
+        for i in range(len(context.collection.all_objects)):
+            try:
+                bpy.data.objects.remove(context.collection.all_objects[0])
+            except:
+                message = f"Could not delete object \"{context.collection.all_objects[0].name}\""
+                log.console(self, log.Severity.WARNING, message)
+
+        collection_is_empty = len(context.collection.all_objects) < 1
+        if collection_is_empty:
+            try:
+                message = f"Collection \"{context.collection.name}\" purged"
+                bpy.data.collections.remove(context.collection)
+            except:
+                message = f"Could not delete collection \"{context.collection.name}\""
+                log.console(self, log.Severity.WARNING, message)
+                message = f"Could not delete all objects. Consider manual clean up"
+
+        log.report(self, (log.Severity.WARNING, log.Severity.INFO)[collection_is_empty], message)
+        return {'FINISHED'}
+
+
 classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
 
 

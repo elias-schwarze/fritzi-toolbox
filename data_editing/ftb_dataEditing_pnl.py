@@ -53,6 +53,7 @@ def draw_mat_gnodes_menu(self, context):
 
 def append_to_outliner_context_menu(self, context):
     self.layout.operator("outliner.remove_empty_collection")
+    self.layout.operator("collection.purge")
 
 
 def add_to_dopesheet_context_menu(self, context):
