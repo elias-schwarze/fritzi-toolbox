@@ -39,25 +39,25 @@ class FTB_PT_Checking_Panel(Panel):
 
     bpy.types.WindowManager.bNormalsButtonClicked = bpy.props.BoolProperty(
         default=False
-        )
+    )
 
     bpy.types.WindowManager.bNormalsChecked = bpy.props.BoolProperty(
         default=False
-        )
+    )
 
     bpy.types.WindowManager.PropCollectionReference = bpy.props.PointerProperty(
         type=bpy.types.Collection,
         name="",
         description="Prop Collection in this file. This will be used to scan for Prop errors",
         update=UpdatePropCollectionReference
-        )
+    )
 
     bpy.types.WindowManager.PropEmptyReference = bpy.props.PointerProperty(
         type=bpy.types.Object,
         name="",
         description="Prop Empty in this file. This will be used to scan for Prop errors",
         update=UpdatePropEmptyReference
-        )
+    )
 
     def draw(self, context):
 
@@ -161,9 +161,12 @@ class FTB_PT_Checking_Panel(Panel):
                 if Asset.HasNotifications():
                     DrawErrorHeader(Asset.GetTotalNotificationCount(), "Notification", 'INFO')
 
-                    DrawErrorButton(Asset.ApplyRotNotification, "object.show_apply_rot_notification", "Unapplied Rotation")
-                    DrawErrorButton(Asset.MissingDisplacementNotification, "object.show_displace_notify", "Missing Displacement")
-                    DrawErrorButton(Asset.MissingShapeKeysNotification, "object.show_shape_key_notification", "Missing Shape Key")
+                    DrawErrorButton(Asset.ApplyRotNotification,
+                                    "object.show_apply_rot_notification", "Unapplied Rotation")
+                    DrawErrorButton(Asset.MissingDisplacementNotification,
+                                    "object.show_displace_notify", "Missing Displacement")
+                    DrawErrorButton(Asset.MissingShapeKeysNotification,
+                                    "object.show_shape_key_notification", "Missing Shape Key")
 
             col.separator(factor=2)
             col.operator("view.toggle_face_orient", text="Toggle Normals Display")
@@ -184,8 +187,10 @@ class FTB_PT_Checking_Panel(Panel):
 
 
 def register():
-    bpy.utils.register_class(FTB_PT_Checking_Panel)
+    # bpy.utils.register_class(FTB_PT_Checking_Panel)
+    pass
 
 
 def unregister():
-    bpy.utils.unregister_class(FTB_PT_Checking_Panel)
+    # bpy.utils.unregister_class(FTB_PT_Checking_Panel)
+    pass
