@@ -86,7 +86,12 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
                 box.operator("utils.render_check_set_settings", text="Set Final Shadows").shadows = True
 
         #  CRYPTOMATTE
-        if not cs.matchCryptomatte(matchData=fs):
+        if not cs.cryptoLayerExists:
+            box = layout.box()
+            box.label(text="No \"3d\" layer found", icon='ERROR')
+            box.label(text="Please create or rename the main view layer to \"3d\"")
+
+        elif not cs.matchCryptomatte(matchData=fs) and cs.cryptoLayerExists:
             box = layout.box()
             box.label(text="Cryptomatte mismatch", icon='ERROR')
             box.operator("utils.render_check_set_settings", text="Set Cryptomatte").cryptomatte = True

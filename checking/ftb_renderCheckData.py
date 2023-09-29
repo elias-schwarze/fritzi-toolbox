@@ -80,6 +80,9 @@ class RenderCheckData:
         "matte_glasses": "VALUE"
     }
 
+    cryptoLayerName = "3d"
+    cryptoLayerExists = False
+
     def matchAovs(self, matchData) -> bool:
         """Returns True if all AOVs of this dataclass are contained in the target scene and have the same value"""
         matchAov: bool = True

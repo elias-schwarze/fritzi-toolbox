@@ -86,12 +86,18 @@ def getCurrentSettings(currentSet: RenderCheckData):
     # create dictionary from AOV data so they can be compared to default AOVs more easily
     currentSet.aovs = dict(zip(aovKeyList, aovValueList))
 
+    # Get 3d layer exists for cryptomatte
+    currentSet.cryptoLayerExists = False
+    for layer in bpy.context.scene.view_layers:
+        if layer.name == currentSet.cryptoLayerName:
+            currentSet.cryptoLayerExists = True
+
     # Get Cryptomatte settings
-    if (bpy.context.scene.view_layers["3d"]):
-        currentSet.cry_asset_pass = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_asset
-        currentSet.cry_object_pass = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_object
-        currentSet.cry_levels = bpy.context.scene.view_layers["3d"].pass_cryptomatte_depth
-        currentSet.cry_accurate = bpy.context.scene.view_layers["3d"].use_pass_cryptomatte_accurate
+    if (currentSet.cryptoLayerExists):
+        currentSet.cry_asset_pass = bpy.context.scene.view_layers[currentSet.cryptoLayerName].use_pass_cryptomatte_asset
+        currentSet.cry_object_pass = bpy.context.scene.view_layers[currentSet.cryptoLayerName].use_pass_cryptomatte_object
+        currentSet.cry_levels = bpy.context.scene.view_layers[currentSet.cryptoLayerName].pass_cryptomatte_depth
+        currentSet.cry_accurate = bpy.context.scene.view_layers[currentSet.cryptoLayerName].use_pass_cryptomatte_accurate
 
     # get if output path is UNC or not
     if len(bpy.context.scene.render.filepath) < 2:
