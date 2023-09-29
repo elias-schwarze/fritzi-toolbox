@@ -1412,30 +1412,40 @@ class FTB_OT_PurgeCollection(Operator):
     bl_description = "Hard deletes all objects inside active collection even if they are linked or referenced elsewhere"
     bl_options = {'REGISTER', 'UNDO'}
 
+    active_collection: bpy.types.Collection = None
+
     @classmethod
     def poll(cls, context):
         if context.mode != 'OBJECT':
             cls.poll_message_set("Must be in OBJECT mode!")
             return False
+
+        cls.active_collection = context.collection
         return True
 
     def execute(self, context):
-        for i in range(len(context.collection.all_objects)):
+        if not self.active_collection:
+            message = "No active collection selected!"
+            log.report(self, (log.Severity.ERROR, log.Severity.INFO)[collection_is_empty], message)
+            return {'CANCELLED'}
+
+        for i in range(len(self.active_collection.all_objects)):
             try:
-                bpy.data.objects.remove(context.collection.all_objects[0])
+                bpy.data.objects.remove(self.active_collection.all_objects[0])
             except:
-                message = f"Could not delete object \"{context.collection.all_objects[0].name}\""
+                message = f"Could not delete object \"{self.active_collection.all_objects[0].name}\""
                 log.console(self, log.Severity.WARNING, message)
 
-        collection_is_empty = len(context.collection.all_objects) < 1
+        collection_is_empty = len(self.active_collection.all_objects) < 1
         if collection_is_empty:
             try:
-                message = f"Collection \"{context.collection.name}\" purged"
-                bpy.data.collections.remove(context.collection)
+                message = f"Collection \"{self.active_collection.name}\" purged"
+                bpy.data.collections.remove(self.active_collection)
             except:
-                message = f"Could not delete collection \"{context.collection.name}\""
+                message = f"Could not delete collection \"{self.active_collection.name}\""
                 log.console(self, log.Severity.WARNING, message)
-                message = f"Could not delete all objects. Consider manual clean up"
+        else:
+            message = f"Could not delete all objects. Consider manual clean up"
 
         log.report(self, (log.Severity.WARNING, log.Severity.INFO)[collection_is_empty], message)
         return {'FINISHED'}
