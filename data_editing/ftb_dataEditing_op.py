@@ -1426,7 +1426,7 @@ class FTB_OT_PurgeCollection(Operator):
     def execute(self, context):
         if not self.active_collection:
             message = "No active collection selected!"
-            log.report(self, (log.Severity.ERROR, log.Severity.INFO)[collection_is_empty], message)
+            log.report(self, log.Severity.ERROR, message)
             return {'CANCELLED'}
 
         for i in range(len(self.active_collection.all_objects)):
