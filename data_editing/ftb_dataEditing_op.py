@@ -1451,6 +1451,40 @@ class FTB_OT_PurgeCollection(Operator):
         return {'FINISHED'}
 
 
+class OT_IncludeViewlayer(Operator):
+    bl_idname = "outliner.collection_set_exclude"
+    bl_label = "Set Exclude"
+    bl_description = "Set all sub-collections of active collection to Include"
+    bl_options = {"REGISTER", "UNDO"}
+
+    exclude: bpy.props.BoolProperty(name="exclude",
+                                    description="Exclude collections",
+                                    default=False)
+
+    def set_exclude(self, collection: bpy.types.LayerCollection):
+        collection.exclude = self.exclude
+        if collection.children:
+            for child in collection.children:
+                self.set_exclude(child)
+
+    @classmethod
+    def poll(cls, context):
+        if not context.view_layer.active_layer_collection:
+            return False
+        return True
+
+    @classmethod
+    def description(cls, context, properties):
+        return (f"Set all sub-collections of collection to \"{('Include', 'Exclude')[properties.exclude]}\"")
+
+    def execute(self, context):
+        collection = context.view_layer.active_layer_collection
+        for col in collection.children:
+            self.set_exclude(col)
+
+        return {'FINISHED'}
+
+
 classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
 
 
