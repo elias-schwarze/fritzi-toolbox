@@ -63,6 +63,7 @@ class RenderCheckData:
     use_sequencer: bool = False
 
     use_bloom: bool = False
+    use_motion_blur: bool = False
 
     cry_object_pass: bool = True
     cry_asset_pass: bool = True

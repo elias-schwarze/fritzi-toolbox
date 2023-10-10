@@ -60,6 +60,8 @@ def getCurrentSettings(currentSet: RenderCheckData):
     # Get Bloom enabled
     currentSet.use_bloom = bpy.context.scene.eevee.use_bloom
 
+    currentSet.use_motion_blur = bpy.context.scene.eevee.use_motion_blur
+
     # simplify settings
     currentSet.simplify_subdiv_render = bpy.context.scene.render.simplify_subdivision_render
 
@@ -145,7 +147,7 @@ def getCurrentSettings(currentSet: RenderCheckData):
 def setFinalSettings(
         resFps=False, samples=False, shadows=False, ao=False, overscan=False, outparams=False, burnIn=False,
         renderSingleLayer=False, colorManagement=False, filmTransparent=False, simplify=False, aovs=False,
-        post_processing=False, use_bloom=False, cryptomatte=False):
+        post_processing=False, use_bloom=False, set_motion_blur=False, cryptomatte=False):
     """
     Set render settings to final settings.
         resFps: Set resolution and framerate
@@ -225,6 +227,10 @@ def setFinalSettings(
     # bloom
     if use_bloom:
         bpy.context.scene.eevee.use_bloom = defaultSet.use_bloom
+
+    # motion blur
+    if set_motion_blur:
+        bpy.context.scene.eevee.use_motion_blur = defaultSet.use_motion_blur
 
     # cryptomatte
     if cryptomatte:
@@ -424,6 +430,11 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         default=False
     )
 
+    set_motion_blur: bpy.props.BoolProperty(
+        name='motion blur',
+        default=False
+    )
+
     cryptomatte: bpy.props.BoolProperty(
         name="cryptomatte",
         default=False
@@ -434,7 +445,8 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
                          outparams=self.outparams, burnIn=self.burnIn, renderSingleLayer=self.renderSingleLayer,
                          colorManagement=self.colorMangement, filmTransparent=self.filmTransparent,
                          simplify=self.simplify, aovs=self.aovs, samples=self.samples,
-                         post_processing=self.post_processing, use_bloom=self.use_bloom, cryptomatte=self.cryptomatte)
+                         post_processing=self.post_processing, use_bloom=self.use_bloom,
+                         set_motion_blur=self.set_motion_blur, cryptomatte=self.cryptomatte)
 
         getCurrentSettings(currentSet=bpy.context.scene.ftbCurrentRenderSettings)
 
@@ -453,6 +465,7 @@ class FTB_OT_RenderCheckSetSettings_op(bpy.types.Operator):
         self.samples = False
         self.post_processing = False
         self.use_bloom = False
+        self.set_motion_blur = False
         self.cryptomatte = False
 
         return {'FINISHED'}

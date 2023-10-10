@@ -144,15 +144,21 @@ class FTB_PT_Render_Checking_Panel(bpy.types.Panel):
             box.label(text="Bloom enabled", icon='ERROR')
             box.operator("utils.render_check_set_settings", text="Disable Bloom").use_bloom = True
 
+        # MOTION BLUR
+        if context.scene.eevee.use_motion_blur:
+            box = layout.box()
+            box.label(text="Motion Blur enabled", icon='ERROR')
+            box.operator("utils.render_check_set_settings", text="Disable Motion Blur").set_motion_blur = True
+
         # BOOLEANS
         if cs.invalidBoolObjects:
             box = layout.box()
             box.label(text=(str(len(cs.invalidBoolObjects)) + " Boolean Issues"), icon='ERROR')
-            for obj in cs.invalidBoolObjects:
-                try:
-                    box.label(text=obj.name_full)
-                except:
-                    pass
+            # for obj in cs.invalidBoolObjects:
+            #     try:
+            #         box.label(text=obj.name_full)
+            #     except:
+            #         pass
             box.operator("utils.fix_boolean_errors")
 
         # NLA + ACTIVE ACTION
