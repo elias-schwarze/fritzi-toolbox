@@ -1451,8 +1451,8 @@ class FTB_OT_PurgeCollection(Operator):
         return {'FINISHED'}
 
 
-class OT_IncludeViewlayer(Operator):
-    bl_idname = "outliner.collection_set_exclude"
+class FTB_OT_IncludeViewlayer(Operator):
+    bl_idname = "outliner.collection_set_inclusion"
     bl_label = "Set Exclude"
     bl_description = "Set all sub-collections of active collection to Include"
     bl_options = {"REGISTER", "UNDO"}
