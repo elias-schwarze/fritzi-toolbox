@@ -15,7 +15,7 @@ class FTBPreferences(bpy.types.AddonPreferences):
         name="Feature Set",
         description="Select features available based on project",
         items=[
-            ('FSERIES', "Fritzi Series", "Fritzi TV-Serie"),
+            ('FS', "Fritzi Series", "Fritzi TV-Serie"),
             ('BV',"Boa Vista","Boa Vista (Kinofilm)")
         ],
         default='BV'

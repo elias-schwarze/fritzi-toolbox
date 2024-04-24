@@ -1,12 +1,18 @@
 import os
 import re
 import bpy
+from ..ftb_prefs import getFritziPreferences
 
 OS_SEPARATOR = os.sep
-PROPID_REGEX = "(hpr|pr|bg|vg)\d{1,}"
-WORKSPACE_ROOT = "fritzi_serie"
-WORKSPACE_FOLDERS = ["015_software", "020_tutorials", "030_material_fritzi_film", "040_rnd",
+
+FS_PROPID_REGEX = "(hpr|pr|bg|vg)\d{1,}"
+BV_PROPID_REGEX = "(h|p|gl|vg)\d{1,}"
+
+FS_WORKSPACE_ROOT = "fritzi_serie"
+FS_WORKSPACE_FOLDERS = ["015_software", "020_tutorials", "030_material_fritzi_film", "040_rnd",
                      "050_production_design", "060_assets", "070_storyboard", "075_capture", "080_scenes"]
+
+BV_WORKSPACE_FOLDERS = ["100_assets"]
 INVALID_CHARS = ["ä", "Ä", "ü", "Ü", "ö", "Ö", "ß", ":", ")", "("]
 
 
@@ -43,18 +49,24 @@ def asset_path_is_absolute(path: str):
 
 def file_is_in_workspace():
     """
-    Returns True if the file is saved within fritzi workspace.
+    Returns True if the file is saved within project workspace.
     """
     is_saved = bpy.data.is_saved and bpy.data.filepath
     if not is_saved:
         return False
 
-    if bpy.data.filepath.find(WORKSPACE_ROOT) != -1:
-        return True
-
-    for folder in WORKSPACE_FOLDERS:
-        if bpy.data.filepath.find(folder) != -1:
+    if getFritziPreferences.feature_set == 'FS':
+        if bpy.data.filepath.find(FS_WORKSPACE_ROOT) != -1:
             return True
+
+        for folder in FS_WORKSPACE_FOLDERS:
+            if bpy.data.filepath.find(folder) != -1:
+                return True
+
+    if getFritziPreferences.feature_set == 'BV':
+        for folder in BV_WORKSPACE_FOLDERS:
+            if bpy.data.filepath.find(folder) != -1:
+                return True
 
     return False
 
@@ -66,10 +78,15 @@ def GetFilenameString():
 
 def ContainsPropID(Name: str):
     """
-    Return True if Name contains valid Fritzi PropID, otherwise False
+    Return True if Name contains valid project PropID, otherwise False
     param Name: Name to check for valid PropID
     """
-    match = re.search(PROPID_REGEX, Name)
+    if getFritziPreferences().feature_set == 'FS':
+        match = re.search(FS_PROPID_REGEX, Name)
+
+    if getFritziPreferences().feature_set == 'BV':
+        match = re.search(BV_PROPID_REGEX, Name)
+
     if not match:
         return False
 
@@ -81,7 +98,7 @@ def GetPropID(Name: str):
     Returns Fritzi PropID string if Name contains it, otherwise None
     param Name: Name to check for valid PropID
     """
-    match = re.search(PROPID_REGEX, Name)
+    match = re.search(FS_PROPID_REGEX, Name)
     if match:
         return match.group()
 

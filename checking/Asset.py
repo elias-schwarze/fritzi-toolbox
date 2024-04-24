@@ -1,6 +1,7 @@
 import bpy
 
-from .. utility_functions.ftb_string_utils import WORKSPACE_ROOT
+from .. utility_functions.ftb_string_utils import FS_WORKSPACE_ROOT, BV_WORKSPACE_FOLDERS
+from ..ftb_prefs import getFritziPreferences
 
 bChecked: bool = False
 
@@ -70,17 +71,25 @@ def InitializeCheck(self):
 
 
 def IsFileInWorkspace():
+    featureSet = getFritziPreferences().feature_set
+
     if not IsSaved():
         return False
 
-    if bpy.data.filepath.find(WORKSPACE_ROOT) != -1:
-        return True
+    if featureSet == 'FS':
+        if bpy.data.filepath.find(FS_WORKSPACE_ROOT) != -1:
+            return True
+
+    if featureSet == 'BV':
+        for folder in BV_WORKSPACE_FOLDERS:
+            if bpy.data.filepath.find(folder) != -1:
+                return True
 
     return False
 
 
 def IsPropEmpty(Empty: bpy.types.Object):
-    return Empty.type == 'EMPTY' and not(Empty.library or Empty.override_library or Empty.instance_collection or Empty.field)
+    return Empty.type == 'EMPTY' and not (Empty.library or Empty.override_library or Empty.instance_collection or Empty.field)
 
 
 def GetFileErrorCount():
