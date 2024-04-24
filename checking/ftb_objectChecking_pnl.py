@@ -187,10 +187,10 @@ class FTB_PT_Checking_Panel(Panel):
 
 
 def register():
-    # bpy.utils.register_class(FTB_PT_Checking_Panel)
+    bpy.utils.register_class(FTB_PT_Checking_Panel)
     pass
 
 
 def unregister():
-    # bpy.utils.unregister_class(FTB_PT_Checking_Panel)
+    bpy.utils.unregister_class(FTB_PT_Checking_Panel)
     pass
