@@ -11,6 +11,16 @@ class FTBPreferences(bpy.types.AddonPreferences):
     """FTB preferences"""
     bl_idname = __package__
 
+    feature_set: bpy.props.EnumProperty(
+        name="Feature Set",
+        description="Select features available based on project",
+        items=[
+            ('FSERIES', "Fritzi Series", "Fritzi TV-Serie"),
+            ('BV',"Boa Vista","Boa Vista (Kinofilm)")
+        ],
+        default='BV'
+    )
+
     skip_override_cleanup: bpy.props.BoolProperty(
         name="Skip Index Override Cleanup (not recommended)",
         description="If enabled, the addon will not automatically remove overrides of active_material_index (not recommended)",
@@ -161,6 +171,8 @@ class FTBPreferences(bpy.types.AddonPreferences):
         # Works best if a column, or even just self.layout.
         mainrow = layout.row()
         col = mainrow.column()
+
+        col.prop(getFritziPreferences(), "feature_set")
 
         col.prop(getFritziPreferences(), "skip_override_cleanup")
 
